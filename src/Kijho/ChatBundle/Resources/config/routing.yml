@@ -1,5 +1,10 @@
-chat_homepage:
+chat_example:
     path:     /
-    defaults: { _controller: ChatBundle:Default:index }
+    defaults: { _controller: ChatBundle:Default:example }
+
+chat_panel:
+    path:     /chat
+    defaults: { _controller: ChatBundle:Default:chatPanel }
+
 
 
