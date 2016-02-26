@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <title>{% block title %}Chat Bundle{% endblock %}</title>     
+
+        
+        <link rel="stylesheet" href=" {{ asset('bundles/chat/css/bootstrap.min.css') }}" media="screen">
+        <link rel="stylesheet" href=" {{ asset('bundles/chat/css/bootstrap-theme.min.css') }}" media="screen">
+        <link rel="stylesheet" href=" {{ asset('bundles/chat/css/style.css') }}" media="screen">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+        
+        {#<link rel="shortcut icon" href="{{ asset('bundles/frontend/images/ico/favicon.ico ')}}">#}
+
+    </head><!--/head-->
+    <body>
+        {#{% import 'KijhoMailerBundle:Default:macros.html.twig' as macros  %}
+        {% include 'KijhoMailerBundle:Default:menu.html.twig' %}#}
+        <section class="container header">
+            {% block header_content %}
+            {% endblock %}
+            <div class="alert alert-dismissable alert-success col-lg-12 flash-message" id="flash-message-success" style="display: none;">
+                <button data-dismiss="alert" class="close" type="button">x</button>
+                <span></span>
+            </div>
+            <div class="alert alert-dismissable alert-warning col-lg-12 flash-message" id="flash-message-warning" style="display: none;">
+                <button data-dismiss="alert" class="close" type="button">x</button>
+                <span></span>
+            </div>
+            <div class="alert alert-dismissable alert-danger col-lg-12 flash-message" id="flash-message-danger" style="display: none;">
+                <button data-dismiss="alert" class="close" type="button">x</button>
+                <span></span>
+            </div>
+        </section>
+
+        <section class="container">
+            {% block content %}
+            {% endblock %}
+        </section><!--/#about-us-->
+
+        <section id="bottom" class="wet-asphalt">
+            <div class="container">
+                <div class="row"><!--/.col-md-3-->
+                    {% block bottom_content %}
+                    {% endblock %}
+                </div>
+            </div>
+        </section><!--/#bottom-->
+
+        <script type="text/javascript" src="{{ asset('bundles/chat/js/jquery-2.1.4.min.js') }}"></script>
+        <script type="text/javascript" src="{{ asset('bundles/chat/js/bootstrap.min.js') }}"></script>
+        <script type="text/javascript" src="{{ asset('bundles/chat/js/bootbox.min.js') }}"></script>
+        <script type="text/javascript" src="{{ asset('bundles/chat/js/utilities.js') }}"></script>
+
+        <script type="text/javascript" src="{{ asset('bundles/chat/js/js-webshim/minified/polyfiller.js') }}"></script>
+
+        
+        <script type="text/javascript">
+            $(document).ready(function () {
+
+                webshims.polyfill();
+
+                {% block scripts %}
+                {% endblock %}
+            });
+        </script>
+        
+        {% block other_scripts %}
+        {% endblock %}
+            
+    </body>
+</html>

@@ -1,0 +1,21 @@
+services:
+    #Configuracion del chat
+    chat_topic.chat_service:
+        class: Kijho\ChatBundle\Topic\ChatTopic
+        tags:
+          - { name: gos_web_socket.topic }
+          
+    #escucha de eventos de conexion
+    gos_web_socket_server.client_event.listener:
+        class: Kijho\ChatBundle\EventListener\ClientEventListener
+        tags:
+            - { name: kernel.event_listener, event: 'gos_web_socket.client_connected', method: onClientConnect }
+            - { name: kernel.event_listener, event: 'gos_web_socket.client_disconnected', method: onClientDisconnect }
+            - { name: kernel.event_listener, event: 'gos_web_socket.client_error', method: onClientError }
+            - { name: kernel.event_listener, event: 'gos_web_socket.server_launched', method: onServerStart }
+            - { name: kernel.event_listener, event: 'gos_web_socket.client_rejected', method: onClientRejected }
+            
+    chat_topic.rpc_service:
+        class: Kijho\ChatBundle\RPC\RPCService
+        tags:
+            - { name: gos_web_socket.rpc }

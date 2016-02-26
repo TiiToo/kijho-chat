@@ -1,0 +1,96 @@
+{% extends 'ChatBundle:Default:main.html.twig' %}
+{% block title %}Chat Bundle{% endblock %}
+{% block content %}
+    <article class="col-md-12 ap">
+        <h1 class="pdn">Chat</h1>
+
+        <div class="widget">
+
+            <div class="col-lg-6">
+                <div class="row">
+                    <legend>Hi {{ app.user }}, Welcome to Chat</legend>
+
+                    <div class="col-lg-12 col-md-12" style="height: 200px; max-height: 200px; overflow: auto; margin-bottom: 12px;">
+                        <ul id="message-list">
+                        </ul>
+                    </div>
+
+                    <div class="col-lg-12 col-md-12">
+                        <input type="text" class="form-control pull-left" id="input-message" placeholer="Type a message" style="width: 80%;"/>
+                        <a href="javascript:void(0);" class="btn btn-primary btn-md pull-right send-message">Send</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+
+{% endblock %}
+
+{% block other_scripts %}
+    {{ ws_client() }}
+
+    <script type="text/javascript">
+        var _WS_URI = "ws://{{ gos_web_socket_server_host }}:{{ gos_web_socket_server_port }}";
+
+        var webSocket = WS.connect(_WS_URI);
+
+        webSocket.on("socket/connect", function (session) {
+            bindUI(session);
+            console.log("Successfully Connected!");
+            changeNickname(session)
+            joinChatRoom(session);
+        });
+
+        webSocket.on("socket/disconnect", function (error) {
+            console.log("Disconnected for " + error.reason + " with code " + error.code);
+            unbindUI();
+        });
+
+        /*Permite cambiar el nickname del usuario*/
+        function changeNickname(session)
+        {
+            session.call("rpc/update_nick_name", {"nickname": "", "userId": ""}).then(  
+                function(result)
+                {
+                    console.log("RPC Valid!", result);
+                },
+                function(error, desc)
+                {
+                    console.log("RPC Error", error, desc);
+                }
+            );
+        }
+
+        // Permite habilitar los eventos sobre los botones de la ventana, cuando hay conexion
+        function bindUI(session) {
+            $(".send-message").bind("click", function (e) {
+                var message = $("#input-message").val();
+                if (message != '') {
+                    sendMessage(session, message);
+                    $("#input-message").val('');
+                }
+                $("#input-message").focus();
+            });
+        }
+
+        // Permite deshabilitar los eventos sobre los botones, cuando se pierde la conexion
+        function unbindUI() {
+            $(".send-message").unbind();
+        }
+
+        //permite realizar la conexion a una sala en especifico, y establecer un escucha de eventos
+        function joinChatRoom(session) {
+            //the callback function in "subscribe" is called everytime an event is published in that channel.
+            session.subscribe("chat/channel", serverEvent);
+        }
+
+        function sendMessage(session, message) {
+            session.publish("chat/channel", message);
+        }
+
+        //es la funcion que escucha los eventos del servidor
+        function serverEvent(uri, payload) {
+            $("#message-list").append('<li>' + payload.msg + '</li>');
+        }
+    </script>
+{% endblock %}

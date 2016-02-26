@@ -1,0 +1,12 @@
+chat_topic:
+    channel: chat/channel
+    handler:
+        callback: 'chat.topic' #related to the getName() of your topic
+        
+rpc_service:
+    channel: rpc/{method}
+    handler:
+        callback: 'rpc.service' #related to the getName() or your RPC service
+    requirements:
+        method:
+            pattern: "[a-z_]+"
