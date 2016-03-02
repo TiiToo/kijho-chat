@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description" content="Kijho Chat" />
+        <meta name="author" content="" />
+        
+        <title>{% block title %}Chat Bundle{% endblock %}</title>     
+        
+        <link rel="stylesheet" href="{{ asset('bundles/chat/assets/js/jquery-ui/css/no-theme/jquery-ui-1.10.3.custom.min.css') }}">
+        <link rel="stylesheet" href="{{ asset('bundles/chat/assets/css/font-icons/entypo/css/entypo.css') }}">
+        <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noto+Sans:400,700,400italic">
+        <link rel="stylesheet" href="{{ asset('bundles/chat/assets/css/bootstrap.css') }}">
+        <link rel="stylesheet" href="{{ asset('bundles/chat/assets/css/neon-core.css') }}">
+        <link rel="stylesheet" href="{{ asset('bundles/chat/assets/css/neon-theme.css') }}">
+
+        <script src="{{ asset('bundles/chat/assets/js/jquery-1.11.0.min.js') }}"></script>
+        
+    </head><!--/head-->
+    <body class="page-body  page-fade">
+
+        <div class="page-container">
+            {% block content %}
+            {% endblock %}
+        </div><!--/#about-us-->
+
+
+        
+        <script src="{{ asset('bundles/chat/assets/js/gsap/main-gsap.js') }}"></script>
+        <script src="{{ asset('bundles/chat/assets/js/jquery-ui/js/jquery-ui-1.10.3.minimal.min.js') }}"></script>
+        <script src="{{ asset('bundles/chat/assets/js/bootstrap.js') }}"></script>
+        <script src="{{ asset('bundles/chat/assets/js/joinable.js') }}"></script>
+        <script src="{{ asset('bundles/chat/assets/js/resizeable.js') }}"></script>
+        <script src="{{ asset('bundles/chat/assets/js/neon-chat.j') }}s"></script>
+        <script src="{{ asset('bundles/chat/assets/js/neon-custom.js') }}"></script>
+        
+        <script type="text/javascript" src="{{ asset('bundles/chat/js/bootbox.min.js') }}"></script>
+        <script type="text/javascript" src="{{ asset('bundles/chat/js/utilities.js') }}"></script>
+
+        <script type="text/javascript" src="{{ asset('bundles/chat/js/js-webshim/minified/polyfiller.js') }}"></script>
+
+        
+        <script type="text/javascript">
+            $(document).ready(function () {
+
+                webshims.polyfill();
+
+                {% block scripts %}
+                {% endblock %}
+            });
+        </script>
+        
+        {% block other_scripts %}
+        {% endblock %}
+            
+    </body>
+</html>

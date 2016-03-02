@@ -1,4 +1,4 @@
-{% extends 'ChatBundle:Default:main.html.twig' %}
+{% extends 'ChatBundle:Default:mainClient.html.twig' %}
 {% block title %}Chat Bundle{% endblock %}
 {% block content %}
     <article class="col-md-12 ap">
@@ -49,7 +49,7 @@
         /*Permite cambiar el nickname del usuario*/
         function changeNickname(session)
         {
-            session.call("rpc/update_nick_name", {"nickname": "{{nickname}}", "userId": ""}).then(  
+            session.call("rpc/update_connection_data", {"nickname": "{{nickname}}", "user_type": "{{userType}}"}).then(  
                 function(result)
                 {
                     console.log("RPC Valid!", result);
@@ -90,7 +90,12 @@
 
         //es la funcion que escucha los eventos del servidor
         function serverEvent(uri, payload) {
-            $("#message-list").append('<li>' + payload.msg + '</li>');
+            
+            if (payload.msg_type == 'welcome_message') {
+                $("#message-list").append('<li>' + payload.msg + '</li>');
+            } else if (payload.msg_type == 'user_message') {
+                $("#message-list").append('<li>' + payload.msg + '</li>');
+            }
         }
     </script>
 {% endblock %}

@@ -18,13 +18,19 @@ class RPCService implements RpcInterface
      * @param array $params
      * @return int
      */
-    public function updateNickName(ConnectionInterface $connection, WampRequest $request, $params)
+    public function updateConnectionData(ConnectionInterface $connection, WampRequest $request, $params)
     {
         $connection->nickname = 'Guest '.$connection->resourceId;
         
         if (isset($params['nickname']) && !empty($params['nickname'])) {
             $nickName = trim ($params['nickname']);
             $connection->nickname = $nickName;
+        }
+        
+        $connection->userType = 'Client';
+        if (isset($params['user_type']) && !empty($params['user_type'])) {
+            $userType = trim ($params['user_type']);
+            $connection->userType = $userType;
         }
         
         return array("result" => array_sum($params));

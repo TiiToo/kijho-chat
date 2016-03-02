@@ -12,6 +12,26 @@ use Gos\Bundle\WebSocketBundle\Router\WampRequest;
 class ChatTopic implements TopicInterface, TopicPeriodicTimerInterface {
 
     /**
+     * Constantes para los tipos de usuarios que se conectan al chat
+     */
+    const USER_CLIENT = 'client';
+    const USER_ADMIN = 'admin';
+
+    /**
+     * Constantes para los tipos de mensajes que el servidor envia a los usuarios
+     */
+    const SERVER_ONLINE_USERS = 'online_users_list';
+    const SERVER_NEW_CLIENT_CONNECTION = 'new_client_connected';
+    const SERVER_CLIENT_LEFT_ROOM = 'client_left_room';
+    const SERVER_WELCOME_MESSAGE = 'welcome_message';
+    const SERVER_USER_MESSAGE = 'user_message';
+
+    /**
+     * Instancia de la sala principal del chat (Clientes, Administradores, etc)
+     */
+    protected $chatTopic;
+
+    /**
      * @var TopicPeriodicTimer
      */
     protected $periodicTimer;
@@ -25,19 +45,39 @@ class ChatTopic implements TopicInterface, TopicPeriodicTimerInterface {
      * @return void
      */
     public function onSubscribe(ConnectionInterface $connection, Topic $topic, WampRequest $request) {
-        //this will broadcast the message to ALL subscribers of this topic.
-        $topic->broadcast(['msg' => $connection->nickname . " has joined " . $topic->getId()]);
-        
-        /** @var ConnectionPeriodicTimer $topicTimer */
-        /*$topicTimer = $connection->PeriodicTimer;
 
-        //Add periodic timer
-        $topicTimer->addPeriodicTimer('hello', 2, function() use ($topic, $connection) {
-            $connection->event($topic->getId(), ['msg' => 'you are active']);
-        });
+        if ($topic->getId() == 'chat/channel') {
+            $this->chatTopic = $topic;
+            $this->serverLog($connection->nickname . ' (' . $connection->userType . ') se ha conectado al chat');
+        }
 
-        //exist
-        $topicTimer->isPeriodicTimerActive('hello'); //true or false*/
+
+        if ($connection->userType == self::USER_ADMIN) {
+
+            //Le enviamos a los administradores el listado de usuarios conectados cada 2 segundos
+            $topicTimer = $connection->PeriodicTimer;
+            $topicTimer->addPeriodicTimer('online_users', 2, function() use ($topic, $connection) {
+                $connection->event($topic->getId(), ['msg' => 'Online Users..',
+                    'msg_type' => self::SERVER_ONLINE_USERS,
+                    'online_users' => $this->getOnlineClientsNicknames()]);
+            });
+        } elseif ($connection->userType == self::USER_CLIENT) {
+
+            //notificamos a los administradores que un nuevo cliente se conectó
+            $administrators = $this->getOnlineAdministrators();
+            foreach ($administrators as $adminTopic) {
+                $adminTopic->event($topic->getId(), [
+                    'msg' => $connection->nickname . " has joined " . $topic->getId(),
+                    'msg_type' => self::SERVER_NEW_CLIENT_CONNECTION,
+                ]);
+            }
+        }
+
+        //enviamos un mensaje de bienvenida al usuario
+        $connection->event($topic->getId(), [
+            'msg' => 'Hi ' . $connection->nickname . ', welcome to chat',
+            'msg_type' => self::SERVER_WELCOME_MESSAGE,
+        ]);
     }
 
     /**
@@ -49,8 +89,21 @@ class ChatTopic implements TopicInterface, TopicPeriodicTimerInterface {
      * @return void
      */
     public function onUnSubscribe(ConnectionInterface $connection, Topic $topic, WampRequest $request) {
+
+        if ($connection->userType == self::USER_CLIENT) {
+            //notificamos a los administradores que un cliente abandona la sala
+            $administrators = $this->getOnlineAdministrators();
+            foreach ($administrators as $adminTopic) {
+                $adminTopic->event($topic->getId(), [
+                    'msg' => $connection->nickname . " has left " . $topic->getId(),
+                    'msg_type' => self::SERVER_CLIENT_LEFT_ROOM,
+                ]);
+            }
+        }
+
+
         //this will broadcast the message to ALL subscribers of this topic.
-        $topic->broadcast(['msg' => $connection->nickname . " has left " . $topic->getId()]);
+        //$topic->broadcast(['msg' => $connection->nickname . " has left " . $topic->getId()]);
     }
 
     /**
@@ -73,10 +126,10 @@ class ChatTopic implements TopicInterface, TopicPeriodicTimerInterface {
          */
 
         //\Symfony\Component\VarDumper\VarDumper::dump($connection);die();
-        
-        
+
         $topic->broadcast([
-            'msg' => $connection->nickname." says: ".$event,
+            'msg' => $connection->nickname . " says: " . $event,
+            'msg_type' => self::SERVER_USER_MESSAGE,
         ]);
     }
 
@@ -101,15 +154,52 @@ class ChatTopic implements TopicInterface, TopicPeriodicTimerInterface {
      * @return array
      */
     public function registerPeriodicTimer(Topic $topic) {
-        /*//add
-        $this->periodicTimer->addPeriodicTimer($this, 'hello', 2, function() use ($topic) {
-            $topic->broadcast('hello world');
-        });
 
-        //exist
-        $this->periodicTimer->isPeriodicTimerActive($this, 'hello'); // true or false
-        //remove
-        $this->periodicTimer->cancelPeriodicTimer($this, 'hello');*/
+        /* //add
+          $this->periodicTimer->addPeriodicTimer($this, 'hello', 2, function() use ($topic) {
+          $topic->broadcast(['msg' => 'usuarios conectados']);
+          });
+
+          //exist
+          $this->periodicTimer->isPeriodicTimerActive($this, 'hello'); // true or false
+          //remove
+          $this->periodicTimer->cancelPeriodicTimer($this, 'hello'); */
     }
-    
+
+    private function getOnlineAdministrators() {
+        $onlineAdministrators = array();
+        if ($this->chatTopic) {
+            foreach ($this->chatTopic->getIterator() as $subscriber) {
+                if ($subscriber->userType == self::USER_ADMIN) {
+                    array_push($onlineAdministrators, $subscriber);
+                }
+            }
+        }
+        return $onlineAdministrators;
+    }
+
+    /**
+     * Permite obtener un arreglo con los nicknames de los clientes del chat
+     * @return array
+     */
+    private function getOnlineClientsNicknames() {
+        $onlineUsers = array();
+        if ($this->chatTopic) {
+            foreach ($this->chatTopic->getIterator() as $subscriber) {
+                if ($subscriber->userType == self::USER_CLIENT) {
+                    array_push($onlineUsers, $subscriber->nickname);
+                }
+            }
+        }
+        return $onlineUsers;
+    }
+
+    /**
+     * Permite desplegar mensajes en la consola del servidor de websockets
+     * @param string $msg
+     */
+    private function serverLog($msg) {
+        echo($msg . PHP_EOL);
+    }
+
 }
