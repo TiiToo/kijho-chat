@@ -49,33 +49,43 @@
         /*Permite cambiar el nickname del usuario*/
         function changeNickname(session)
         {
-            session.call("rpc/update_connection_data", {"nickname": "{{nickname}}", "user_type": "{{userType}}"}).then(  
-                function(result)
-                {
-                    console.log("RPC Valid!", result);
-                },
-                function(error, desc)
-                {
-                    console.log("RPC Error", error, desc);
-                }
+            session.call("rpc/update_connection_data", {"nickname": "{{nickname}}", "user_type": "{{userType}}"}).then(
+                    function (result)
+                    {
+                        console.log("RPC Valid!", result);
+                    },
+                    function (error, desc)
+                    {
+                        console.log("RPC Error", error, desc);
+                    }
             );
         }
 
         // Permite habilitar los eventos sobre los botones de la ventana, cuando hay conexion
         function bindUI(session) {
-            $(".send-message").bind("click", function (e) {
-                var message = $("#input-message").val();
-                if (message != '') {
-                    sendMessage(session, message);
-                    $("#input-message").val('');
+
+            $("#input-message").bind("keydown", function (e) {
+                var key;
+                if (window.event) {
+                    key = window.event.keyCode;   /*IE*/
+                } else {
+                    key = e.which;                /*firefox*/
                 }
-                $("#input-message").focus();
+                if (key == 13) {
+                    sendMessage(session);
+                }
+            });
+
+
+            $(".send-message").bind("click", function (e) {
+                sendMessage(session);
             });
         }
 
         // Permite deshabilitar los eventos sobre los botones, cuando se pierde la conexion
         function unbindUI() {
             $(".send-message").unbind();
+            $("#input-message").unbind();
         }
 
         //permite realizar la conexion a una sala en especifico, y establecer un escucha de eventos
@@ -84,13 +94,23 @@
             session.subscribe("chat/channel", serverEvent);
         }
 
-        function sendMessage(session, message) {
-            session.publish("chat/channel", message);
+        function sendMessage(session) {
+
+            var message = $("#input-message").val();
+            if (message != '') {
+                var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_TO_ADMIN')}}",
+                    message: message,
+                    destination: 'Administrator'
+                };
+                session.publish("chat/channel", data);
+                $("#input-message").val('');
+            }
+            $("#input-message").focus();
         }
 
         //es la funcion que escucha los eventos del servidor
         function serverEvent(uri, payload) {
-            
+
             if (payload.msg_type == 'welcome_message') {
                 $("#message-list").append('<li>' + payload.msg + '</li>');
             } else if (payload.msg_type == 'user_message') {

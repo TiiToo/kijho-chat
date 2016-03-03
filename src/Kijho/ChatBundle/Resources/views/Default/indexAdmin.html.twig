@@ -195,15 +195,15 @@
 
         //es la funcion que escucha los eventos del servidor
         function serverEvent(uri, payload) {
-            if (payload.msg_type == 'welcome_message') {
+            if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SERVER_WELCOME_MESSAGE')}}") {
                 $("#message-list").append('<li>' + payload.msg + '</li>');
-            } else if (payload.msg_type == 'user_message') {
+            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_FROM_CLIENT')}}") {
                 $("#message-list").append('<li>' + payload.msg + '</li>');
-            } else if (payload.msg_type == 'online_users_list') {
+            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SERVER_ONLINE_USERS')}}") {
                 refreshOnlineUsers(payload.online_users);
-            } else if (payload.msg_type == 'new_client_connected') {
+            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SERVER_NEW_CLIENT_CONNECTION')}}") {
                 $("#message-list").append('<li>' + payload.msg + '</li>');
-            } else if (payload.msg_type == 'client_left_room') {
+            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SERVER_CLIENT_LEFT_ROOM')}}") {
                 $("#message-list").append('<li>' + payload.msg + '</li>');
             }
         }

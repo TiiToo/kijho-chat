@@ -25,6 +25,13 @@ class ChatTopic implements TopicInterface, TopicPeriodicTimerInterface {
     const SERVER_CLIENT_LEFT_ROOM = 'client_left_room';
     const SERVER_WELCOME_MESSAGE = 'welcome_message';
     const SERVER_USER_MESSAGE = 'user_message';
+    const MESSAGE_FROM_CLIENT = 'message_from_client';
+    
+    /**
+     * Constantes para los tipos de mensajes que los usuarios envian al servidor
+     */
+    const MESSAGE_TO_ADMIN = 'message_to_admin';
+    const MESSAGE_TO_CLIENT = 'message_to_client';
 
     /**
      * Instancia de la sala principal del chat (Clientes, Administradores, etc)
@@ -50,7 +57,6 @@ class ChatTopic implements TopicInterface, TopicPeriodicTimerInterface {
             $this->chatTopic = $topic;
             $this->serverLog($connection->nickname . ' (' . $connection->userType . ') se ha conectado al chat');
         }
-
 
         if ($connection->userType == self::USER_ADMIN) {
 
@@ -101,7 +107,6 @@ class ChatTopic implements TopicInterface, TopicPeriodicTimerInterface {
             }
         }
 
-
         //this will broadcast the message to ALL subscribers of this topic.
         //$topic->broadcast(['msg' => $connection->nickname . " has left " . $topic->getId()]);
     }
@@ -125,12 +130,36 @@ class ChatTopic implements TopicInterface, TopicPeriodicTimerInterface {
           //shout something to all subs.
          */
 
-        //\Symfony\Component\VarDumper\VarDumper::dump($connection);die();
+        if ($topic->getId() == 'chat/channel') {
 
-        $topic->broadcast([
-            'msg' => $connection->nickname . " says: " . $event,
-            'msg_type' => self::SERVER_USER_MESSAGE,
-        ]);
+            if (isset($event['type']) && !empty($event['type'])) {
+
+                if ($event['type'] == self::MESSAGE_TO_ADMIN && isset($event['destination'])) {
+
+                    $adminNickname = $event['destination'];
+                    $message = $event['message'];
+
+                    //buscamos al administrador con el nickname para mandarle el mensaje
+                    $administrators = $this->getOnlineAdministrators();
+                    
+                    foreach ($administrators as $adminTopic) {
+                        if ($adminTopic->nickname == $adminNickname) {
+                            $adminTopic->event($topic->getId(), [
+                                'msg_type' => self::MESSAGE_FROM_CLIENT,
+                                'msg' => $connection->nickname . " says: " . $message,
+                                'sender' => $connection->nickname,
+                            ]);
+                        }
+                    }
+                } else {
+                    $this->serverLog('otro tipo de mensaje');
+                }
+            } else {
+                $this->serverLog('no hay tipo');
+            }
+        } else {
+            $this->serverLog('otro canal');
+        }
     }
 
     /**
