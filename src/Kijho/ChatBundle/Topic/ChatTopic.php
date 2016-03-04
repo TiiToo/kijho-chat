@@ -8,6 +8,8 @@ use Gos\Bundle\WebSocketBundle\Topic\TopicPeriodicTimerInterface;
 use Ratchet\ConnectionInterface;
 use Ratchet\Wamp\Topic;
 use Gos\Bundle\WebSocketBundle\Router\WampRequest;
+use Doctrine\ORM\EntityManager;
+use Kijho\ChatBundle\Entity as Entity;
 
 class ChatTopic implements TopicInterface, TopicPeriodicTimerInterface {
 
@@ -44,8 +46,22 @@ class ChatTopic implements TopicInterface, TopicPeriodicTimerInterface {
     protected $periodicTimer;
 
     /**
+     * Instancia del Entity Manager para acceder a base de datos
+     */
+    private $em;
+    
+    /**
+     * Instancia del container para acceder a parametros globales, renderizar templates, etc
+     */
+    private $container;
+
+    public function __construct(EntityManager $em, $container) {
+        $this->em = $em;
+        $this->container = $container;
+    }
+    
+    /**
      * This will receive any Subscription requests for this topic.
-     *
      * @param ConnectionInterface $connection
      * @param Topic $topic
      * @param WampRequest $request
@@ -123,12 +139,6 @@ class ChatTopic implements TopicInterface, TopicPeriodicTimerInterface {
      * @return mixed|void
      */
     public function onPublish(ConnectionInterface $connection, Topic $topic, WampRequest $request, $event, array $exclude, array $eligible) {
-        /*
-          $topic->getId() will contain the FULL requested uri, so you can proceed based on that
-
-          if ($topic->getId() === 'acme/channel/shout')
-          //shout something to all subs.
-         */
 
         if ($topic->getId() == 'chat/channel') {
 
@@ -144,6 +154,18 @@ class ChatTopic implements TopicInterface, TopicPeriodicTimerInterface {
                     
                     foreach ($administrators as $adminTopic) {
                         if ($adminTopic->nickname == $adminNickname) {
+                            
+                            $cliMessage = new Entity\Message();
+                            $cliMessage->setMessage($message);
+                            $cliMessage->setSenderId($connection->nickname);
+                            $cliMessage->setSenderNickname($connection->nickname);
+                            $cliMessage->setDestinationId($adminNickname);
+                            $cliMessage->setDestinationNickname($adminNickname);
+                            $cliMessage->setType(Entity\Message::TYPE_CLIENT_TO_ADMIN);
+                            
+                            $this->em->persist($cliMessage);
+                            $this->em->flush();
+                            
                             $adminTopic->event($topic->getId(), [
                                 'msg_type' => self::MESSAGE_FROM_CLIENT,
                                 'msg' => $connection->nickname . " says: " . $message,

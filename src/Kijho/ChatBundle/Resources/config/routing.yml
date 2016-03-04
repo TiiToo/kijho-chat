@@ -14,5 +14,8 @@ chat_panel:
     path:     /clientPanel
     defaults: { _controller: ChatBundle:Default:clientPanel }
 
+chat_start_gos_server:
+    path:     /startGosServer
+    defaults: { _controller: ChatBundle:Default:startGosServer }
 
 

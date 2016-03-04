@@ -24,6 +24,11 @@
             <h2>Admin Chat Panel</h2>
             <ul id="message-list">
             </ul>
+
+            <div class="col-xs-12" id="container-server-start" style="display: none;">
+                <p>Chat server offline.</p>
+                <a class="btn btn-primary btn-md start-gos-server">Start Chat Server</a>
+            </div>
         </div>
     </div>
 
@@ -128,26 +133,52 @@
 {% endblock %}
 
 {% block scripts %}
-    $("#display-chat").trigger('click');
-{% endblock %}
+        {# Damos click en este boton para desplegar el panel #}
+        $("#display-chat").trigger('click');
 
-{% block other_scripts %}
-    {{ ws_client() }}
+        {# Ejecutamos una funcion periodicamente para verificar el estado del servidor #}
+        window.setInterval(verifyServerConnection, 4000);
 
-    <script type="text/javascript">
-        var _WS_URI = "ws://{{ gos_web_socket_server_host }}:{{ gos_web_socket_server_port }}";
+        $(".start-gos-server").click(function () {
+            $(this).html('Please wait..');
+            $.ajax({
+                type: 'POST',
+                url: "{{path('chat_start_gos_server')}}",
+                dataType: 'json',
+                timeout: 4000,
+                success: function (r)
+                {
+                    window.location.reload();
+                },
+                error: function (r)
+                {
+                    window.location.reload();
+                }
+            });
+        });
+    {% endblock %}
+
+    {% block other_scripts %}
+        {{ ws_client() }}
+
+        <script type = "text/javascript" >
+                var _WS_URI = "ws://{{ gos_web_socket_server_host }}:{{ gos_web_socket_server_port }}";
 
         var webSocket = WS.connect(_WS_URI);
+
+        var successConnect = false;
 
         webSocket.on("socket/connect", function (session) {
             bindUI(session);
             console.log("Successfully Connected!");
+            successConnect = true;
             changeNickname(session)
             joinChatRoom(session);
         });
 
         webSocket.on("socket/disconnect", function (error) {
             console.log("Disconnected for " + error.reason + " with code " + error.code);
+            successConnect = false;
             unbindUI();
         });
 
@@ -157,10 +188,12 @@
             session.call("rpc/update_connection_data", {"nickname": "{{nickname}}", "user_type": "{{userType}}"}).then(
                     function (result)
                     {
+
                         console.log("RPC Valid!", result);
                     },
                     function (error, desc)
                     {
+
                         console.log("RPC Error", error, desc);
                     }
             );
@@ -195,6 +228,10 @@
 
         //es la funcion que escucha los eventos del servidor
         function serverEvent(uri, payload) {
+
+
+            //console.log(uri);
+
             if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SERVER_WELCOME_MESSAGE')}}") {
                 $("#message-list").append('<li>' + payload.msg + '</li>');
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_FROM_CLIENT')}}") {
@@ -207,14 +244,31 @@
                 $("#message-list").append('<li>' + payload.msg + '</li>');
             }
         }
-        
+
+        /**
+         * Permite pintar el listado de usuarios conectados
+         * @param {string} onlineUsers
+         **/
         function refreshOnlineUsers(onlineUsers) {
             $('.online-users').html('<strong>Online Users</strong>');
-            
+
             for (i = 0; i < onlineUsers.length; i++) {
-                var htmlUser = '<a href="#"><span class="user-status is-online"></span> <em>'+onlineUsers[i]+'</em></a>';
+                var htmlUser = '<a href="#"><span class="user-status is-online"></span> <em>' + onlineUsers[i] + '</em></a>';
                 $('.online-users').append(htmlUser);
             }
         }
+
+        /**
+         * Permite verificar el estado del servidor gos para ocultar o mostrar 
+         * el boton de inicio manual del servidor
+         */
+        function verifyServerConnection() {
+            if (successConnect) {
+                $('#container-server-start').css('display', 'none');
+            } else {
+                $('#container-server-start').css('display', '');
+            }
+        }
+
     </script>
 {% endblock %}

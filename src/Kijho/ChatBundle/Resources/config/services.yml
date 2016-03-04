@@ -2,9 +2,12 @@ services:
     #Configuracion del chat
     chat_topic.chat_service:
         class: Kijho\ChatBundle\Topic\ChatTopic
+        arguments: 
+            em:         "@doctrine.orm.entity_manager"
+            container:  "@service_container"
         tags:
           - { name: gos_web_socket.topic }
-          
+       
     #escucha de eventos de conexion
     gos_web_socket_server.client_event.listener:
         class: Kijho\ChatBundle\EventListener\ClientEventListener
