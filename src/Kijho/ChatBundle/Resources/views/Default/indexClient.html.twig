@@ -37,7 +37,7 @@
         webSocket.on("socket/connect", function (session) {
             bindUI(session);
             console.log("Successfully Connected!");
-            changeNickname(session)
+            updateConnectionData(session)
             joinChatRoom(session);
         });
 
@@ -47,17 +47,17 @@
         });
 
         /*Permite cambiar el nickname del usuario*/
-        function changeNickname(session)
+        function updateConnectionData(session)
         {
-            session.call("rpc/update_connection_data", {"nickname": "{{nickname}}", "user_type": "{{userType}}"}).then(
-                    function (result)
-                    {
-                        console.log("RPC Valid!", result);
-                    },
-                    function (error, desc)
-                    {
-                        console.log("RPC Error", error, desc);
-                    }
+            session.call("rpc/update_connection_data", {"nickname": "{{nickname}}", "user_id": "{{userId}}", "user_type": "{{userType}}"}).then(
+                function (result)
+                {
+                    console.log("RPC Valid!", result);
+                },
+                function (error, desc)
+                {
+                    console.log("RPC Error", error, desc);
+                }
             );
         }
 

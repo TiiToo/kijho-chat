@@ -32,7 +32,7 @@
         </div>
     </div>
 
-    <div id="chat" class="fixed" data-current-user="Art Ramadani" data-order-by-status="1" data-max-chat-history="25">
+    <div id="chat" class="fixed" data-current-user="{{nickname}}" data-order-by-status="1" data-max-chat-history="25">
 
         <div class="chat-inner">
 
@@ -54,12 +54,19 @@
                 <a href="#"><span class="user-status is-idle"></span> <em>Fernando G. Olson</em></a>
             </div>
 
-            <div class="chat-group" id="group-2">
+            {#<div class="chat-group" id="group-2">
                 <strong>Work</strong>
 
                 <a href="#"><span class="user-status is-offline"></span> <em>Robert J. Garcia</em></a>
                 <a href="#" data-conversation-history="#sample_history_2"><span class="user-status is-offline"></span> <em>Daniel A. Pena</em></a>
                 <a href="#"><span class="user-status is-busy"></span> <em>Rodrigo E. Lozano</em></a>
+            </div>#}
+            
+            <div class="chat-group" id="group-2">
+                <strong>All Chats</strong>
+                {% for conversation in lastConversations %}
+                    <a href="#" class="open-client-conversation" client-id="{{conversation.senderId}}" data-conversation-history="#{{conversation.senderId}}"><span class="user-status is-offline"></span> <em>{{conversation.senderNickname}}</em></a>
+                {% endfor %}
             </div>
 
             <div class="chat-group online-users" id="group-3">
@@ -116,19 +123,23 @@
     </ul>
 
     <!-- Chat Histories -->
-    <ul class="chat-history" id="sample_history_2">
-        <li class="opponent unread">
-            <span class="user">Daniel A. Pena</span>
-            <p>I am going out.</p>
-            <span class="time">08:21</span>
-        </li>
+    <div class="container-chats">
+        {% for conversation in lastConversations %}
+            <ul class="chat-history" id="{{conversation.senderId}}">
+                {#<li class="opponent unread">
+                    <span class="user">Daniel A. Pena</span>
+                    <p>I am going out.</p>
+                    <span class="time">08:21</span>
+                </li>
 
-        <li class="opponent unread">
-            <span class="user">Daniel A. Pena</span>
-            <p>Call me when you see this message.</p>
-            <span class="time">08:27</span>
-        </li>
-    </ul>
+                <li class="opponent unread">
+                    <span class="user">Daniel A. Pena</span>
+                    <p>Call me when you see this message.</p>
+                    <span class="time">08:27</span>
+                </li>#}
+            </ul>
+        {% endfor %}
+    </div>
 
 {% endblock %}
 
@@ -172,7 +183,7 @@
             bindUI(session);
             console.log("Successfully Connected!");
             successConnect = true;
-            changeNickname(session)
+            updateConnectionData(session)
             joinChatRoom(session);
         });
 
@@ -183,19 +194,19 @@
         });
 
         /*Permite cambiar el nickname del usuario*/
-        function changeNickname(session)
+        function updateConnectionData(session)
         {
-            session.call("rpc/update_connection_data", {"nickname": "{{nickname}}", "user_type": "{{userType}}"}).then(
-                    function (result)
-                    {
+            session.call("rpc/update_connection_data", {"nickname": "{{nickname}}", "user_id": "{{userId}}","user_type": "{{userType}}"}).then(
+                function (result)
+                {
 
-                        console.log("RPC Valid!", result);
-                    },
-                    function (error, desc)
-                    {
+                    console.log("RPC Valid!", result);
+                },
+                function (error, desc)
+                {
 
-                        console.log("RPC Error", error, desc);
-                    }
+                    console.log("RPC Error", error, desc);
+                }
             );
         }
 
@@ -209,11 +220,17 @@
                 }
                 $("#input-message").focus();
             });
+            
+            $(".open-client-conversation").bind("click", function (e) {
+                var clientId = $(this).attr('client-id');
+                loadClientConversation(session, clientId);
+            });
         }
 
         // Permite deshabilitar los eventos sobre los botones, cuando se pierde la conexion
         function unbindUI() {
             $(".send-message").unbind();
+            $(".open-client-conversation").unbind();
         }
 
         //permite realizar la conexion a una sala en especifico, y establecer un escucha de eventos
@@ -229,9 +246,6 @@
         //es la funcion que escucha los eventos del servidor
         function serverEvent(uri, payload) {
 
-
-            //console.log(uri);
-
             if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SERVER_WELCOME_MESSAGE')}}") {
                 $("#message-list").append('<li>' + payload.msg + '</li>');
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_FROM_CLIENT')}}") {
@@ -242,7 +256,12 @@
                 $("#message-list").append('<li>' + payload.msg + '</li>');
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SERVER_CLIENT_LEFT_ROOM')}}") {
                 $("#message-list").append('<li>' + payload.msg + '</li>');
-            }
+            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SHOW_CLIENT_CONVERSATION')}}") {
+                var identifier = payload.client_id;
+                var ulMessages = $("#"+identifier);
+                ulMessages.html('<li>sisas</li>');
+                console.log(payload);
+            } 
         }
 
         /**
@@ -267,6 +286,20 @@
                 $('#container-server-start').css('display', 'none');
             } else {
                 $('#container-server-start').css('display', '');
+            }
+        }
+
+        /**
+         * Permite consultar y pintar en pantalla la conversacion del admin 
+         * con un cliente determinado
+         * @param {string} clientId identificador del cliente
+         **/
+        function loadClientConversation(session, clientId) {
+            if (clientId != '') {
+                var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::GET_CONVERSATION_WITH_CLIENT')}}",
+                    clientId: clientId,
+                };
+                session.publish("chat/channel", data);
             }
         }
 

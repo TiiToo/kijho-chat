@@ -8,9 +8,10 @@ use Symfony\Component\Process\Process;
 
 class DefaultController extends Controller {
 
-    public function clientPanelAction($nickname = null, $userType = '') {
+    public function clientPanelAction($nickname = null, $userId = '', $userType = '') {
         return $this->render('ChatBundle:Default:indexClient.html.twig', array(
                     'nickname' => $nickname,
+                    'userId' => $userId,
                     'userType' => $userType,
         ));
     }
@@ -19,10 +20,25 @@ class DefaultController extends Controller {
         return $this->render('ChatBundle:Default:exampleClient.html.twig');
     }
 
-    public function adminPanelAction($nickname = null, $userType = '') {
+    public function adminPanelAction($nickname = null, $userId = '', $userType = '') {
+        
+        $em = $this->getDoctrine()->getManager();
+        
+        //listado de usuarios que han chateado con el admin, ordenado descendentemente por la fecha del ultimo mensaje
+        $lastConversations = $em->getRepository('ChatBundle:Message')->findClientChatNickNames($userId);
+        
+        
+        //buscamos los mensajes enviados al administrador
+        $search = array('destinationId' => 'Administrator');
+        $order = array('senderNickname' => 'ASC', 'date' => 'ASC');
+        $messages = $em->getRepository('ChatBundle:Message')->findBy($search, $order);
+        
         return $this->render('ChatBundle:Default:indexAdmin.html.twig', array(
                     'nickname' => $nickname,
+                    'userId' => $userId,
                     'userType' => $userType,
+                    'lastConversations' => $lastConversations,
+                    'messages' => $messages,
         ));
     }
 

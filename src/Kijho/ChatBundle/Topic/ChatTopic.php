@@ -10,8 +10,9 @@ use Ratchet\Wamp\Topic;
 use Gos\Bundle\WebSocketBundle\Router\WampRequest;
 use Doctrine\ORM\EntityManager;
 use Kijho\ChatBundle\Entity as Entity;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 
-class ChatTopic implements TopicInterface, TopicPeriodicTimerInterface {
+class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimerInterface {
 
     /**
      * Constantes para los tipos de usuarios que se conectan al chat
@@ -28,12 +29,14 @@ class ChatTopic implements TopicInterface, TopicPeriodicTimerInterface {
     const SERVER_WELCOME_MESSAGE = 'welcome_message';
     const SERVER_USER_MESSAGE = 'user_message';
     const MESSAGE_FROM_CLIENT = 'message_from_client';
-    
+    const SHOW_CLIENT_CONVERSATION = 'show_client_conversation';
+
     /**
      * Constantes para los tipos de mensajes que los usuarios envian al servidor
      */
     const MESSAGE_TO_ADMIN = 'message_to_admin';
     const MESSAGE_TO_CLIENT = 'message_to_client';
+    const GET_CONVERSATION_WITH_CLIENT = 'get_conversation_with_client';
 
     /**
      * Instancia de la sala principal del chat (Clientes, Administradores, etc)
@@ -49,17 +52,17 @@ class ChatTopic implements TopicInterface, TopicPeriodicTimerInterface {
      * Instancia del Entity Manager para acceder a base de datos
      */
     private $em;
-    
+
     /**
      * Instancia del container para acceder a parametros globales, renderizar templates, etc
      */
-    private $container;
+    protected $container;
 
     public function __construct(EntityManager $em, $container) {
         $this->em = $em;
         $this->container = $container;
     }
-    
+
     /**
      * This will receive any Subscription requests for this topic.
      * @param ConnectionInterface $connection
@@ -151,27 +154,48 @@ class ChatTopic implements TopicInterface, TopicPeriodicTimerInterface {
 
                     //buscamos al administrador con el nickname para mandarle el mensaje
                     $administrators = $this->getOnlineAdministrators();
-                    
+
                     foreach ($administrators as $adminTopic) {
                         if ($adminTopic->nickname == $adminNickname) {
-                            
+
                             $cliMessage = new Entity\Message();
                             $cliMessage->setMessage($message);
-                            $cliMessage->setSenderId($connection->nickname);
+                            $cliMessage->setSenderId($connection->userId);
                             $cliMessage->setSenderNickname($connection->nickname);
-                            $cliMessage->setDestinationId($adminNickname);
+                            $cliMessage->setDestinationId($adminTopic->userId);
                             $cliMessage->setDestinationNickname($adminNickname);
                             $cliMessage->setType(Entity\Message::TYPE_CLIENT_TO_ADMIN);
-                            
+
                             $this->em->persist($cliMessage);
                             $this->em->flush();
-                            
+
                             $adminTopic->event($topic->getId(), [
                                 'msg_type' => self::MESSAGE_FROM_CLIENT,
                                 'msg' => $connection->nickname . " says: " . $message,
                                 'sender' => $connection->nickname,
                             ]);
                         }
+                    }
+                } else if ($event['type'] == self::GET_CONVERSATION_WITH_CLIENT) {
+
+                    if (isset($event['clientId']) && !empty($event['clientId'])) {
+                        $clientId = $event['clientId'];
+
+                        $conversation = $this->em->getRepository('ChatBundle:Message')->findConversationClientAdmin($clientId, $connection->userId);
+
+                        $html = $this->renderView('ChatBundle:Conversation:clientAdmin.html.twig', array(
+                            'conversation' => $conversation,
+                            'userId' => $connection->userId,
+                            'opponentId' => $clientId,
+                        ));
+
+                        $connection->event($topic->getId(), [
+                            'msg_type' => self::SHOW_CLIENT_CONVERSATION,
+                            'client_id' => $clientId,
+                            'html' => $html,
+                        ]);
+
+                        $this->serverLog('se desea cargar la conversacion de ' . $connection->nickname . ' con el cliente ' . $clientId);
                     }
                 } else {
                     $this->serverLog('otro tipo de mensaje');
