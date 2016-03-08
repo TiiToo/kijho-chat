@@ -65,7 +65,9 @@
             <div class="chat-group" id="group-2">
                 <strong>All Chats</strong>
                 {% for conversation in lastConversations %}
-                    <a href="#" class="open-client-conversation" client-id="{{conversation.senderId}}" data-conversation-history="#{{conversation.senderId}}"><span class="user-status is-offline"></span> <em>{{conversation.senderNickname}}</em></a>
+                    <a href="#" class="open-client-conversation" client-id="{{conversation.senderId}}" data-conversation-history="#client-{{conversation.senderId}}"><span class="user-status is-offline"></span> <em>{{conversation.senderNickname}}</em></a>
+                {% else %}
+                    <a class="disabled" href="return false;">No chat history.</a>
                 {% endfor %}
             </div>
 
@@ -124,8 +126,24 @@
 
     <!-- Chat Histories -->
     <div class="container-chats">
-        {% for conversation in lastConversations %}
-            <ul class="chat-history" id="{{conversation.senderId}}">
+        {% for clientConversation in allConversations %}
+            <ul class="chat-history" id="client-{{clientConversation.data.senderId}}">
+                {% for message in clientConversation.messages %}
+                    {% set userClass = 'opponent' %}
+                    {% if message.senderId == userId %}
+                        {% set userClass = 'user' %}
+                    {% endif %}
+                    {% set readClass = 'unread' %}
+                    {% if message.readed == true %}
+                        {% set readClass = '' %}
+                    {% endif %}
+                    <li class="{{userClass~' '~readClass}}">
+                        <span class="user">{{message.senderNickname}}</span>
+                        <p>{{message.message}}</p>
+                        <span class="time">{{message.date|date('m/d/Y h:i a')}}</span>
+                    </li>
+                {% endfor %}
+                
                 {#<li class="opponent unread">
                     <span class="user">Daniel A. Pena</span>
                     <p>I am going out.</p>
@@ -199,7 +217,6 @@
             session.call("rpc/update_connection_data", {"nickname": "{{nickname}}", "user_id": "{{userId}}","user_type": "{{userType}}"}).then(
                 function (result)
                 {
-
                     console.log("RPC Valid!", result);
                 },
                 function (error, desc)
@@ -210,40 +227,79 @@
             );
         }
 
+        var messageToClient = '';
         // Permite habilitar los eventos sobre los botones de la ventana, cuando hay conexion
         function bindUI(session) {
-            $(".send-message").bind("click", function (e) {
-                var message = $("#input-message").val();
-                if (message != '') {
-                    sendMessage(session, message);
-                    $("#input-message").val('');
+            $(".chat-textarea textarea").bind("keyup", function (e) {
+                var key;
+                if (window.event) {
+                    key = window.event.keyCode;   /*IE*/
+                } else {
+                    key = e.which;                /*firefox*/
                 }
-                $("#input-message").focus();
+                if ($('.chat-textarea textarea').val() != '') {
+                    messageToClient = $('.chat-textarea textarea').val();
+                }
+                if (key == 13) {
+                    sendMessage(session);
+                }
             });
             
-            $(".open-client-conversation").bind("click", function (e) {
+            $(".chat-inner").on( "click", ".open-client-conversation", function() {
                 var clientId = $(this).attr('client-id');
-                loadClientConversation(session, clientId);
+                prepareToMessage(clientId);
+                putMessagesReaded(session, clientId);
             });
         }
+        
+        
 
         // Permite deshabilitar los eventos sobre los botones, cuando se pierde la conexion
         function unbindUI() {
-            $(".send-message").unbind();
+            $(".chat-textarea textarea").unbind();
             $(".open-client-conversation").unbind();
         }
 
         //permite realizar la conexion a una sala en especifico, y establecer un escucha de eventos
         function joinChatRoom(session) {
             //the callback function in "subscribe" is called everytime an event is published in that channel.
-            session.subscribe("chat/channel", serverEvent);
+            session.subscribe("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", serverEvent);
         }
 
-        function sendMessage(session, message) {
-            session.publish("chat/channel", message);
+        /**
+         * Esta funcion permite setear el id del cliente en el texarea 
+         * para enviar mensajes, cuando el usuario abre una ventana de chat
+         * @param {string} clientId identficador del cliente
+         **/
+        function prepareToMessage(clientId) {
+            $(".chat-textarea textarea").attr('destination-id', clientId);
+        }
+        
+        /**
+         * Permite enviar un mensaje a alguno de los clientes
+         * @param {type} session
+         * @returns {undefined}
+         */
+        function sendMessage(session) {
+            var textarea = $('.chat-textarea textarea');
+            var clientId = textarea.attr('destination-id')+"";
+            
+            if (clientId != '' && clientId != 'undefined' && messageToClient != '') {
+                var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_TO_CLIENT')}}",
+                    clientId: clientId,
+                    message: messageToClient,
+                };
+                session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
+                messageToClient = '';
+            }
         }
 
-        //es la funcion que escucha los eventos del servidor
+        /**
+         * Es la funcion que escucha los eventos del servidor 
+         * @param {type} uri
+         * @param {type} payload
+         * @returns {undefined}
+         */
         function serverEvent(uri, payload) {
 
             if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SERVER_WELCOME_MESSAGE')}}") {
@@ -253,15 +309,12 @@
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SERVER_ONLINE_USERS')}}") {
                 refreshOnlineUsers(payload.online_users);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SERVER_NEW_CLIENT_CONNECTION')}}") {
-                $("#message-list").append('<li>' + payload.msg + '</li>');
+                clientJoinRoom(payload);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SERVER_CLIENT_LEFT_ROOM')}}") {
+                clientLeftRoom(payload);
+            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_SEND_SUCCESSFULLY')}}") {
                 $("#message-list").append('<li>' + payload.msg + '</li>');
-            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SHOW_CLIENT_CONVERSATION')}}") {
-                var identifier = payload.client_id;
-                var ulMessages = $("#"+identifier);
-                ulMessages.html('<li>sisas</li>');
-                console.log(payload);
-            } 
+            }
         }
 
         /**
@@ -272,9 +325,56 @@
             $('.online-users').html('<strong>Online Users</strong>');
 
             for (i = 0; i < onlineUsers.length; i++) {
-                var htmlUser = '<a href="#"><span class="user-status is-online"></span> <em>' + onlineUsers[i] + '</em></a>';
+                var htmlUser = '<a href="#" class="open-client-conversation" client-id="'+onlineUsers[i]['user_id']+'" data-conversation-history="#client-'+onlineUsers[i]['user_id']+'"><span class="user-status is-online"></span> <em>'+onlineUsers[i]['nickname']+'</em></a>';
                 $('.online-users').append(htmlUser);
             }
+            
+            //verificamos si los online estan en el listado de conversaciones para ponerlos online (verde)
+            for (i = 0; i < onlineUsers.length; i++) {
+                var element = $("#group-2 a[client-id='"+onlineUsers[i]['user_id']+"']");
+                if (!$.isEmptyObject(element.html())) {
+                   var spanStatus = $("#group-2 a[client-id='"+onlineUsers[i]['user_id']+"'] span").first();
+                   spanStatus.attr('class','user-status is-online');
+                }
+            }
+        }
+        
+        /**
+         * Permite realizar acciones en pantalla cuando un cliente
+         * sale del chat 
+         * @param {type} payload
+         **/
+        function clientLeftRoom(payload) {
+            var element = $("#group-2 a[client-id='"+payload.user_id+"']");
+            if (!$.isEmptyObject(element.html())) {
+                var spanStatus = $("#group-2 a[client-id='"+payload.user_id+"'] span").first();
+                spanStatus.attr('class','user-status is-offline');
+            }
+            $("#message-list").append('<li>' + payload.msg + '</li>');
+        }
+        
+        /**
+         * Permite realizar acciones en pantalla cuando un cliente
+         * se conecta al chat
+         * @param {type} payload
+         **/
+        function clientJoinRoom(payload) {
+            var element = $("#group-2 a[client-id='"+payload.user_id+"']");
+            if (!$.isEmptyObject(element.html())) {
+                var spanStatus = $("#group-2 a[client-id='"+payload.user_id+"'] span").first();
+                spanStatus.attr('class','user-status is-online');
+            } else {
+                var htmlUser = '<a href="#" class="open-client-conversation" client-id="'+payload.user_id+'" data-conversation-history="#client-'+payload.user_id+'"><span class="user-status is-online"></span> <em>'+payload.nickname+'</em></a>';
+                var firstUser = $('#group-2 a').first();
+                if (firstUser.hasClass('disabled')) {
+                    firstUser.remove();
+                    $('#group-2').append(htmlUser);
+                } else {
+                    $('#group-2 a').first().before(htmlUser);
+                }
+                
+            }
+            $("#message-list").append('<li>' + payload.msg + '</li>');
         }
 
         /**
@@ -290,18 +390,19 @@
         }
 
         /**
-         * Permite consultar y pintar en pantalla la conversacion del admin 
-         * con un cliente determinado
+         * Permite marcar los mensajes de un cliente como leidos
          * @param {string} clientId identificador del cliente
          **/
-        function loadClientConversation(session, clientId) {
+        function putMessagesReaded(session, clientId) {
             if (clientId != '') {
-                var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::GET_CONVERSATION_WITH_CLIENT')}}",
+                var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::PUT_MESSAGES_AS_READED')}}",
                     clientId: clientId,
                 };
-                session.publish("chat/channel", data);
+                session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
             }
         }
+        
+        
 
     </script>
 {% endblock %}

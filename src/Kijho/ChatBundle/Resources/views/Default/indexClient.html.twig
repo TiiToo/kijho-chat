@@ -76,7 +76,6 @@
                 }
             });
 
-
             $(".send-message").bind("click", function (e) {
                 sendMessage(session);
             });
@@ -110,10 +109,12 @@
 
         //es la funcion que escucha los eventos del servidor
         function serverEvent(uri, payload) {
-
-            if (payload.msg_type == 'welcome_message') {
+            console.log(payload);
+            if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SERVER_WELCOME_MESSAGE')}}") {
                 $("#message-list").append('<li>' + payload.msg + '</li>');
-            } else if (payload.msg_type == 'user_message') {
+            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_FROM_ADMIN')}}") {
+                $("#message-list").append('<li>' + payload.msg + '</li>');
+            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_SEND_SUCCESSFULLY')}}") {
                 $("#message-list").append('<li>' + payload.msg + '</li>');
             }
         }

@@ -28,17 +28,25 @@ class DefaultController extends Controller {
         $lastConversations = $em->getRepository('ChatBundle:Message')->findClientChatNickNames($userId);
         
         
-        //buscamos los mensajes enviados al administrador
-        $search = array('destinationId' => 'Administrator');
-        $order = array('senderNickname' => 'ASC', 'date' => 'ASC');
-        $messages = $em->getRepository('ChatBundle:Message')->findBy($search, $order);
+        
+        //buscamos las conversaciones completas entre el admin y los clientes
+        $allConversations = array();
+        $i = 0;
+        foreach ($lastConversations as $conversationData) {
+            $conversation = $em->getRepository('ChatBundle:Message')->findConversationClientAdmin($conversationData['senderId'], $userId);
+            $allConversations[$i]['data'] = $conversationData;
+            $allConversations[$i]['messages'] = $conversation;
+            $i++;
+        }
+        
+        //\Symfony\Component\VarDumper\VarDumper::dump($allConversations);die();
         
         return $this->render('ChatBundle:Default:indexAdmin.html.twig', array(
                     'nickname' => $nickname,
                     'userId' => $userId,
                     'userType' => $userType,
                     'lastConversations' => $lastConversations,
-                    'messages' => $messages,
+                    'allConversations' => $allConversations,
         ));
     }
 

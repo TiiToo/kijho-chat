@@ -82,14 +82,18 @@ var neonChat = neonChat || {
 				
 				var $chat_user = $(this);
 				
-				if($chat_user.hasClass('active'))
-				{
-					neonChat.close();
-				}
-				else
-				{
-					neonChat.open($chat_user);
-				}
+                                var disabled = $chat_user.hasClass('disabled');
+                                
+                                 if (!disabled) {
+                                    if($chat_user.hasClass('active'))
+                                    {
+                                            neonChat.close();
+                                    }
+                                    else
+                                    {
+                                            neonChat.open($chat_user);
+                                    }
+                                }
 			});
 			
 			$chat.find('.chat-group a').each(function(i, el)

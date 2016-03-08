@@ -11,6 +11,7 @@ use Gos\Bundle\WebSocketBundle\Router\WampRequest;
 use Doctrine\ORM\EntityManager;
 use Kijho\ChatBundle\Entity as Entity;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Kijho\ChatBundle\Util\Util;
 
 class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimerInterface {
 
@@ -19,6 +20,11 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
      */
     const USER_CLIENT = 'client';
     const USER_ADMIN = 'admin';
+    
+    /**
+     * Canal por defecto del chat
+     */
+    const CHAT_CHANNEL = "chat/channel";
 
     /**
      * Constantes para los tipos de mensajes que el servidor envia a los usuarios
@@ -27,16 +33,22 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     const SERVER_NEW_CLIENT_CONNECTION = 'new_client_connected';
     const SERVER_CLIENT_LEFT_ROOM = 'client_left_room';
     const SERVER_WELCOME_MESSAGE = 'welcome_message';
-    const SERVER_USER_MESSAGE = 'user_message';
     const MESSAGE_FROM_CLIENT = 'message_from_client';
-    const SHOW_CLIENT_CONVERSATION = 'show_client_conversation';
+    const MESSAGE_TO_CLIENT = 'message_to_client';
+    const MESSAGE_FROM_ADMIN = 'message_from_admin';
+    const MESSAGE_SEND_SUCCESSFULLY = 'message_send_successfully';
 
     /**
      * Constantes para los tipos de mensajes que los usuarios envian al servidor
      */
     const MESSAGE_TO_ADMIN = 'message_to_admin';
-    const MESSAGE_TO_CLIENT = 'message_to_client';
-    const GET_CONVERSATION_WITH_CLIENT = 'get_conversation_with_client';
+    const PUT_MESSAGES_AS_READED = 'put_messages_as_readed';
+
+    /**
+     * Constante que controla el tiempo en el cual se actualiza el listado de usuarios
+     * conectados para el panel de usuarios online
+     */
+    const TIME_REFRESH_ONLINE_USERS = 5;
 
     /**
      * Instancia de la sala principal del chat (Clientes, Administradores, etc)
@@ -81,10 +93,10 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
 
             //Le enviamos a los administradores el listado de usuarios conectados cada 2 segundos
             $topicTimer = $connection->PeriodicTimer;
-            $topicTimer->addPeriodicTimer('online_users', 2, function() use ($topic, $connection) {
+            $topicTimer->addPeriodicTimer('online_users', self::TIME_REFRESH_ONLINE_USERS, function() use ($topic, $connection) {
                 $connection->event($topic->getId(), ['msg' => 'Online Users..',
                     'msg_type' => self::SERVER_ONLINE_USERS,
-                    'online_users' => $this->getOnlineClientsNicknames()]);
+                    'online_users' => $this->getOnlineClientsData()]);
             });
         } elseif ($connection->userType == self::USER_CLIENT) {
 
@@ -92,8 +104,10 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
             $administrators = $this->getOnlineAdministrators();
             foreach ($administrators as $adminTopic) {
                 $adminTopic->event($topic->getId(), [
-                    'msg' => $connection->nickname . " has joined " . $topic->getId(),
                     'msg_type' => self::SERVER_NEW_CLIENT_CONNECTION,
+                    'msg' => $connection->nickname . " has joined " . $topic->getId(),
+                    'user_id' => $connection->userId,
+                    'nickname' => $connection->nickname,
                 ]);
             }
         }
@@ -120,8 +134,9 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
             $administrators = $this->getOnlineAdministrators();
             foreach ($administrators as $adminTopic) {
                 $adminTopic->event($topic->getId(), [
-                    'msg' => $connection->nickname . " has left " . $topic->getId(),
                     'msg_type' => self::SERVER_CLIENT_LEFT_ROOM,
+                    'msg' => $connection->nickname . " has left " . $topic->getId(),
+                    'user_id' => $connection->userId,
                 ]);
             }
         }
@@ -155,19 +170,25 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                     //buscamos al administrador con el nickname para mandarle el mensaje
                     $administrators = $this->getOnlineAdministrators();
 
+                    $messageSaved = false;
                     foreach ($administrators as $adminTopic) {
                         if ($adminTopic->nickname == $adminNickname) {
 
-                            $cliMessage = new Entity\Message();
-                            $cliMessage->setMessage($message);
-                            $cliMessage->setSenderId($connection->userId);
-                            $cliMessage->setSenderNickname($connection->nickname);
-                            $cliMessage->setDestinationId($adminTopic->userId);
-                            $cliMessage->setDestinationNickname($adminNickname);
-                            $cliMessage->setType(Entity\Message::TYPE_CLIENT_TO_ADMIN);
+                            //se utiliza la variable $messageSaved, para solo guardar un mensaje 
+                            //y enviarlo a todos los dispositivos del usuario
+                            if (!$messageSaved) {
+                                $cliMessage = new Entity\Message();
+                                $cliMessage->setMessage($message);
+                                $cliMessage->setSenderId($connection->userId);
+                                $cliMessage->setSenderNickname($connection->nickname);
+                                $cliMessage->setDestinationId($adminTopic->userId);
+                                $cliMessage->setDestinationNickname($adminNickname);
+                                $cliMessage->setType(Entity\Message::TYPE_CLIENT_TO_ADMIN);
 
-                            $this->em->persist($cliMessage);
-                            $this->em->flush();
+                                $this->em->persist($cliMessage);
+                                $this->em->flush();
+                                $messageSaved = true;
+                            }
 
                             $adminTopic->event($topic->getId(), [
                                 'msg_type' => self::MESSAGE_FROM_CLIENT,
@@ -176,26 +197,72 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                             ]);
                         }
                     }
-                } else if ($event['type'] == self::GET_CONVERSATION_WITH_CLIENT) {
+
+                    //notificamos al usuario que su mensaje se envio exitosamente
+                    $connection->event($topic->getId(), [
+                        'msg' => $connection->nickname . " says: " . $message,
+                        'msg_type' => self::MESSAGE_SEND_SUCCESSFULLY,
+                    ]);
+                } elseif ($event['type'] == self::PUT_MESSAGES_AS_READED) {
 
                     if (isset($event['clientId']) && !empty($event['clientId'])) {
                         $clientId = $event['clientId'];
 
-                        $conversation = $this->em->getRepository('ChatBundle:Message')->findConversationClientAdmin($clientId, $connection->userId);
+                        //buscamos los mensajes que el cliente le ha enviado al administrador
+                        $search = array('senderId' => $clientId, 'destinationId' => $connection->userId, 'readed' => false);
+                        $conversation = $this->em->getRepository('ChatBundle:Message')->findBy($search);
 
-                        $html = $this->renderView('ChatBundle:Conversation:clientAdmin.html.twig', array(
-                            'conversation' => $conversation,
-                            'userId' => $connection->userId,
-                            'opponentId' => $clientId,
-                        ));
+                        $currentDate = Util::getCurrentDate();
+                        foreach ($conversation as $message) {
+                            $message->setReaded(true);
+                            $message->setDateReaded($currentDate);
+                            $this->em->persist($message);
+                            $this->em->flush();
+                        }
+                    }
+                } elseif ($event['type'] == self::MESSAGE_TO_CLIENT) {
+                    if (isset($event['clientId']) && !empty($event['clientId'])) {
+                        $clientId = $event['clientId'];
 
+                        //buscamos la conexion del cliente para enviarle el mensaje
+                        $message = $event['message'];
+
+                        //buscamos al administrador con el nickname para mandarle el mensaje
+                        $clients = $this->getOnlineClients();
+
+                        $messageSaved = false;
+                        foreach ($clients as $clientTopic) {
+                            if ($clientTopic->userId == $clientId) {
+
+                                //se utiliza la variable $messageSaved, para solo guardar un mensaje 
+                                //y enviarlo a todos los dispositivos del usuario
+                                if (!$messageSaved) {
+                                    $adminMessage = new Entity\Message();
+                                    $adminMessage->setMessage($message);
+                                    $adminMessage->setSenderId($connection->userId);
+                                    $adminMessage->setSenderNickname($connection->nickname);
+                                    $adminMessage->setDestinationId($clientTopic->userId);
+                                    $adminMessage->setDestinationNickname($clientTopic->nickname);
+                                    $adminMessage->setType(Entity\Message::TYPE_ADMIN_TO_CLIENT);
+
+                                    $this->em->persist($adminMessage);
+                                    $this->em->flush();
+                                    $messageSaved = true;
+                                }
+
+                                $clientTopic->event($topic->getId(), [
+                                    'msg_type' => self::MESSAGE_FROM_ADMIN,
+                                    'msg' => $connection->nickname . " says: " . $message,
+                                    'sender' => $connection->nickname,
+                                ]);
+                            }
+                        }
+
+                        //notificamos al administrador que su mensaje se envio exitosamente
                         $connection->event($topic->getId(), [
-                            'msg_type' => self::SHOW_CLIENT_CONVERSATION,
-                            'client_id' => $clientId,
-                            'html' => $html,
+                            'msg' => $connection->nickname . " says: " . $message,
+                            'msg_type' => self::MESSAGE_SEND_SUCCESSFULLY,
                         ]);
-
-                        $this->serverLog('se desea cargar la conversacion de ' . $connection->nickname . ' con el cliente ' . $clientId);
                     }
                 } else {
                     $this->serverLog('otro tipo de mensaje');
@@ -203,8 +270,6 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
             } else {
                 $this->serverLog('no hay tipo');
             }
-        } else {
-            $this->serverLog('otro canal');
         }
     }
 
@@ -241,6 +306,11 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
           $this->periodicTimer->cancelPeriodicTimer($this, 'hello'); */
     }
 
+    /**
+     * Permite obtener el listado de los administradores online
+     * @author Cesar Giraldo <cnaranjo@kijho.com> 02/03/2016
+     * @return array
+     */
     private function getOnlineAdministrators() {
         $onlineAdministrators = array();
         if ($this->chatTopic) {
@@ -254,15 +324,35 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     }
 
     /**
+     * Permite obtener el listado de los clientes online
+     * @author Cesar Giraldo <cnaranjo@kijho.com> 08/03/2016
+     * @return array
+     */
+    private function getOnlineClients() {
+        $onlineClients = array();
+        if ($this->chatTopic) {
+            foreach ($this->chatTopic->getIterator() as $subscriber) {
+                if ($subscriber->userType == self::USER_CLIENT) {
+                    array_push($onlineClients, $subscriber);
+                }
+            }
+        }
+        return $onlineClients;
+    }
+
+    /**
      * Permite obtener un arreglo con los nicknames de los clientes del chat
      * @return array
      */
-    private function getOnlineClientsNicknames() {
+    private function getOnlineClientsData() {
         $onlineUsers = array();
         if ($this->chatTopic) {
             foreach ($this->chatTopic->getIterator() as $subscriber) {
                 if ($subscriber->userType == self::USER_CLIENT) {
-                    array_push($onlineUsers, $subscriber->nickname);
+                    $data = array('nickname' => $subscriber->nickname, 'user_id' => $subscriber->userId);
+                    if (!in_array($data, $onlineUsers)) {
+                        array_push($onlineUsers, $data);
+                    }
                 }
             }
         }

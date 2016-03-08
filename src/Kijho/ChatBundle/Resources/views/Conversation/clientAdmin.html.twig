@@ -1,7 +1,0 @@
-{% for message in conversation %}
-    <li>
-        <span class="{% if message.senderId == userId %}user{% else %}opponent{% endif %}">{{message.senderNickname}}</span>
-        <p>{{message.message}}</p>
-        <span class="time">{{message.date|date('m/d/Y h:i a')}}</span>
-    </li>
-{% endfor %}

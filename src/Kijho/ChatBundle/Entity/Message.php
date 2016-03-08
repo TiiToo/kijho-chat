@@ -46,6 +46,12 @@ class Message {
      * @ORM\Column(name="mess_readed", type="boolean", nullable=true)
      */
     protected $readed;
+    
+    /**
+     * Fecha y hora en la que el destinatario lee el mensaje
+     * @ORM\Column(name="mess_date_readed", type="datetime", nullable=true)
+     */
+    protected $dateReaded;
 
     /**
      * Contenido del mensaje
@@ -143,6 +149,14 @@ class Message {
 
     function setDestinationId($destinationId) {
         $this->destinationId = $destinationId;
+    }
+    
+    function getDateReaded() {
+        return $this->dateReaded;
+    }
+
+    function setDateReaded($dateReaded) {
+        $this->dateReaded = $dateReaded;
     }
 
     /**
