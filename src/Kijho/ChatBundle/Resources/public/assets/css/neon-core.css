@@ -6357,7 +6357,7 @@ textareatable .replace-inputs input {
 }
 #chat .chat-group > a:hover,
 #chat .chat-group > a.active {
-  background-color: #343a45;
+  background-color: #4b515c;
 }
 #chat .chat-group > a:before {
   content: '';

@@ -184,7 +184,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 $cliMessage->setDestinationId($adminTopic->userId);
                                 $cliMessage->setDestinationNickname($adminNickname);
                                 $cliMessage->setType(Entity\Message::TYPE_CLIENT_TO_ADMIN);
-
+                                
                                 $this->em->persist($cliMessage);
                                 $this->em->flush();
                                 $messageSaved = true;
@@ -192,8 +192,10 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
 
                             $adminTopic->event($topic->getId(), [
                                 'msg_type' => self::MESSAGE_FROM_CLIENT,
-                                'msg' => $connection->nickname . " says: " . $message,
-                                'sender' => $connection->nickname,
+                                'msg' => $message,
+                                'nickname' => $connection->nickname,
+                                'user_id' => $connection->userId,
+                                'msg_date' => $cliMessage->getDate()->format('m/d/Y h:i a'),
                             ]);
                         }
                     }

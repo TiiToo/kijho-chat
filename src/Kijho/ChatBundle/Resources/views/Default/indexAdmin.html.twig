@@ -1,5 +1,5 @@
 {% extends 'ChatBundle:Default:mainAdmin.html.twig' %}
-{% block title %}Chat Bundle{% endblock %}
+{% block title %}Chat Bundle - Admin{% endblock %}
 {% block content %}
 
     <div class="main-content">
@@ -61,7 +61,7 @@
                 <a href="#" data-conversation-history="#sample_history_2"><span class="user-status is-offline"></span> <em>Daniel A. Pena</em></a>
                 <a href="#"><span class="user-status is-busy"></span> <em>Rodrigo E. Lozano</em></a>
             </div>#}
-            
+
             <div class="chat-group" id="group-2">
                 <strong>All Chats</strong>
                 {% for conversation in lastConversations %}
@@ -143,7 +143,7 @@
                         <span class="time">{{message.date|date('m/d/Y h:i a')}}</span>
                     </li>
                 {% endfor %}
-                
+
                 {#<li class="opponent unread">
                     <span class="user">Daniel A. Pena</span>
                     <p>I am going out.</p>
@@ -162,10 +162,10 @@
 {% endblock %}
 
 {% block scripts %}
-        {# Damos click en este boton para desplegar el panel #}
+    {# Damos click en este boton para desplegar el panel #}
         $("#display-chat").trigger('click');
 
-        {# Ejecutamos una funcion periodicamente para verificar el estado del servidor #}
+    {# Ejecutamos una funcion periodicamente para verificar el estado del servidor #}
         window.setInterval(verifyServerConnection, 4000);
 
         $(".start-gos-server").click(function () {
@@ -185,13 +185,13 @@
                 }
             });
         });
-    {% endblock %}
+{% endblock %}
 
-    {% block other_scripts %}
-        {{ ws_client() }}
+{% block other_scripts %}
+    {{ ws_client() }}
 
-        <script type = "text/javascript" >
-                var _WS_URI = "ws://{{ gos_web_socket_server_host }}:{{ gos_web_socket_server_port }}";
+    <script type = "text/javascript" >
+        var _WS_URI = "ws://{{ gos_web_socket_server_host }}:{{ gos_web_socket_server_port }}";
 
         var webSocket = WS.connect(_WS_URI);
 
@@ -214,16 +214,16 @@
         /*Permite cambiar el nickname del usuario*/
         function updateConnectionData(session)
         {
-            session.call("rpc/update_connection_data", {"nickname": "{{nickname}}", "user_id": "{{userId}}","user_type": "{{userType}}"}).then(
-                function (result)
-                {
-                    console.log("RPC Valid!", result);
-                },
-                function (error, desc)
-                {
+            session.call("rpc/update_connection_data", {"nickname": "{{nickname}}", "user_id": "{{userId}}", "user_type": "{{userType}}"}).then(
+                    function (result)
+                    {
+                        console.log("RPC Valid!", result);
+                    },
+                    function (error, desc)
+                    {
 
-                    console.log("RPC Error", error, desc);
-                }
+                        console.log("RPC Error", error, desc);
+                    }
             );
         }
 
@@ -244,15 +244,15 @@
                     sendMessage(session);
                 }
             });
-            
-            $(".chat-inner").on( "click", ".open-client-conversation", function() {
+
+            $(".chat-inner").on("click", ".open-client-conversation", function () {
                 var clientId = $(this).attr('client-id');
                 prepareToMessage(clientId);
                 putMessagesReaded(session, clientId);
             });
         }
-        
-        
+
+
 
         // Permite deshabilitar los eventos sobre los botones, cuando se pierde la conexion
         function unbindUI() {
@@ -274,7 +274,7 @@
         function prepareToMessage(clientId) {
             $(".chat-textarea textarea").attr('destination-id', clientId);
         }
-        
+
         /**
          * Permite enviar un mensaje a alguno de los clientes
          * @param {type} session
@@ -282,8 +282,8 @@
          */
         function sendMessage(session) {
             var textarea = $('.chat-textarea textarea');
-            var clientId = textarea.attr('destination-id')+"";
-            
+            var clientId = textarea.attr('destination-id') + "";
+
             if (clientId != '' && clientId != 'undefined' && messageToClient != '') {
                 var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_TO_CLIENT')}}",
                     clientId: clientId,
@@ -305,7 +305,7 @@
             if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SERVER_WELCOME_MESSAGE')}}") {
                 $("#message-list").append('<li>' + payload.msg + '</li>');
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_FROM_CLIENT')}}") {
-                $("#message-list").append('<li>' + payload.msg + '</li>');
+                messageFromClient(payload);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SERVER_ONLINE_USERS')}}") {
                 refreshOnlineUsers(payload.online_users);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SERVER_NEW_CLIENT_CONNECTION')}}") {
@@ -325,46 +325,46 @@
             $('.online-users').html('<strong>Online Users</strong>');
 
             for (i = 0; i < onlineUsers.length; i++) {
-                var htmlUser = '<a href="#" class="open-client-conversation" client-id="'+onlineUsers[i]['user_id']+'" data-conversation-history="#client-'+onlineUsers[i]['user_id']+'"><span class="user-status is-online"></span> <em>'+onlineUsers[i]['nickname']+'</em></a>';
+                var htmlUser = '<a href="#" class="open-client-conversation" client-id="' + onlineUsers[i]['user_id'] + '" data-conversation-history="#client-' + onlineUsers[i]['user_id'] + '"><span class="user-status is-online"></span> <em>' + onlineUsers[i]['nickname'] + '</em></a>';
                 $('.online-users').append(htmlUser);
             }
-            
+
             //verificamos si los online estan en el listado de conversaciones para ponerlos online (verde)
             for (i = 0; i < onlineUsers.length; i++) {
-                var element = $("#group-2 a[client-id='"+onlineUsers[i]['user_id']+"']");
+                var element = $("#group-2 a[client-id='" + onlineUsers[i]['user_id'] + "']");
                 if (!$.isEmptyObject(element.html())) {
-                   var spanStatus = $("#group-2 a[client-id='"+onlineUsers[i]['user_id']+"'] span").first();
-                   spanStatus.attr('class','user-status is-online');
+                    var spanStatus = $("#group-2 a[client-id='" + onlineUsers[i]['user_id'] + "'] span").first();
+                    spanStatus.attr('class', 'user-status is-online');
                 }
             }
         }
-        
+
         /**
          * Permite realizar acciones en pantalla cuando un cliente
          * sale del chat 
          * @param {type} payload
          **/
         function clientLeftRoom(payload) {
-            var element = $("#group-2 a[client-id='"+payload.user_id+"']");
+            var element = $("#group-2 a[client-id='" + payload.user_id + "']");
             if (!$.isEmptyObject(element.html())) {
-                var spanStatus = $("#group-2 a[client-id='"+payload.user_id+"'] span").first();
-                spanStatus.attr('class','user-status is-offline');
+                var spanStatus = $("#group-2 a[client-id='" + payload.user_id + "'] span").first();
+                spanStatus.attr('class', 'user-status is-offline');
             }
             $("#message-list").append('<li>' + payload.msg + '</li>');
         }
-        
+
         /**
          * Permite realizar acciones en pantalla cuando un cliente
          * se conecta al chat
          * @param {type} payload
          **/
         function clientJoinRoom(payload) {
-            var element = $("#group-2 a[client-id='"+payload.user_id+"']");
+            var element = $("#group-2 a[client-id='" + payload.user_id + "']");
             if (!$.isEmptyObject(element.html())) {
-                var spanStatus = $("#group-2 a[client-id='"+payload.user_id+"'] span").first();
-                spanStatus.attr('class','user-status is-online');
+                var spanStatus = $("#group-2 a[client-id='" + payload.user_id + "'] span").first();
+                spanStatus.attr('class', 'user-status is-online');
             } else {
-                var htmlUser = '<a href="#" class="open-client-conversation" client-id="'+payload.user_id+'" data-conversation-history="#client-'+payload.user_id+'"><span class="user-status is-online"></span> <em>'+payload.nickname+'</em></a>';
+                var htmlUser = '<a href="#" class="open-client-conversation" client-id="' + payload.user_id + '" data-conversation-history="#client-' + payload.user_id + '"><span class="user-status is-online"></span> <em>' + payload.nickname + '</em><span class="badge badge-info is-hidden">0</span></a>';
                 var firstUser = $('#group-2 a').first();
                 if (firstUser.hasClass('disabled')) {
                     firstUser.remove();
@@ -372,7 +372,7 @@
                 } else {
                     $('#group-2 a').first().before(htmlUser);
                 }
-                
+
             }
             $("#message-list").append('<li>' + payload.msg + '</li>');
         }
@@ -401,8 +401,71 @@
                 session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
             }
         }
-        
-        
+
+        /**
+         * Permite realizar acciones en pantalla cuando llega un mensaje de un cliente
+         * @param {type} payload
+         **/
+        function messageFromClient(payload) {
+            $("#message-list").append('<li>' + payload.msg + '</li>');
+            console.log(payload);
+            //buscamos el tab de conversacion del usuario en el listado de conversaciones
+            var element = $(".open-client-conversation[client-id='" + payload.user_id + "']");
+            if (!$.isEmptyObject(element.html())) {
+                increaseUnreadCounters(element);
+                
+                //buscamos el panel de mensajes del usuario
+                var chatContainer = $("#client-"+payload.user_id);
+                if (!$.isEmptyObject(chatContainer.html())) {
+                    var html = '<li class="opponent unread">'
+                                    +'<span class="user">' + payload.nickname + '</span>'
+                                    +'<p>' + payload.msg + '</p>'
+                                    +'<span class="time">' + payload.msg_date +'</span>'
+                                +'</li>';
+                    chatContainer.append(html);
+                    neonChat.prefetchMessages();
+                } else {
+                    //si no habia un panel de mensajes para el usuario, le creamos uno
+                    var html = '<ul class="chat-history" id="client-' + payload.user_id + '">'
+                                    +'<li class="opponent unread">'
+                                        +'<span class="user">' + payload.nickname + '</span>'
+                                        +'<p>' + payload.msg + '</p>'
+                                        +'<span class="time">' + payload.msg_date +'</span>'
+                                    +'</li>'
+                                +'</ul>';
+                    $(".container-chats").append(html);
+                    neonChat.prefetchMessages();
+                }
+            } else {
+                console.log('el usuario no esta en la lista de conversaciones');
+            }
+
+        }
+
+        /**
+         * Permite incrementar los contadores de mensajes no leidos
+         * cuando un cliente envia un nuevo mensaje
+         * @param {type} element
+         **/
+        function increaseUnreadCounters(element) {
+            //buscamos el span para aumentar los mensajes sin leer del usuario
+            var span = element.find("span.badge");
+            var unreadMessages = parseInt(span.text());
+            if (unreadMessages == 0) {
+                span.removeClass('is-hidden');
+            }
+            span.text(unreadMessages + 1);
+
+            //buscamos el span para aumentar los mensajes sin leer de todos los usuarios
+            var generalSpan = $(".chat-header span.badge");
+            var unreadMessages = parseInt(generalSpan.text());
+            if (unreadMessages == 0) {
+                generalSpan.removeClass('is-hidden');
+            }
+            generalSpan.text(unreadMessages + 1);
+        }
+
+
 
     </script>
 {% endblock %}
