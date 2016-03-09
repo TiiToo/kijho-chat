@@ -44,24 +44,11 @@
                 <span class="badge badge-success is-hidden">0</span>
             </h2>
 
-            <div class="chat-group" id="group-1">
-                <strong>Favorites</strong>
-
-                <a href="#" id="sample-user-123" data-conversation-history="#sample_history"><span class="user-status is-online"></span> <em>Catherine J. Watkins</em></a>
-                <a href="#"><span class="user-status is-online"></span> <em>Nicholas R. Walker</em></a>
-                <a href="#"><span class="user-status is-busy"></span> <em>Susan J. Best</em></a>
-                <a href="#"><span class="user-status is-offline"></span> <em>Brandon S. Young</em></a>
-                <a href="#"><span class="user-status is-idle"></span> <em>Fernando G. Olson</em></a>
+            <div class="chat-group online-users" id="group-3">
+                <strong>Online Users</strong>
+                <a href='#'>Loading...</a>
             </div>
-
-            {#<div class="chat-group" id="group-2">
-                <strong>Work</strong>
-
-                <a href="#"><span class="user-status is-offline"></span> <em>Robert J. Garcia</em></a>
-                <a href="#" data-conversation-history="#sample_history_2"><span class="user-status is-offline"></span> <em>Daniel A. Pena</em></a>
-                <a href="#"><span class="user-status is-busy"></span> <em>Rodrigo E. Lozano</em></a>
-            </div>#}
-
+            
             <div class="chat-group" id="group-2">
                 <strong>All Chats</strong>
                 {% for conversation in lastConversations %}
@@ -70,12 +57,6 @@
                     <a class="disabled" href="return false;">No chat history.</a>
                 {% endfor %}
             </div>
-
-            <div class="chat-group online-users" id="group-3">
-                <strong>Online Users</strong>
-                <a href='#'>Loading...</a>
-            </div>
-
         </div>
 
         <!-- conversation template -->
@@ -98,33 +79,6 @@
     </div>
 
     <!-- Chat Histories -->
-    <ul class="chat-history" id="sample_history">
-        <li>
-            <span class="user">Art Ramadani</span>
-            <p>Are you here?</p>
-            <span class="time">09:00</span>
-        </li>
-
-        <li class="opponent">
-            <span class="user">Catherine J. Watkins</span>
-            <p>This message is pre-queued.</p>
-            <span class="time">09:25</span>
-        </li>
-
-        <li class="opponent">
-            <span class="user">Catherine J. Watkins</span>
-            <p>Whohoo!</p>
-            <span class="time">09:26</span>
-        </li>
-
-        <li class="opponent unread">
-            <span class="user">Catherine J. Watkins</span>
-            <p>Do you like it?</p>
-            <span class="time">09:27</span>
-        </li>
-    </ul>
-
-    <!-- Chat Histories -->
     <div class="container-chats">
         {% for clientConversation in allConversations %}
             <ul class="chat-history" id="client-{{clientConversation.data.senderId}}">
@@ -133,9 +87,9 @@
                     {% if message.senderId == userId %}
                         {% set userClass = 'user' %}
                     {% endif %}
-                    {% set readClass = 'unread' %}
-                    {% if message.readed == true %}
-                        {% set readClass = '' %}
+                    {% set readClass = '' %}
+                    {% if message.readed == false and message.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_CLIENT_TO_ADMIN') %}
+                        {% set readClass = 'unread' %}
                     {% endif %}
                     <li class="{{userClass~' '~readClass}}">
                         <span class="user">{{message.senderNickname}}</span>
@@ -148,12 +102,6 @@
                     <span class="user">Daniel A. Pena</span>
                     <p>I am going out.</p>
                     <span class="time">08:21</span>
-                </li>
-
-                <li class="opponent unread">
-                    <span class="user">Daniel A. Pena</span>
-                    <p>Call me when you see this message.</p>
-                    <span class="time">08:27</span>
                 </li>#}
             </ul>
         {% endfor %}
@@ -215,15 +163,12 @@
         function updateConnectionData(session)
         {
             session.call("rpc/update_connection_data", {"nickname": "{{nickname}}", "user_id": "{{userId}}", "user_type": "{{userType}}"}).then(
-                    function (result)
-                    {
-                        console.log("RPC Valid!", result);
-                    },
-                    function (error, desc)
-                    {
-
-                        console.log("RPC Error", error, desc);
-                    }
+                function (result) {
+                    console.log("RPC Valid!", result);
+                },
+                function (error, desc) {
+                    console.log("RPC Error", error, desc);
+                }
             );
         }
 
@@ -335,8 +280,11 @@
                 if (!$.isEmptyObject(element.html())) {
                     var spanStatus = $("#group-2 a[client-id='" + onlineUsers[i]['user_id'] + "'] span").first();
                     spanStatus.attr('class', 'user-status is-online');
+                } else {
+                    clientJoinRoom(onlineUsers[i]);
                 }
             }
+            neonChat.orderGroups();
         }
 
         /**
@@ -350,7 +298,10 @@
                 var spanStatus = $("#group-2 a[client-id='" + payload.user_id + "'] span").first();
                 spanStatus.attr('class', 'user-status is-offline');
             }
+            neonChat.refreshUserIds();
+            neonChat.orderGroups();
             $("#message-list").append('<li>' + payload.msg + '</li>');
+            
         }
 
         /**
@@ -372,9 +323,12 @@
                 } else {
                     $('#group-2 a').first().before(htmlUser);
                 }
-
             }
-            $("#message-list").append('<li>' + payload.msg + '</li>');
+            neonChat.refreshUserIds();
+            neonChat.orderGroups();
+            if (payload.msg) {
+                $("#message-list").append('<li>' + payload.msg + '</li>');
+            }
         }
 
         /**
@@ -414,30 +368,35 @@
             if (!$.isEmptyObject(element.html())) {
                 increaseUnreadCounters(element);
                 
-                //buscamos el panel de mensajes del usuario
-                var chatContainer = $("#client-"+payload.user_id);
-                if (!$.isEmptyObject(chatContainer.html())) {
-                    var html = '<li class="opponent unread">'
+                //armamos el html co el mensaje del usuario
+                var htmlMessage = '<li class="opponent unread">'
                                     +'<span class="user">' + payload.nickname + '</span>'
                                     +'<p>' + payload.msg + '</p>'
                                     +'<span class="time">' + payload.msg_date +'</span>'
                                 +'</li>';
-                    chatContainer.append(html);
-                    neonChat.prefetchMessages();
+                        
+                //buscamos el panel de mensajes del usuario
+                var chatContainer = $("#client-"+payload.user_id);
+                if (!$.isEmptyObject(chatContainer.html())) {
+                    
+                    chatContainer.append(htmlMessage);
                 } else {
                     //si no habia un panel de mensajes para el usuario, le creamos uno
                     var html = '<ul class="chat-history" id="client-' + payload.user_id + '">'
-                                    +'<li class="opponent unread">'
-                                        +'<span class="user">' + payload.nickname + '</span>'
-                                        +'<p>' + payload.msg + '</p>'
-                                        +'<span class="time">' + payload.msg_date +'</span>'
-                                    +'</li>'
-                                +'</ul>';
+                                    + htmlMessage + '</ul>';
                     $(".container-chats").append(html);
-                    neonChat.prefetchMessages();
                 }
-            } else {
-                console.log('el usuario no esta en la lista de conversaciones');
+                neonChat.prefetchMessages();
+                
+                //verificamos si la ventana de chat esta abierta
+                var display = $('.chat-conversation').css('display');
+                if (display == 'block') {
+                    //si esta abierta preguntamos si el mensaje entrante es del chat abierto
+                    var userId = $(".chat-conversation div.chat-textarea textarea.form-control").attr('destination-id');
+                    if (userId == payload.user_id) {
+                        neonChat.renderMessages(neonChat.$current_user.attr('id'));
+                    }
+                }
             }
 
         }
