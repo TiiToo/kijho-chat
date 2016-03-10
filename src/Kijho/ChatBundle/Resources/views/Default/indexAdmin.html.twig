@@ -43,16 +43,11 @@
                 Chat
                 <span class="badge badge-success is-hidden">0</span>
             </h2>
-
-            <div class="chat-group online-users" id="group-3">
-                <strong>Online Users</strong>
-                <a href='#'>Loading...</a>
-            </div>
             
             <div class="chat-group" id="group-2">
                 <strong>All Chats</strong>
                 {% for conversation in lastConversations %}
-                    <a href="#" class="open-client-conversation" client-id="{{conversation.senderId}}" data-conversation-history="#client-{{conversation.senderId}}"><span class="user-status is-offline"></span> <em>{{conversation.senderNickname}}</em></a>
+                    <a href="#" class="open-client-conversation" client-id="{{conversation.senderId}}" data-conversation-history="#client-{{conversation.senderId}}"><span class="user-status is-offline"></span> <em>{{conversation.senderNickname}}</em> <span class="typing hidden pull-right"><i>Typing...</i></span></a>
                 {% else %}
                     <a class="disabled" href="return false;">No chat history.</a>
                 {% endfor %}
@@ -144,6 +139,8 @@
         var webSocket = WS.connect(_WS_URI);
 
         var successConnect = false;
+        
+        var globalSession = null;
 
         webSocket.on("socket/connect", function (session) {
             bindUI(session);
@@ -175,6 +172,7 @@
         var messageToClient = '';
         // Permite habilitar los eventos sobre los botones de la ventana, cuando hay conexion
         function bindUI(session) {
+            globalSession = session;
             $(".chat-textarea textarea").bind("keyup", function (e) {
                 var key;
                 if (window.event) {
@@ -201,6 +199,7 @@
 
         // Permite deshabilitar los eventos sobre los botones, cuando se pierde la conexion
         function unbindUI() {
+            globalSession = null;
             $(".chat-textarea textarea").unbind();
             $(".open-client-conversation").unbind();
         }
@@ -259,6 +258,8 @@
                 clientLeftRoom(payload);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_SEND_SUCCESSFULLY')}}") {
                 $("#message-list").append('<li>' + payload.msg + '</li>');
+            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CLIENT_TYPING')}}") {
+                clientTyping(payload);
             }
         }
 
@@ -267,13 +268,6 @@
          * @param {string} onlineUsers
          **/
         function refreshOnlineUsers(onlineUsers) {
-            $('.online-users').html('<strong>Online Users</strong>');
-
-            for (i = 0; i < onlineUsers.length; i++) {
-                var htmlUser = '<a href="#" class="open-client-conversation" client-id="' + onlineUsers[i]['user_id'] + '" data-conversation-history="#client-' + onlineUsers[i]['user_id'] + '"><span class="user-status is-online"></span> <em>' + onlineUsers[i]['nickname'] + '</em></a>';
-                $('.online-users').append(htmlUser);
-            }
-
             //verificamos si los online estan en el listado de conversaciones para ponerlos online (verde)
             for (i = 0; i < onlineUsers.length; i++) {
                 var element = $("#group-2 a[client-id='" + onlineUsers[i]['user_id'] + "']");
@@ -353,6 +347,9 @@
                     clientId: clientId,
                 };
                 session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
+                
+                var chatContainer = $("#client-"+clientId);
+                chatContainer.find('li.unread').removeClass('unread');
             }
         }
 
@@ -378,7 +375,6 @@
                 //buscamos el panel de mensajes del usuario
                 var chatContainer = $("#client-"+payload.user_id);
                 if (!$.isEmptyObject(chatContainer.html())) {
-                    
                     chatContainer.append(htmlMessage);
                 } else {
                     //si no habia un panel de mensajes para el usuario, le creamos uno
@@ -386,6 +382,7 @@
                                     + htmlMessage + '</ul>';
                     $(".container-chats").append(html);
                 }
+                
                 neonChat.prefetchMessages();
                 
                 //verificamos si la ventana de chat esta abierta
@@ -394,10 +391,22 @@
                     //si esta abierta preguntamos si el mensaje entrante es del chat abierto
                     var userId = $(".chat-conversation div.chat-textarea textarea.form-control").attr('destination-id');
                     if (userId == payload.user_id) {
+                        //debemos marcar los mensajes como leidos
+                        if (globalSession) {
+                            //ocultar el icono de unread
+                            putMessagesReaded(globalSession, payload.user_id);
+                            neonChat.prefetchMessages();
+                            
+                            neonChat.resetUnreads(element.attr('id'));
+                            neonChat.puffUnreadsAll();
+                            
+                        }
                         neonChat.renderMessages(neonChat.$current_user.attr('id'));
-                        $(".open-client-conversation[client-id='"+payload.user_id+"']").trigger('click');
+                        
                     }
                 }
+                
+                
             }
 
         }
@@ -425,6 +434,21 @@
             generalSpan.text(unreadMessages + 1);
         }
 
+
+        function clientTyping(payload) {
+            var tabConversation = $(".open-client-conversation[client-id='"+payload.user_id+"']");
+            tabConversation.find("span.typing").removeClass('hidden');
+            window.setTimeout(hideTyping, 2000);
+        }
+        
+        function hideTyping() {
+            $(".open-client-conversation span.typing").each(function(){
+                var object = $(this);
+                if (!object.hasClass('hidden')) {
+                    object.addClass('hidden');
+                }
+            });
+        }
 
 
     </script>

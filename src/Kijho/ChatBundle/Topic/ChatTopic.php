@@ -37,6 +37,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     const MESSAGE_TO_CLIENT = 'message_to_client';
     const MESSAGE_FROM_ADMIN = 'message_from_admin';
     const MESSAGE_SEND_SUCCESSFULLY = 'message_send_successfully';
+    const CLIENT_TYPING = 'client_typing';
 
     /**
      * Constantes para los tipos de mensajes que los usuarios envian al servidor
@@ -48,7 +49,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
      * Constante que controla el tiempo en el cual se actualiza el listado de usuarios
      * conectados para el panel de usuarios online
      */
-    const TIME_REFRESH_ONLINE_USERS = 5;
+    const TIME_REFRESH_ONLINE_USERS = 3;
 
     /**
      * Instancia de la sala principal del chat (Clientes, Administradores, etc)
@@ -275,6 +276,18 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 'nickname' => $connection->nickname,
                                 'user_id' => $connection->userId,
                                 'msg_date' => $cliMessage->getDate()->format('m/d/Y h:i a'),
+                            ]);
+                        }
+                    } elseif ($event['type'] == self::CLIENT_TYPING) {
+
+                        //buscamos a los administradores para notificarles que el cliente esta escribiendo
+                        $administrators = $this->getOnlineAdministrators();
+
+                        foreach ($administrators as $adminTopic) {
+                            $adminTopic->event($topic->getId(), [
+                                'msg_type' => self::CLIENT_TYPING,
+                                'nickname' => $connection->nickname,
+                                'user_id' => $connection->userId,
                             ]);
                         }
                     }

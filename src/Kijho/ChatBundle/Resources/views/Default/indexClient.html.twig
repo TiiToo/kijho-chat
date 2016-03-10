@@ -128,6 +128,8 @@
                 }
                 if (key == 13) {
                     sendMessage(session);
+                } else {
+                    notifyTyping(session);
                 }
             });
 
@@ -149,7 +151,6 @@
         }
 
         function sendMessage(session) {
-
             var message = $("#input-message").val();
             if (message != '') {
                 var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_TO_ADMIN')}}",
@@ -209,6 +210,11 @@
         function scrollDown() {
             $(".panel-body").scrollTop($("#message-list li:last").position().top - 50 );
         };
+        
+        function notifyTyping(session) {
+            var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CLIENT_TYPING')}}"};
+            session.publish("chat/channel", data);
+        }
         
     </script>
 {% endblock %}
