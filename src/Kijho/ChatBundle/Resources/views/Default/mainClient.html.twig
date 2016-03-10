@@ -10,15 +10,13 @@
         
         <link rel="stylesheet" href=" {{ asset('bundles/chat/css/bootstrap.min.css') }}" media="screen">
         <link rel="stylesheet" href=" {{ asset('bundles/chat/css/bootstrap-theme.min.css') }}" media="screen">
-        <link rel="stylesheet" href=" {{ asset('bundles/chat/css/style.css') }}" media="screen">
+        <link rel="stylesheet" href=" {{ asset('bundles/chat/css/style-client.css') }}" media="screen">
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
         
         {#<link rel="shortcut icon" href="{{ asset('bundles/frontend/images/ico/favicon.ico ')}}">#}
 
     </head><!--/head-->
     <body>
-        {#{% import 'KijhoMailerBundle:Default:macros.html.twig' as macros  %}
-        {% include 'KijhoMailerBundle:Default:menu.html.twig' %}#}
         <section class="container header">
             {% block header_content %}
             {% endblock %}

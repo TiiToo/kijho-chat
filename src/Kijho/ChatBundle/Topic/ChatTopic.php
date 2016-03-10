@@ -20,7 +20,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
      */
     const USER_CLIENT = 'client';
     const USER_ADMIN = 'admin';
-    
+
     /**
      * Canal por defecto del chat
      */
@@ -159,39 +159,118 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     public function onPublish(ConnectionInterface $connection, Topic $topic, WampRequest $request, $event, array $exclude, array $eligible) {
 
         if ($topic->getId() == 'chat/channel') {
-
             if (isset($event['type']) && !empty($event['type'])) {
+                if ($connection->userType == self::USER_ADMIN) {
+                    if ($event['type'] == self::PUT_MESSAGES_AS_READED) {
 
-                if ($event['type'] == self::MESSAGE_TO_ADMIN && isset($event['destination'])) {
+                        if (isset($event['clientId']) && !empty($event['clientId'])) {
+                            $clientId = $event['clientId'];
 
-                    $adminNickname = $event['destination'];
-                    $message = $event['message'];
+                            //buscamos los mensajes que el cliente le ha enviado al administrador
+                            $search = array('senderId' => $clientId, 'destinationId' => $connection->userId, 'readed' => false);
+                            $conversation = $this->em->getRepository('ChatBundle:Message')->findBy($search);
 
-                    //buscamos al administrador con el nickname para mandarle el mensaje
-                    $administrators = $this->getOnlineAdministrators();
-
-                    $messageSaved = false;
-                    foreach ($administrators as $adminTopic) {
-                        if ($adminTopic->nickname == $adminNickname) {
-
-                            //se utiliza la variable $messageSaved, para solo guardar un mensaje 
-                            //y enviarlo a todos los dispositivos del usuario
-                            if (!$messageSaved) {
-                                $cliMessage = new Entity\Message();
-                                $cliMessage->setMessage($message);
-                                $cliMessage->setSenderId($connection->userId);
-                                $cliMessage->setSenderNickname($connection->nickname);
-                                $cliMessage->setDestinationId($adminTopic->userId);
-                                $cliMessage->setDestinationNickname($adminNickname);
-                                $cliMessage->setType(Entity\Message::TYPE_CLIENT_TO_ADMIN);
-                                
-                                $this->em->persist($cliMessage);
+                            $currentDate = Util::getCurrentDate();
+                            foreach ($conversation as $message) {
+                                $message->setReaded(true);
+                                $message->setDateReaded($currentDate);
+                                $this->em->persist($message);
                                 $this->em->flush();
-                                $messageSaved = true;
+                            }
+                        }
+                    } elseif ($event['type'] == self::MESSAGE_TO_CLIENT) {
+                        if (isset($event['clientId']) && !empty($event['clientId'])) {
+                            $clientId = $event['clientId'];
+
+                            //buscamos la conexion del cliente para enviarle el mensaje
+                            $message = $event['message'];
+
+                            //buscamos al administrador con el nickname para mandarle el mensaje
+                            $clients = $this->getOnlineClients();
+
+                            $messageSaved = false;
+                            foreach ($clients as $clientTopic) {
+                                if ($clientTopic->userId == $clientId) {
+
+                                    //se utiliza la variable $messageSaved, para solo guardar un mensaje 
+                                    //y enviarlo a todos los dispositivos del usuario
+                                    if (!$messageSaved) {
+                                        $adminMessage = new Entity\Message();
+                                        $adminMessage->setMessage($message);
+                                        $adminMessage->setSenderId($connection->userId);
+                                        $adminMessage->setSenderNickname($connection->nickname);
+                                        $adminMessage->setDestinationId($clientTopic->userId);
+                                        $adminMessage->setDestinationNickname($clientTopic->nickname);
+                                        $adminMessage->setType(Entity\Message::TYPE_ADMIN_TO_CLIENT);
+
+                                        $this->em->persist($adminMessage);
+                                        $this->em->flush();
+                                        $messageSaved = true;
+                                    }
+
+                                    $clientTopic->event($topic->getId(), [
+                                        'msg_type' => self::MESSAGE_FROM_ADMIN,
+                                        'msg' => $message,
+                                        'nickname' => $connection->nickname,
+                                        'user_id' => $connection->userId,
+                                        'msg_date' => $adminMessage->getDate()->format('m/d/Y h:i a'),
+                                    ]);
+                                }
                             }
 
-                            $adminTopic->event($topic->getId(), [
-                                'msg_type' => self::MESSAGE_FROM_CLIENT,
+                            //notificamos al administrador que su mensaje se envio exitosamente
+                            $connection->event($topic->getId(), [
+                                'msg_type' => self::MESSAGE_SEND_SUCCESSFULLY,
+                                'msg' => $message,
+                                'nickname' => $connection->nickname,
+                                'user_id' => $connection->userId,
+                                'msg_date' => $adminMessage->getDate()->format('m/d/Y h:i a'),
+                            ]);
+                        }
+                    }
+                } elseif ($connection->userType == self::USER_CLIENT) {
+                    if ($event['type'] == self::MESSAGE_TO_ADMIN && isset($event['destination'])) {
+
+                        $adminNickname = $event['destination'];
+                        $message = $event['message'];
+
+                        //buscamos al administrador con el nickname para mandarle el mensaje
+                        $administrators = $this->getOnlineAdministrators();
+
+                        $messageSaved = false;
+                        foreach ($administrators as $adminTopic) {
+                            if ($adminTopic->nickname == $adminNickname) {
+
+                                //se utiliza la variable $messageSaved, para solo guardar un mensaje 
+                                //y enviarlo a todos los dispositivos del usuario
+                                if (!$messageSaved) {
+                                    $cliMessage = new Entity\Message();
+                                    $cliMessage->setMessage($message);
+                                    $cliMessage->setSenderId($connection->userId);
+                                    $cliMessage->setSenderNickname($connection->nickname);
+                                    $cliMessage->setDestinationId($adminTopic->userId);
+                                    $cliMessage->setDestinationNickname($adminNickname);
+                                    $cliMessage->setType(Entity\Message::TYPE_CLIENT_TO_ADMIN);
+
+                                    $this->em->persist($cliMessage);
+                                    $this->em->flush();
+                                    $messageSaved = true;
+                                }
+
+                                $adminTopic->event($topic->getId(), [
+                                    'msg_type' => self::MESSAGE_FROM_CLIENT,
+                                    'msg' => $message,
+                                    'nickname' => $connection->nickname,
+                                    'user_id' => $connection->userId,
+                                    'msg_date' => $cliMessage->getDate()->format('m/d/Y h:i a'),
+                                ]);
+                            }
+                        }
+
+                        if ($messageSaved) {
+                            //notificamos al usuario que su mensaje se envio exitosamente
+                            $connection->event($topic->getId(), [
+                                'msg_type' => self::MESSAGE_SEND_SUCCESSFULLY,
                                 'msg' => $message,
                                 'nickname' => $connection->nickname,
                                 'user_id' => $connection->userId,
@@ -199,78 +278,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                             ]);
                         }
                     }
-
-                    //notificamos al usuario que su mensaje se envio exitosamente
-                    $connection->event($topic->getId(), [
-                        'msg' => $connection->nickname . " says: " . $message,
-                        'msg_type' => self::MESSAGE_SEND_SUCCESSFULLY,
-                    ]);
-                } elseif ($event['type'] == self::PUT_MESSAGES_AS_READED) {
-
-                    if (isset($event['clientId']) && !empty($event['clientId'])) {
-                        $clientId = $event['clientId'];
-
-                        //buscamos los mensajes que el cliente le ha enviado al administrador
-                        $search = array('senderId' => $clientId, 'destinationId' => $connection->userId, 'readed' => false);
-                        $conversation = $this->em->getRepository('ChatBundle:Message')->findBy($search);
-
-                        $currentDate = Util::getCurrentDate();
-                        foreach ($conversation as $message) {
-                            $message->setReaded(true);
-                            $message->setDateReaded($currentDate);
-                            $this->em->persist($message);
-                            $this->em->flush();
-                        }
-                    }
-                } elseif ($event['type'] == self::MESSAGE_TO_CLIENT) {
-                    if (isset($event['clientId']) && !empty($event['clientId'])) {
-                        $clientId = $event['clientId'];
-
-                        //buscamos la conexion del cliente para enviarle el mensaje
-                        $message = $event['message'];
-
-                        //buscamos al administrador con el nickname para mandarle el mensaje
-                        $clients = $this->getOnlineClients();
-
-                        $messageSaved = false;
-                        foreach ($clients as $clientTopic) {
-                            if ($clientTopic->userId == $clientId) {
-
-                                //se utiliza la variable $messageSaved, para solo guardar un mensaje 
-                                //y enviarlo a todos los dispositivos del usuario
-                                if (!$messageSaved) {
-                                    $adminMessage = new Entity\Message();
-                                    $adminMessage->setMessage($message);
-                                    $adminMessage->setSenderId($connection->userId);
-                                    $adminMessage->setSenderNickname($connection->nickname);
-                                    $adminMessage->setDestinationId($clientTopic->userId);
-                                    $adminMessage->setDestinationNickname($clientTopic->nickname);
-                                    $adminMessage->setType(Entity\Message::TYPE_ADMIN_TO_CLIENT);
-
-                                    $this->em->persist($adminMessage);
-                                    $this->em->flush();
-                                    $messageSaved = true;
-                                }
-
-                                $clientTopic->event($topic->getId(), [
-                                    'msg_type' => self::MESSAGE_FROM_ADMIN,
-                                    'msg' => $connection->nickname . " says: " . $message,
-                                    'sender' => $connection->nickname,
-                                ]);
-                            }
-                        }
-
-                        //notificamos al administrador que su mensaje se envio exitosamente
-                        $connection->event($topic->getId(), [
-                            'msg' => $connection->nickname . " says: " . $message,
-                            'msg_type' => self::MESSAGE_SEND_SUCCESSFULLY,
-                        ]);
-                    }
-                } else {
-                    $this->serverLog('otro tipo de mensaje');
                 }
-            } else {
-                $this->serverLog('no hay tipo');
             }
         }
     }
