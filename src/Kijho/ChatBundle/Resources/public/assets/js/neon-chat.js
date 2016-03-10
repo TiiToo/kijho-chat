@@ -136,12 +136,16 @@ var neonChat = neonChat || {
 		
 		open: function($user_link)
 		{
-			this.refreshUserIds();
+			
+                    
+                        this.refreshUserIds();
 			
 			if(typeof $user_link == 'string')
 			{
 				$user_link = $($user_link);
 			}
+                        
+                        var span_status = $user_link.find('span.user-status');
 			
 			// Set Active Class
 			$chat.find('.chat-group a').not($user_link).removeClass('active');
@@ -150,13 +154,22 @@ var neonChat = neonChat || {
 			// Chat Header
 			var user_status = this.statuses[ this.chat_history[$user_link.attr('id')].status ];
 			
+                        if (span_status.hasClass(this.statuses.online.class)) {
+                            user_status = this.statuses.online;
+                        } else if (span_status.hasClass(this.statuses.offline.class)) {
+                            user_status = this.statuses.offline;
+                        } else if (span_status.hasClass(this.statuses.busy.class)) {
+                            user_status = this.statuses.busy
+                        } else if (span_status.hasClass(this.statuses.idle.class)) {
+                            user_status = this.statuses.idle
+                        }
 			
 			$conversation_header.find('.display-name').html($user_link.find('em').text());
 			
-			if(user_status)
+			if (user_status)
 			{
-				$conversation_header.find('.user-status').attr('class', 'user-status ' + user_status.class);
-				$conversation_header.find('small').html(user_status.label);
+                            $conversation_header.find('.user-status').attr('class', 'user-status ' + user_status.class);
+                            $conversation_header.find('small').html(user_status.label);
 			}
 			
 			$conversation_window.show();

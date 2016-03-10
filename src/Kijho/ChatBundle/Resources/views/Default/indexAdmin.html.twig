@@ -298,7 +298,7 @@
                 var spanStatus = $("#group-2 a[client-id='" + payload.user_id + "'] span").first();
                 spanStatus.attr('class', 'user-status is-offline');
             }
-            neonChat.refreshUserIds();
+            //neonChat.refreshUserIds();
             neonChat.orderGroups();
             $("#message-list").append('<li>' + payload.msg + '</li>');
             
@@ -324,7 +324,7 @@
                     $('#group-2 a').first().before(htmlUser);
                 }
             }
-            neonChat.refreshUserIds();
+            //neonChat.refreshUserIds();
             neonChat.orderGroups();
             if (payload.msg) {
                 $("#message-list").append('<li>' + payload.msg + '</li>');
@@ -395,6 +395,7 @@
                     var userId = $(".chat-conversation div.chat-textarea textarea.form-control").attr('destination-id');
                     if (userId == payload.user_id) {
                         neonChat.renderMessages(neonChat.$current_user.attr('id'));
+                        $(".open-client-conversation[client-id='"+payload.user_id+"']").trigger('click');
                     }
                 }
             }
