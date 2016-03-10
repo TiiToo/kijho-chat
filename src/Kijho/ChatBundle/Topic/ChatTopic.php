@@ -27,6 +27,11 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     const CHAT_CHANNEL = "chat/channel";
 
     /**
+     * Constante cuando un cliente envia un mensaje a todos los administradores
+     */
+    const MESSAGE_ALL_ADMINISTRATORS = 'message_all_admin';
+
+    /**
      * Constantes para los tipos de mensajes que el servidor envia a los usuarios
      */
     const SERVER_ONLINE_USERS = 'online_users_list';
@@ -188,11 +193,13 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
 
                             //buscamos al administrador con el nickname para mandarle el mensaje
                             $clients = $this->getOnlineClients();
-
+                            $foundClient = null;
                             $messageSaved = false;
                             foreach ($clients as $clientTopic) {
                                 if ($clientTopic->userId == $clientId) {
 
+                                    $foundClient = $clientTopic;
+                                    
                                     //se utiliza la variable $messageSaved, para solo guardar un mensaje 
                                     //y enviarlo a todos los dispositivos del usuario
                                     if (!$messageSaved) {
@@ -227,30 +234,67 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 'user_id' => $connection->userId,
                                 'msg_date' => $adminMessage->getDate()->format('m/d/Y h:i a'),
                             ]);
+                            
+                            /**
+                             * Verificamos si tenbemos que notificar a los otros administradores
+                             * que el administrador actual ya se hizo cargo de la conversacion
+                             */
+                            $notifyOtherAdmins = (boolean)$event['notifyOtherAdmins'];
+                            if ($notifyOtherAdmins && $foundClient) {
+                                
+                                $message = 'Automatic Message: '.$connection->nickname.' will receive and will respond the client messages';
+                                
+                                $administrators = $this->getOnlineAdministrators();
+                                foreach ($administrators as $adminTopic) {
+                                    if ($adminTopic->userId != $connection->userId) {
+                                        $cliMessage = new Entity\Message();
+                                        $cliMessage->setMessage($message);
+                                        $cliMessage->setSenderId($foundClient->userId);
+                                        $cliMessage->setSenderNickname('System');
+                                        $cliMessage->setDestinationId($adminTopic->userId);
+                                        $cliMessage->setDestinationNickname($adminTopic->nickname);
+                                        $cliMessage->setType(Entity\Message::TYPE_CLIENT_TO_ADMIN);
+                                        $this->em->persist($cliMessage);
+                                        $this->em->flush();
+                                        
+                                        $adminTopic->event($topic->getId(), [
+                                            'msg_type' => self::MESSAGE_FROM_CLIENT,
+                                            'msg' => $message,
+                                            'nickname' => 'System',
+                                            'user_id' => $foundClient->userId,
+                                            'msg_date' => $cliMessage->getDate()->format('m/d/Y h:i a'),
+                                            'admin_destination' => $connection->userId,
+                                        ]);
+                                    }
+                                }
+                            }
+                            
                         }
                     }
                 } elseif ($connection->userType == self::USER_CLIENT) {
                     if ($event['type'] == self::MESSAGE_TO_ADMIN && isset($event['destination'])) {
 
-                        $adminNickname = $event['destination'];
                         $message = $event['message'];
-
-                        //buscamos al administrador con el nickname para mandarle el mensaje
+                        $messageSaved = false;
                         $administrators = $this->getOnlineAdministrators();
 
-                        $messageSaved = false;
+                        $adminId = $event['destination'];
+
+
+                        //buscamos al administrador con el nickname para mandarle el mensaje
                         foreach ($administrators as $adminTopic) {
-                            if ($adminTopic->nickname == $adminNickname) {
+
+                            if ($adminId == self::MESSAGE_ALL_ADMINISTRATORS || $adminTopic->userId == $adminId) {
 
                                 //se utiliza la variable $messageSaved, para solo guardar un mensaje 
                                 //y enviarlo a todos los dispositivos del usuario
-                                if (!$messageSaved) {
+                                if (!$messageSaved || $adminId == self::MESSAGE_ALL_ADMINISTRATORS) {
                                     $cliMessage = new Entity\Message();
                                     $cliMessage->setMessage($message);
                                     $cliMessage->setSenderId($connection->userId);
                                     $cliMessage->setSenderNickname($connection->nickname);
                                     $cliMessage->setDestinationId($adminTopic->userId);
-                                    $cliMessage->setDestinationNickname($adminNickname);
+                                    $cliMessage->setDestinationNickname($adminTopic->nickname);
                                     $cliMessage->setType(Entity\Message::TYPE_CLIENT_TO_ADMIN);
 
                                     $this->em->persist($cliMessage);
@@ -264,6 +308,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                     'nickname' => $connection->nickname,
                                     'user_id' => $connection->userId,
                                     'msg_date' => $cliMessage->getDate()->format('m/d/Y h:i a'),
+                                    'admin_destination' => $adminId,
                                 ]);
                             }
                         }

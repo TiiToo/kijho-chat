@@ -34,36 +34,6 @@
                     </div>
                     <div class="panel-body">
                         <ul class="chat" id="message-list">
-                            {#<li class="left clearfix"><span class="chat-img pull-left">
-                                    <img src="http://placehold.it/50/55C1E7/fff&amp;text=U" alt="User Avatar" class="img-circle">
-                                </span>
-                                <div class="chat-body clearfix">
-                                    <div class="header">
-                                        <strong class="primary-font">Jack Sparrow</strong> <small class="pull-right text-muted">
-                                            <span class="glyphicon glyphicon-time"></span>12 mins ago</small>
-                                    </div>
-                                    <p>
-                                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur bibendum ornare
-                                        dolor, quis ullamcorper ligula sodales.
-                                    </p>
-                                </div>
-                            </li>
-                            <li class="right clearfix"><span class="chat-img pull-right">
-                                    <img src="http://placehold.it/50/FA6F57/fff&amp;text=ME" alt="User Avatar" class="img-circle">
-                                </span>
-                                <div class="chat-body clearfix">
-                                    <div class="header">
-                                        <small class=" text-muted"><span class="glyphicon glyphicon-time"></span>13 mins ago</small>
-                                        <strong class="pull-right primary-font">Bhaumik Patel</strong>
-                                    </div>
-                                    <p>
-                                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur bibendum ornare
-                                        dolor, quis ullamcorper ligula sodales.
-                                    </p>
-                                </div>
-                            </li>#}
-                            
-                            
                         </ul>
                     </div>
                     <div class="panel-footer">
@@ -101,7 +71,11 @@
             unbindUI();
         });
 
-        /*Permite cambiar el nickname del usuario*/
+        
+        /**
+         * Permite actualizar la informacion de la conexion del usuario
+         * @param {type} session
+         */
         function updateConnectionData(session)
         {
             session.call("rpc/update_connection_data", {"nickname": "{{nickname}}", "user_id": "{{userId}}", "user_type": "{{userType}}"}).then(
@@ -116,7 +90,10 @@
             );
         }
 
-        // Permite habilitar los eventos sobre los botones de la ventana, cuando hay conexion
+        /**
+         * Permite habilitar los eventos sobre los elementos de la ventana, cuando hay conexion
+         * @param {type} session
+         */
         function bindUI(session) {
 
             $("#input-message").bind("keydown", function (e) {
@@ -138,24 +115,41 @@
             });
         }
 
-        // Permite deshabilitar los eventos sobre los botones, cuando se pierde la conexion
+        /**
+         * Permite deshabilitar los eventos sobre los botones, cuando se pierde la conexion
+         */
         function unbindUI() {
             $(".send-message").unbind();
             $("#input-message").unbind();
         }
 
-        //permite realizar la conexion a una sala en especifico, y establecer un escucha de eventos
+        /**
+         * Permite realizar la conexion a una sala en especifico, y establecer un escucha de eventos
+         * @param {type} session
+         */
         function joinChatRoom(session) {
             //the callback function in "subscribe" is called everytime an event is published in that channel.
             session.subscribe("chat/channel", serverEvent);
         }
 
+        /**
+         * Cuando el cliente entra al chat, los primeros mensajes que envia (antes de que un administrador le responda)
+         * son enviados a todos los administradores, cuando un admin responde, los mensajes seran solo 
+         * enviados a dicho administrador
+         * @type String
+         */
+        var destination = "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_ALL_ADMINISTRATORS')}}";
+
+        /**
+         * Permite el envio de un mensaje a un usuario en especifico
+         * @param {type} session
+         */
         function sendMessage(session) {
             var message = $("#input-message").val();
             if (message != '') {
                 var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_TO_ADMIN')}}",
                     message: message,
-                    destination: 'Administrator'
+                    destination: destination,
                 };
                 session.publish("chat/channel", data);
                 $("#input-message").val('');
@@ -163,18 +157,27 @@
             $("#input-message").focus();
         }
 
-        //es la funcion que escucha los eventos del servidor
+        /**
+         * Funcion que escucha los eventos del servidor para efectuar acciones en pantalla
+         * @param {type} uri
+         * @param {type} payload
+         **/
         function serverEvent(uri, payload) {
             console.log(payload);
             if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SERVER_WELCOME_MESSAGE')}}") {
                 $("#message-list").append('<li>' + payload.msg + '</li>');
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_FROM_ADMIN')}}") {
+                destination = payload.user_id;
                 appendHtmlMessageAdmin(payload)
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_SEND_SUCCESSFULLY')}}") {
                 appendHtmlMessageClient(payload);
             }
         }
         
+        /**
+         * Permite mostrar en el historial del chat, un mensaje que acaba de enviar el cliente
+         * @param {type} payload
+         **/
         function appendHtmlMessageClient(payload) {
             var html = '<li class="right clearfix"><span class="chat-img pull-right">'
                                     +'<img src="http://placehold.it/50/FA6F57/fff&amp;text=ME" alt="User Avatar" class="img-circle">'
@@ -191,6 +194,10 @@
             scrollDown();
         }
         
+        /**
+         * Permite mostrar en el historial del chat, un mensaje que fue enviado por un administrador
+         * @param {type} payload
+         **/
         function appendHtmlMessageAdmin(payload) {
             var html = '<li class="left clearfix"><span class="chat-img pull-left">'
                                 +'<img src="http://placehold.it/50/55C1E7/fff&amp;text=U" alt="User Avatar" class="img-circle">'
@@ -207,10 +214,17 @@
             scrollDown();
         }
         
+        /**
+         * Permite hacer scroll down en el historial del chat
+         **/
         function scrollDown() {
-            $(".panel-body").scrollTop($("#message-list li:last").position().top - 50 );
+            $("#message-list").scrollTop($("#message-list li:last").position().top - 50 );
         };
         
+        /**
+         * Permite notificar al servidor que el usuario esta escribiendo un mensaje
+         * @param {type} session
+         **/
         function notifyTyping(session) {
             var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CLIENT_TYPING')}}"};
             session.publish("chat/channel", data);
