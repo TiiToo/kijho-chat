@@ -32,7 +32,7 @@
             
             <span class="col-xs-12" id="container-notification"></span>
             <div class="col-xs-12" id="container-server-start" style="display: none;">
-                <p>Chat server offline.</p>
+                <p>Chat server offline, please start manually.</p>
                 <a class="btn btn-success btn-md start-gos-server">Click To Start Chat Server</a>
             </div>
 
@@ -333,7 +333,6 @@
                 $('#container-server-start').css('display', 'none');
             } else {
                 $('#container-server-start').css('display', '');
-                displayNotification('Chat server is offline, please start manually');
             }
         }
 
