@@ -16,19 +16,12 @@
                         </a>
                     </li>
                 </ul>
+                <span id="container-notification"></span>
             </div>
         </div>
         <hr />
-
-        <div class="col-lg-12" style="height: 600px; min-height: 600px;">
-            <h2>Admin Chat Panel</h2>
-            <ul id="message-list">
-            </ul>
-
-            <div class="col-xs-12" id="container-server-start" style="display: none;">
-                <p>Chat server offline.</p>
-                <a class="btn btn-primary btn-md start-gos-server">Start Chat Server</a>
-            </div>
+        <div class="col-lg-12" style="height: 400px; min-height: 400px;">
+            
         </div>
     </div>
 
@@ -44,6 +37,11 @@
                 <span class="badge badge-success is-hidden">0</span>
             </h2>
             
+            <div class="col-xs-12" id="container-server-start" style="display: none;">
+                <p>Chat server offline.</p>
+                <a class="btn btn-success btn-md start-gos-server">Click To Start Chat Server</a>
+            </div>
+
             <div class="chat-group" id="group-2">
                 <strong>All Chats</strong>
                 {% for conversation in lastConversations %}
@@ -106,28 +104,28 @@
 
 {% block scripts %}
     {# Damos click en este boton para desplegar el panel #}
-        $("#display-chat").trigger('click');
+    $("#display-chat").trigger('click');
 
     {# Ejecutamos una funcion periodicamente para verificar el estado del servidor #}
-        window.setInterval(verifyServerConnection, 4000);
+    window.setInterval(verifyServerConnection, 4000);
 
-        $(".start-gos-server").click(function () {
-            $(this).html('Please wait..');
-            $.ajax({
-                type: 'POST',
-                url: "{{path('chat_start_gos_server')}}",
-                dataType: 'json',
-                timeout: 4000,
-                success: function (r)
-                {
-                    window.location.reload();
-                },
-                error: function (r)
-                {
-                    window.location.reload();
-                }
-            });
-        });
+    $(".start-gos-server").click(function () {
+    $(this).html('Please wait..');
+    $.ajax({
+    type: 'POST',
+    url: "{{path('chat_start_gos_server')}}",
+    dataType: 'json',
+    timeout: 4000,
+    success: function (r)
+    {
+    window.location.reload();
+    },
+    error: function (r)
+    {
+    window.location.reload();
+    }
+    });
+    });
 {% endblock %}
 
 {% block other_scripts %}
@@ -139,7 +137,7 @@
         var webSocket = WS.connect(_WS_URI);
 
         var successConnect = false;
-        
+
         var globalSession = null;
 
         webSocket.on("socket/connect", function (session) {
@@ -160,12 +158,12 @@
         function updateConnectionData(session)
         {
             session.call("rpc/update_connection_data", {"nickname": "{{nickname}}", "user_id": "{{userId}}", "user_type": "{{userType}}"}).then(
-                function (result) {
-                    console.log("RPC Valid!", result);
-                },
-                function (error, desc) {
-                    console.log("RPC Error", error, desc);
-                }
+                    function (result) {
+                        console.log("RPC Valid!", result);
+                    },
+                    function (error, desc) {
+                        console.log("RPC Error", error, desc);
+                    }
             );
         }
 
@@ -227,10 +225,10 @@
         function sendMessage(session) {
             var textarea = $('.chat-textarea textarea');
             var clientId = textarea.attr('destination-id') + "";
-            
+
             var nofityOtherAdmins = false;
             if (typeof adminDestinations[clientId] != 'undefined') {
-                if(adminDestinations[clientId] == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_ALL_ADMINISTRATORS')}}") {
+                if (adminDestinations[clientId] == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_ALL_ADMINISTRATORS')}}") {
                     nofityOtherAdmins = true;
                 }
             }
@@ -255,7 +253,7 @@
         function serverEvent(uri, payload) {
 
             if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SERVER_WELCOME_MESSAGE')}}") {
-                $("#message-list").append('<li>' + payload.msg + '</li>');
+                displayNotification(payload.msg);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_FROM_CLIENT')}}") {
                 messageFromClient(payload);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SERVER_ONLINE_USERS')}}") {
@@ -265,7 +263,7 @@
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SERVER_CLIENT_LEFT_ROOM')}}") {
                 clientLeftRoom(payload);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_SEND_SUCCESSFULLY')}}") {
-                $("#message-list").append('<li>' + payload.msg + '</li>');
+                displayNotification('Message send successfully');
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CLIENT_TYPING')}}") {
                 clientTyping(payload);
             }
@@ -302,8 +300,7 @@
             }
             //neonChat.refreshUserIds();
             neonChat.orderGroups();
-            $("#message-list").append('<li>' + payload.msg + '</li>');
-            
+            displayNotification(payload.msg);
         }
 
         /**
@@ -329,7 +326,7 @@
             //neonChat.refreshUserIds();
             neonChat.orderGroups();
             if (payload.msg) {
-                $("#message-list").append('<li>' + payload.msg + '</li>');
+                displayNotification(payload.msg);
             }
         }
 
@@ -342,6 +339,7 @@
                 $('#container-server-start').css('display', 'none');
             } else {
                 $('#container-server-start').css('display', '');
+                displayNotification('Chat server is offline, please start manually');
             }
         }
 
@@ -355,8 +353,8 @@
                     clientId: clientId,
                 };
                 session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
-                
-                var chatContainer = $("#client-"+clientId);
+
+                var chatContainer = $("#client-" + clientId);
                 chatContainer.find('li.unread').removeClass('unread');
             }
         }
@@ -375,16 +373,16 @@
          * @param {type} payload
          **/
         function messageFromClient(payload) {
-            
-            $("#message-list").append('<li>' + payload.msg + '</li>');
-            
+
+            displayNotification('New message from '+ payload.nickname);
+
             adminDestinations[payload.user_id] = payload.admin_destination;
-            
+
             //buscamos el tab de conversacion del usuario en el listado de conversaciones
             var element = $(".open-client-conversation[client-id='" + payload.user_id + "']");
             if (!$.isEmptyObject(element.html())) {
                 increaseUnreadCounters(element);
-                
+
                 //armamos el html con el mensaje del usuario
                 var htmlMessage = '<li class="opponent unread">';
 
@@ -393,23 +391,23 @@
                 } else {
                     htmlMessage += '<span class="user">' + payload.nickname + '</span>';
                 }
-                    htmlMessage += '<p>' + payload.msg + '</p>'
-                                 +'<span class="time">' + payload.msg_date +'</span>'
-                             +'</li>';
-                        
+                htmlMessage += '<p>' + payload.msg + '</p>'
+                        + '<span class="time">' + payload.msg_date + '</span>'
+                        + '</li>';
+
                 //buscamos el panel de mensajes del usuario
-                var chatContainer = $("#client-"+payload.user_id);
+                var chatContainer = $("#client-" + payload.user_id);
                 if (!$.isEmptyObject(chatContainer.html())) {
                     chatContainer.append(htmlMessage);
                 } else {
                     //si no habia un panel de mensajes para el usuario, le creamos uno
                     var html = '<ul class="chat-history" id="client-' + payload.user_id + '">'
-                                    + htmlMessage + '</ul>';
+                            + htmlMessage + '</ul>';
                     $(".container-chats").append(html);
                 }
-                
+
                 neonChat.prefetchMessages();
-                
+
                 //verificamos si la ventana de chat esta abierta
                 var display = $('.chat-conversation').css('display');
                 if (display == 'block') {
@@ -421,17 +419,17 @@
                             //ocultar el icono de unread
                             putMessagesReaded(globalSession, payload.user_id);
                             neonChat.prefetchMessages();
-                            
+
                             neonChat.resetUnreads(element.attr('id'));
                             neonChat.puffUnreadsAll();
-                            
+
                         }
                         neonChat.renderMessages(neonChat.$current_user.attr('id'));
-                        
+
                     }
                 }
-                
-                
+
+
             }
 
         }
@@ -461,13 +459,27 @@
 
 
         function clientTyping(payload) {
-            var tabConversation = $(".open-client-conversation[client-id='"+payload.user_id+"']");
+            var tabConversation = $(".open-client-conversation[client-id='" + payload.user_id + "']");
             tabConversation.find("span.typing").removeClass('hidden');
             window.setTimeout(hideTyping, 2000);
         }
-        
+
+        function displayNotification(msg) {
+            $("#container-notification").html(msg);
+            $("#container-notification").removeClass('hidden');
+            window.setTimeout(hideNotification, 2000);
+        }
+
+        function hideNotification() {
+            var object = $("#container-notification");
+            if (!object.hasClass('hidden')) {
+                object.addClass('hidden');
+            }
+        }
+
+
         function hideTyping() {
-            $(".open-client-conversation span.typing").each(function(){
+            $(".open-client-conversation span.typing").each(function () {
                 var object = $(this);
                 if (!object.hasClass('hidden')) {
                     object.addClass('hidden');
