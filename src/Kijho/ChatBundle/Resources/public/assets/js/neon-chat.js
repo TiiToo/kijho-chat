@@ -18,6 +18,8 @@ var neonChat = neonChat || {
 	}
 };
 
+var previousAction = 'hideChat';
+
 ;(function($, window, undefined)
 {
 	"use strict";
@@ -842,6 +844,16 @@ var neonChat = neonChat || {
 				_func = public_vars.$pageContainer.hasClass('toggle-click') ? 'hideChat' : 'showChat';
 			}
 			
+                        if (previousAction == 'hideChat') {
+                            _func = 'showChat';
+                            previousAction = 'showChat';
+                            animated = false;
+                        } else if (previousAction == 'showChat') {
+                            _func = 'hideChat';
+                            previousAction = 'hideChat';
+                            animated = false;
+                        }
+                        
 			neonChat[_func](animated);
 		}
 	});
