@@ -53,13 +53,8 @@
         <script type="text/javascript" src="{{ asset('bundles/chat/js/bootbox.min.js') }}"></script>
         <script type="text/javascript" src="{{ asset('bundles/chat/js/utilities.js') }}"></script>
 
-        <script type="text/javascript" src="{{ asset('bundles/chat/js/js-webshim/minified/polyfiller.js') }}"></script>
-
-        
         <script type="text/javascript">
             $(document).ready(function () {
-
-                webshims.polyfill();
 
                 {% block scripts %}
                 {% endblock %}
