@@ -31,7 +31,7 @@
                 <a href="#" class="chat-close" data-animate="1"><i class="entypo-cancel"></i></a>
                 <i class="entypo-users"></i>Chat<span class="badge badge-success is-hidden">0</span>
             </h2>
-            
+
             {% if local is defined and local == false %}
                 <span class="col-xs-12" id="container-notification"></span>
             {% endif %}
@@ -101,36 +101,36 @@
 {% endblock %}
 
 {% block scripts %}
-    {# Damos click en este boton para desplegar el panel #}
-    $("#display-chat").trigger('click');
+        {# Damos click en este boton para desplegar el panel #}
+        $("#display-chat").trigger('click');
 
-    {# Ejecutamos una funcion periodicamente para verificar el estado del servidor #}
-    window.setInterval(verifyServerConnection, 4000);
+        {# Ejecutamos una funcion periodicamente para verificar el estado del servidor #}
+        window.setInterval(verifyServerConnection, 4000);
 
-    $(".start-gos-server").click(function () {
-    $(this).html('Please wait..');
-    $.ajax({
-    type: 'POST',
-    url: "{{path('chat_start_gos_server')}}",
-    dataType: 'json',
-    timeout: 4000,
-    success: function (r)
-    {
-    window.location.reload();
-    },
-    error: function (r)
-    {
-    window.location.reload();
-    }
-    });
-    });
-{% endblock %}
+        $(".start-gos-server").click(function () {
+            $(this).html('Please wait..');
+            $.ajax({
+                type: 'POST',
+                url: "{{path('chat_start_gos_server')}}",
+                dataType: 'json',
+                timeout: 5000,
+                success: function (r)
+                {
+                    window.location.reload();
+                },
+                error: function (r)
+                {
+                    window.location.reload();
+                }
+            });
+        });
+    {% endblock %}
 
-{% block other_scripts %}
-    {{ ws_client() }}
+    {% block other_scripts %}
+        {{ ws_client() }}
 
-    <script type = "text/javascript" >
-        var _WS_URI = "ws://{{ gos_web_socket_server_host }}:{{ gos_web_socket_server_port }}";
+        <script type = "text/javascript" >
+                var _WS_URI = "ws://{{ gos_web_socket_server_host }}:{{ gos_web_socket_server_port }}";
 
         var webSocket = WS.connect(_WS_URI);
 
@@ -371,7 +371,7 @@
          **/
         function messageFromClient(payload) {
 
-            displayNotification('New message from '+ payload.nickname);
+            displayNotification('New message from ' + payload.nickname);
 
             adminDestinations[payload.user_id] = payload.admin_destination;
 
