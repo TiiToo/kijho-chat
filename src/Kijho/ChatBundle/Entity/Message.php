@@ -8,7 +8,7 @@ use Kijho\ChatBundle\Util\Util;
 /**
  * Message
  * @author Cesar Giraldo <cesargiraldo1108@gmail.com> 04/03/2016
- * @ORM\Table(name="message")
+ * @ORM\Table(name="chat_message")
  * @ORM\Entity(repositoryClass="Kijho\ChatBundle\Entity\MessageRepository")
  * @ORM\HasLifecycleCallbacks
  */

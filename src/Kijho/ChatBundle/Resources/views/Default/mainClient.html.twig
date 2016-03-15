@@ -7,13 +7,13 @@
         <meta name="author" content="">
         <title>{% block title %}Chat Bundle{% endblock %}</title>     
 
-        
-        <link rel="stylesheet" href=" {{ asset('bundles/chat/css/bootstrap.min.css') }}" media="screen">
+        {% if local is defined and local == true %}
+            <link rel="stylesheet" href=" {{ asset('bundles/chat/css/bootstrap.min.css') }}" media="screen">
+        {% endif %}
         <link rel="stylesheet" href=" {{ asset('bundles/chat/css/bootstrap-theme.min.css') }}" media="screen">
         <link rel="stylesheet" href=" {{ asset('bundles/chat/css/style-client.css') }}" media="screen">
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
         
-        {#<link rel="shortcut icon" href="{{ asset('bundles/frontend/images/ico/favicon.ico ')}}">#}
 
     </head><!--/head-->
     <body>
@@ -49,9 +49,9 @@
         </section><!--/#bottom-->
 
         <script type="text/javascript" src="{{ asset('bundles/chat/js/jquery-2.1.4.min.js') }}"></script>
-        <script type="text/javascript" src="{{ asset('bundles/chat/js/bootstrap.min.js') }}"></script>
-        <script type="text/javascript" src="{{ asset('bundles/chat/js/bootbox.min.js') }}"></script>
-        <script type="text/javascript" src="{{ asset('bundles/chat/js/utilities.js') }}"></script>
+        {% if local is defined and local == true %}
+            <script type="text/javascript" src="{{ asset('bundles/chat/js/bootstrap.min.js') }}"></script>
+        {% endif %}
 
         <script type="text/javascript">
             $(document).ready(function () {

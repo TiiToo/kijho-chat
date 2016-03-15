@@ -8,8 +8,9 @@ use Symfony\Component\Process\Process;
 
 class DefaultController extends Controller {
 
-    public function clientPanelAction($nickname = null, $userId = '', $userType = '') {
+    public function clientPanelAction($nickname = null, $userId = '', $userType = '', $local = false) {
         return $this->render('ChatBundle:Default:indexClient.html.twig', array(
+                    'local' => $local,
                     'nickname' => $nickname,
                     'userId' => $userId,
                     'userType' => $userType,
@@ -27,8 +28,6 @@ class DefaultController extends Controller {
         //listado de usuarios que han chateado con el admin, ordenado descendentemente por la fecha del ultimo mensaje
         $lastConversations = $em->getRepository('ChatBundle:Message')->findClientChatNickNames($userId);
         
-        
-        
         //buscamos las conversaciones completas entre el admin y los clientes
         $allConversations = array();
         $i = 0;
@@ -38,8 +37,6 @@ class DefaultController extends Controller {
             $allConversations[$i]['messages'] = $conversation;
             $i++;
         }
-        
-        //\Symfony\Component\VarDumper\VarDumper::dump($allConversations);die();
         
         return $this->render('ChatBundle:Default:indexAdmin.html.twig', array(
                     'local' => $local,
