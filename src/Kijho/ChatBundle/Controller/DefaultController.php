@@ -20,7 +20,7 @@ class DefaultController extends Controller {
         return $this->render('ChatBundle:Default:exampleClient.html.twig');
     }
 
-    public function adminPanelAction($nickname = null, $userId = '', $userType = '') {
+    public function adminPanelAction($nickname = null, $userId = '', $userType = '', $local = false) {
         
         $em = $this->getDoctrine()->getManager();
         
@@ -42,6 +42,7 @@ class DefaultController extends Controller {
         //\Symfony\Component\VarDumper\VarDumper::dump($allConversations);die();
         
         return $this->render('ChatBundle:Default:indexAdmin.html.twig', array(
+                    'local' => $local,
                     'nickname' => $nickname,
                     'userId' => $userId,
                     'userType' => $userType,

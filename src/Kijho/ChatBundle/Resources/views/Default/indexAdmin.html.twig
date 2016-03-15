@@ -2,26 +2,28 @@
 {% block title %}Chat Bundle - Admin{% endblock %}
 {% block content %}
 
-    {#<div class="main-content">
-        <div class="row">
-            <!-- Raw Links -->
-            <div class="col-md-6 pull-right">
-                <ul class="list-inline links-list ">
-                    <li>
-                        <a id="display-chat" href="#" data-toggle="chat" data-animate="1" data-collapse-sidebar="1">
-                            <i class="entypo-chat"></i>
-                            Chat
-                            <span class="badge badge-success chat-notifications-badge is-hidden">0</span>
-                        </a>
-                    </li>
-                </ul>
-                <span id="container-notification"></span>
+    {% if local is defined and local == true %}
+        <div class="main-content">
+            <div class="row">
+                <!-- Raw Links -->
+                <div class="col-md-6 pull-right">
+                    <ul class="list-inline links-list ">
+                        <li>
+                            <a id="display-chat" href="#" data-toggle="chat" data-animate="1" data-collapse-sidebar="1">
+                                <i class="entypo-chat"></i>
+                                Chat
+                                <span class="badge badge-success chat-notifications-badge is-hidden">0</span>
+                            </a>
+                        </li>
+                    </ul>
+                    <span id="container-notification"></span>
+                </div>
+            </div>
+            <hr />
+            <div class="col-lg-12" style="height: 400px; min-height: 400px;">    
             </div>
         </div>
-        <hr />
-        <div class="col-lg-12" style="height: 400px; min-height: 400px;">    
-        </div>
-    </div>#}
+    {% endif %}
 
     <div id="chat" class="fixed" data-current-user="{{nickname}}" data-order-by-status="1" data-max-chat-history="25">
         <div class="chat-inner">
@@ -30,7 +32,9 @@
                 <i class="entypo-users"></i>Chat<span class="badge badge-success is-hidden">0</span>
             </h2>
             
-            <span class="col-xs-12" id="container-notification"></span>
+            {% if local is defined and local == false %}
+                <span class="col-xs-12" id="container-notification"></span>
+            {% endif %}
             <div class="col-xs-12" id="container-server-start" style="display: none;">
                 <p>Chat server offline, please start manually.</p>
                 <a class="btn btn-success btn-md start-gos-server">Click To Start Chat Server</a>

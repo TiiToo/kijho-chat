@@ -844,14 +844,16 @@ var previousAction = 'hideChat';
 				_func = public_vars.$pageContainer.hasClass('toggle-click') ? 'hideChat' : 'showChat';
 			}
 			
-                        if (previousAction == 'hideChat') {
-                            _func = 'showChat';
-                            previousAction = 'showChat';
-                            animated = false;
-                        } else if (previousAction == 'showChat') {
-                            _func = 'hideChat';
-                            previousAction = 'hideChat';
-                            animated = false;
+                        if (localEnvironment == false) {
+                            if (previousAction == 'hideChat') {
+                                _func = 'showChat';
+                                previousAction = 'showChat';
+                                animated = false;
+                            } else if (previousAction == 'showChat') {
+                                _func = 'hideChat';
+                                previousAction = 'hideChat';
+                                animated = false;
+                            }
                         }
                         
 			neonChat[_func](animated);
