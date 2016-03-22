@@ -28,7 +28,31 @@
     <div id="chat" class="fixed" data-current-user="{{nickname}}" data-order-by-status="1" data-max-chat-history="25">
         <div class="chat-inner">
             <h2 class="chat-header">
-                <a href="#" class="chat-close" data-animate="1"><i class="entypo-cancel"></i></a>
+                {#<a href="#" class="chat-close" data-animate="1"><i class="entypo-cancel"></i></a>#}
+                <div class="btn-group pull-right">
+                    <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
+                        <span class="glyphicon glyphicon-chevron-down"></span>
+                    </button>
+                    <ul class="dropdown-menu slidedown">
+                        <li>
+                            <a href="#"><span class="glyphicon glyphicon-refresh"></span> Refresh</a>
+                        </li>
+                        <li>
+                            <a href="#"><span class="glyphicon glyphicon-ok-sign"></span> Online</a>
+                        </li>
+                        <li>
+                            <a href="#"><span class="glyphicon glyphicon-remove"></span> Busy</a>
+                        </li>
+                        <li>
+                            <a href="#"><span class="glyphicon glyphicon-time"></span> Away</a>
+                        </li>
+                        <li class="divider"></li>
+                        <li>
+                            <a href="#"><span class="glyphicon glyphicon-off"></span> Offline</a>
+                        </li>
+                    </ul>
+                </div>
+                
                 <i class="entypo-users"></i>Chat<span class="badge badge-success is-hidden">0</span>
             </h2>
 

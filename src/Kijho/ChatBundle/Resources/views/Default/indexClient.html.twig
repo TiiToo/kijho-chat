@@ -1,15 +1,38 @@
 {% extends 'ChatBundle:Default:mainClient.html.twig' %}
 {% block title %}Chat Bundle{% endblock %}
 {% block content %}
-        <div class="row">
-            <div class="col-md-5">
-                <h1 class="pdn">Chat</h1>
-                <legend>Hi {{ nickname }}, Welcome to Chat</legend>
-                <div class="panel panel-primary">
+    
+        {% if local is defined and local == true %}
+            <div class="main-content">
+                <div class="row">
+                    <!-- Raw Links -->
+                    <div class="col-md-6 pull-right">
+                        <ul class="list-inline links-list ">
+                            <li>
+                                <a id="display-chat" href="#" data-toggle="chat" data-animate="1" data-collapse-sidebar="1">
+                                    <i class="entypo-chat"></i>
+                                    Chat
+                                    <span class="badge badge-success chat-notifications-badge is-hidden">0</span>
+                                </a>
+                            </li>
+                        </ul>
+                        <span id="container-notification"></span>
+                    </div>
+                </div>
+                <hr />
+                <div class="col-lg-12" style="height: 400px; min-height: 400px;">    
+                </div>
+            </div>
+        {% endif %}
+    
+        <div id="chat" class="fixed">
+            <div class="chat-inner">
+                <div class="panel panel-primary" style="margin: 8px;">
                     <div class="panel-heading">
-                        <span class="glyphicon glyphicon-comment"></span> Chat
+                        <span class="glyphicon glyphicon-comment"></span>
+                        Chat <span class="badge badge-success is-hidden">0</span>
                         <div class="btn-group pull-right">
-                            <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
+                            <button data-toggle="dropdown" class="btn btn-default btn-xs dropdown-toggle" type="button">
                                 <span class="glyphicon glyphicon-chevron-down"></span>
                             </button>
                             <ul class="dropdown-menu slidedown">
@@ -40,7 +63,7 @@
                         <div class="input-group">
                             <input id="input-message" type="text" class="form-control input-sm" placeholder="Type your message here...">
                             <span class="input-group-btn">
-                                <button class="btn btn-warning btn-sm send-message" id="btn-chat">
+                                <button class="btn btn-primary btn-sm send-message" id="btn-chat">
                                     Send</button>
                             </span>
                         </div>
@@ -48,7 +71,6 @@
                 </div>
             </div>
         </div>
-
 {% endblock %}
 
 {% block other_scripts %}

@@ -7,55 +7,47 @@
         <meta name="author" content="">
         <title>{% block title %}Chat Bundle{% endblock %}</title>     
 
+{#        <link rel="stylesheet" href="{{ asset('bundles/chat/assets/js/jquery-ui/css/no-theme/jquery-ui-1.10.3.custom.min.css') }}">#}
+        <link rel="stylesheet" href="{{ asset('bundles/chat/assets/css/font-icons/entypo/css/entypo.css') }}">
+        <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noto+Sans:400,700,400italic">
+        
         {% if local is defined and local == true %}
-            <link rel="stylesheet" href=" {{ asset('bundles/chat/css/bootstrap.min.css') }}" media="screen">
+            <link rel="stylesheet" href="{{ asset('bundles/chat/assets/css/bootstrap.css') }}">
         {% endif %}
         <link rel="stylesheet" href=" {{ asset('bundles/chat/css/bootstrap-theme.min.css') }}" media="screen">
         <link rel="stylesheet" href=" {{ asset('bundles/chat/css/style-client.css') }}" media="screen">
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+{#        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">#}
         
+        
+        <link rel="stylesheet" href="{{ asset('bundles/chat/assets/css/neon-core.css') }}">
+{#        <link rel="stylesheet" href="{{ asset('bundles/chat/assets/css/neon-theme.css') }}">#}
 
+        <script src="{{ asset('bundles/chat/assets/js/jquery-1.11.0.min.js') }}"></script>
+        
     </head><!--/head-->
     <body>
-        <section class="container header">
-            {% block header_content %}
-            {% endblock %}
-            <div class="alert alert-dismissable alert-success col-lg-12 flash-message" id="flash-message-success" style="display: none;">
-                <button data-dismiss="alert" class="close" type="button">x</button>
-                <span></span>
-            </div>
-            <div class="alert alert-dismissable alert-warning col-lg-12 flash-message" id="flash-message-warning" style="display: none;">
-                <button data-dismiss="alert" class="close" type="button">x</button>
-                <span></span>
-            </div>
-            <div class="alert alert-dismissable alert-danger col-lg-12 flash-message" id="flash-message-danger" style="display: none;">
-                <button data-dismiss="alert" class="close" type="button">x</button>
-                <span></span>
-            </div>
-        </section>
-
-        <section class="container">
+        <div class="page-container">
             {% block content %}
             {% endblock %}
-        </section><!--/#about-us-->
+        </div><!--/#about-us-->
 
-        <section id="bottom" class="wet-asphalt">
-            <div class="container">
-                <div class="row"><!--/.col-md-3-->
-                    {% block bottom_content %}
-                    {% endblock %}
-                </div>
-            </div>
-        </section><!--/#bottom-->
-
-        <script type="text/javascript" src="{{ asset('bundles/chat/js/jquery-2.1.4.min.js') }}"></script>
         {% if local is defined and local == true %}
-            <script type="text/javascript" src="{{ asset('bundles/chat/js/bootstrap.min.js') }}"></script>
+            <script src="{{ asset('bundles/chat/assets/js/bootstrap.js') }}"></script>
         {% endif %}
+        
+        <script src="{{ asset('bundles/chat/assets/js/gsap/main-gsap.js') }}"></script>
+        <script src="{{ asset('bundles/chat/assets/js/joinable.js') }}"></script>
+        <script src="{{ asset('bundles/chat/assets/js/resizeable.js') }}"></script>
+        <script src="{{ asset('bundles/chat/assets/js/neon-chat.j') }}s"></script>
+        <script src="{{ asset('bundles/chat/assets/js/neon-custom.js') }}"></script>
 
         <script type="text/javascript">
+            var localEnvironment = false;
+            {% if local is defined and local == true %}
+                localEnvironment = true;
+            {% endif %}
+    
             $(document).ready(function () {
-
                 {% block scripts %}
                 {% endblock %}
             });

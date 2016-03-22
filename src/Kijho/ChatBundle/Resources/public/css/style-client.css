@@ -92,3 +92,31 @@ and open the template in the editor.
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
     background-color: #555;
 }
+
+.btn-primary {
+    background-color: #337ab7 !important;
+    border-color: #337ab7 !important;
+}
+
+#chat {
+    width: 400px !important;
+    background-color: #f7f7f9 !important;
+    border: 1px solid #e1e1e8 !important;
+    height: 396px !important;
+    margin: auto !important;
+}
+
+.chat-inner {
+    color: #000000 !important;
+}
+
+.panel-heading {
+    height: 45px;
+    color: #FFF !important;
+    padding: 10px;
+    font-size: 14px;
+}
+
+.panel-heading i {
+    vertical-align: middle;
+}
