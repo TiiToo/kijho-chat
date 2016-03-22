@@ -110,13 +110,13 @@ and open the template in the editor.
     color: #000000 !important;
 }
 
-.panel-heading {
+.panel-heading-chat {
     height: 45px;
     color: #FFF !important;
     padding: 10px;
     font-size: 14px;
 }
 
-.panel-heading i {
+.panel-heading-chat i {
     vertical-align: middle;
 }
