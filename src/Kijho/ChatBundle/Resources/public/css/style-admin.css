@@ -7,9 +7,10 @@ and open the template in the editor.
     Created on : Mar 22, 2016, 4:47:38 PM
     Author     : cesargiraldonaranjo
 */
-.chat-conversation {
+.chat-conversation li p {
     color: #949494 !important;
 }
+
 .badge-success {
     background-color: #00a651 !important;
 }
