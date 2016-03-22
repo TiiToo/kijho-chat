@@ -120,3 +120,7 @@ and open the template in the editor.
 .panel-heading-chat i {
     vertical-align: middle;
 }
+
+.badge-success {
+    background-color: #00a651 !important;
+}
