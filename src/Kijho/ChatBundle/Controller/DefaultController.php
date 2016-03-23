@@ -5,6 +5,8 @@ namespace Kijho\ChatBundle\Controller;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Process\Process;
+use Symfony\Component\HttpFoundation\Request;
+use Kijho\ChatBundle\Entity\Message;
 
 class DefaultController extends Controller {
 
@@ -22,12 +24,12 @@ class DefaultController extends Controller {
     }
 
     public function adminPanelAction($nickname = null, $userId = '', $userType = '', $local = false) {
-        
+
         $em = $this->getDoctrine()->getManager();
-        
+
         //listado de usuarios que han chateado con el admin, ordenado descendentemente por la fecha del ultimo mensaje
         $lastConversations = $em->getRepository('ChatBundle:Message')->findClientChatNickNames($userId);
-        
+
         //buscamos las conversaciones completas entre el admin y los clientes
         $allConversations = array();
         $i = 0;
@@ -37,7 +39,7 @@ class DefaultController extends Controller {
             $allConversations[$i]['messages'] = $conversation;
             $i++;
         }
-        
+
         return $this->render('ChatBundle:Default:indexAdmin.html.twig', array(
                     'local' => $local,
                     'nickname' => $nickname,
@@ -46,6 +48,38 @@ class DefaultController extends Controller {
                     'lastConversations' => $lastConversations,
                     'allConversations' => $allConversations,
         ));
+    }
+
+    /**
+     * Permite obtener el listado de mensajes que no ha leido un cliente
+     * @param Request $request
+     */
+    public function getClientUnreadMessagesAction(Request $request) {
+        $nickname = $request->request->get('nickname');
+        $userId = $request->request->get('userId');
+
+        $em = $this->getDoctrine()->getManager();
+
+        $unreadMessages = $em->getRepository('ChatBundle:Message')->findClientUnreadMessages($nickname, $userId);
+        
+        $arrayUnread = array();
+
+        for($i = 0; $i < count($unreadMessages); $i++) {
+            $message = array(
+                'msg_date' => $unreadMessages[$i]->getDate()->format('m/d/Y h:i a'),
+                'msg' => $unreadMessages[$i]->getMessage(),
+                'nickname' => $unreadMessages[$i]->getSenderNickname(),
+            );
+            array_push($arrayUnread, $message);
+        }
+
+        $unreadMessages = json_encode($arrayUnread, true);
+
+        $response = array(
+            'result' => '__OK__',
+            'messages' => $unreadMessages
+        );
+        return new JsonResponse($response);
     }
 
     public function exampleAdminAction() {
@@ -67,7 +101,7 @@ class DefaultController extends Controller {
         try {
             //$process = new Process('./start-gos.sh &');
             $process = new Process('php ../app/console gos:websocket:server&');
-            $process->start();
+            $process->run();
             //$this->runProcess($process);
         } catch (\Exception $exc) {
             $response = array(

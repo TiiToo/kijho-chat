@@ -320,7 +320,7 @@
                 var spanStatus = $("#group-2 a[client-id='" + payload.user_id + "'] span").first();
                 spanStatus.attr('class', 'user-status is-offline');
             }
-            //neonChat.refreshUserIds();
+            neonChat.refreshUserIds();
             neonChat.orderGroups();
             displayNotification(payload.msg);
         }
@@ -345,7 +345,7 @@
                     $('#group-2 a').first().before(htmlUser);
                 }
             }
-            //neonChat.refreshUserIds();
+            neonChat.refreshUserIds();
             neonChat.orderGroups();
             if (payload.msg) {
                 displayNotification(payload.msg);

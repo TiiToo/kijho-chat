@@ -43,6 +43,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     const MESSAGE_FROM_ADMIN = 'message_from_admin';
     const MESSAGE_SEND_SUCCESSFULLY = 'message_send_successfully';
     const CLIENT_TYPING = 'client_typing';
+    const CLIENT_MESSAGES_PUT_AS_READED = 'client_messages_put_as_readed';
 
     /**
      * Constantes para los tipos de mensajes que los usuarios envian al servidor
@@ -199,7 +200,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 if ($clientTopic->userId == $clientId) {
 
                                     $foundClient = $clientTopic;
-                                    
+
                                     //se utiliza la variable $messageSaved, para solo guardar un mensaje 
                                     //y enviarlo a todos los dispositivos del usuario
                                     if (!$messageSaved) {
@@ -234,16 +235,16 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 'user_id' => $connection->userId,
                                 'msg_date' => $adminMessage->getDate()->format('m/d/Y h:i a'),
                             ]);
-                            
+
                             /**
                              * Verificamos si tenbemos que notificar a los otros administradores
                              * que el administrador actual ya se hizo cargo de la conversacion
                              */
-                            $notifyOtherAdmins = (boolean)$event['notifyOtherAdmins'];
+                            $notifyOtherAdmins = (boolean) $event['notifyOtherAdmins'];
                             if ($notifyOtherAdmins && $foundClient) {
-                                
-                                $message = 'Automatic Message: '.$connection->nickname.' will receive and will respond the client messages';
-                                
+
+                                $message = 'Automatic Message: ' . $connection->nickname . ' will receive and will respond the client messages';
+
                                 $administrators = $this->getOnlineAdministrators();
                                 foreach ($administrators as $adminTopic) {
                                     if ($adminTopic->userId != $connection->userId) {
@@ -256,7 +257,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                         $cliMessage->setType(Entity\Message::TYPE_CLIENT_TO_ADMIN);
                                         $this->em->persist($cliMessage);
                                         $this->em->flush();
-                                        
+
                                         $adminTopic->event($topic->getId(), [
                                             'msg_type' => self::MESSAGE_FROM_CLIENT,
                                             'msg' => $message,
@@ -268,7 +269,6 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                     }
                                 }
                             }
-                            
                         }
                     }
                 } elseif ($connection->userType == self::USER_CLIENT) {
@@ -335,6 +335,23 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 'user_id' => $connection->userId,
                             ]);
                         }
+                    } elseif ($event['type'] == self::PUT_MESSAGES_AS_READED) {
+                        
+                        //buscamos los mensajes que el cliente tiene sin leer
+                        $unreadMessages = $this->em->getRepository('ChatBundle:Message')->findClientUnreadMessages($connection->nickname, $connection->userId);
+                        
+                        $currentDate = Util::getCurrentDate();
+                        foreach ($unreadMessages as $message) {
+                            $message->setReaded(true);
+                            $message->setDateReaded($currentDate);
+                            $this->em->persist($message);
+                            $this->em->flush();
+                        }
+                        
+                        //notificamos al usuario que sus mensajes fueron marcados como leidos
+                        $connection->event($topic->getId(), [
+                            'msg_type' => self::CLIENT_MESSAGES_PUT_AS_READED,
+                        ]);
                     }
                 }
             }

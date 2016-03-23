@@ -81,6 +81,8 @@
 
         var webSocket = WS.connect(_WS_URI);
 
+        var globalSession = null;
+
         webSocket.on("socket/connect", function (session) {
             bindUI(session);
             console.log("Successfully Connected!");
@@ -117,7 +119,7 @@
          * @param {type} session
          */
         function bindUI(session) {
-
+            globalSession = session;
             $("#input-message").bind("keydown", function (e) {
                 var key;
                 if (window.event) {
@@ -135,12 +137,17 @@
             $(".send-message").bind("click", function (e) {
                 sendMessage(session);
             });
+            
+            $("#display-chat").bind("click", function (e) {
+                putMessagesReaded();
+            });
         }
 
         /**
          * Permite deshabilitar los eventos sobre los botones, cuando se pierde la conexion
          */
         function unbindUI() {
+            globalSession = null;
             $(".send-message").unbind();
             $("#input-message").unbind();
         }
@@ -185,15 +192,26 @@
          * @param {type} payload
          **/
         function serverEvent(uri, payload) {
-            console.log(payload);
             if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SERVER_WELCOME_MESSAGE')}}") {
-                $("#message-list").append('<li>' + payload.msg + '</li>');
+                $("#message-list").prepend('<li>' + payload.msg + '</li>');
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_FROM_ADMIN')}}") {
                 destination = payload.user_id;
-                appendHtmlMessageAdmin(payload)
+                appendHtmlMessageAdmin(payload);
+                //displayChatPanel();
+                updateUnreadCounters(1);
+                
+                var displayStatus = $("#chat").css('display');
+                if (displayStatus == 'block') {
+                    putMessagesReaded();
+                }
+                
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_SEND_SUCCESSFULLY')}}") {
                 appendHtmlMessageClient(payload);
+            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CLIENT_MESSAGES_PUT_AS_READED')}}") {
+                window.setTimeout(resetUnreadCounters, 2000);
             }
+            
+            
         }
         
         /**
@@ -252,5 +270,83 @@
             session.publish("chat/channel", data);
         }
         
+        /**
+         * Permite verificar si el panel de chat esta oculto, para desplegarlo
+         */
+        function displayChatPanel() {
+            var displayStatus = $("#chat").css('display');
+            if (displayStatus == 'none') {
+                $("#display-chat").trigger('click');
+            }
+        }
+        
+        /**
+         * Permite actualizar los contadores de mensajes sin leer por el cliente
+         */
+        function updateUnreadCounters(counter) {
+            var spanNotification = $("#display-chat span.chat-notifications-badge");
+            var currentNumber = parseInt(spanNotification.html());
+            currentNumber += counter;
+            spanNotification.html(currentNumber);
+
+            var secondSpanNotification = $(".panel-heading-chat span.badge-success");
+            secondSpanNotification.html(currentNumber);
+
+            if (spanNotification.hasClass('is-hidden')) {
+                spanNotification.removeClass('is-hidden');
+                secondSpanNotification.removeClass('is-hidden');
+            }
+        }
+        
+        function resetUnreadCounters() {
+            var spanNotification = $("#display-chat span.chat-notifications-badge");
+            spanNotification.html('0');
+            spanNotification.addClass('is-hidden');
+            
+            var secondSpanNotification = $(".panel-heading-chat span.badge-success");
+            secondSpanNotification.html('0');
+            secondSpanNotification.addClass('is-hidden');
+        }
+        
+        /**
+         * Permite marcar los mensajes enviados al cliente como leidos
+         **/
+        function putMessagesReaded() {
+            if (globalSession) {
+                var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::PUT_MESSAGES_AS_READED')}}"};
+                globalSession.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
+            }
+        }
+        
     </script>
+{% endblock %}
+
+{% block scripts %}
+    
+    /**
+     * Ajax que permite consultar los mensajes que el usuario no ha leido
+     **/
+    $.ajax({
+        type: 'POST',
+        url: "{{path('chat_example_client_get_unread_messages')}}",
+        dataType: 'json',
+        data: {nickname: "{{nickname}}", userId: "{{userId}}"},
+        success: function (resp)
+        {
+            if (resp.result == '__OK__') {
+                var messages = JSON.parse(resp.messages)
+                if (messages.length > 0) {
+                    updateUnreadCounters(messages.length);
+                }
+
+                for (var i = 0; i < messages.length; i++) {
+                    appendHtmlMessageAdmin(messages[i]);
+                }
+            }
+        },
+        error: function (resp)
+        {
+            console.log("Error cargando los mensajes sin leer")
+        }
+    });
 {% endblock %}

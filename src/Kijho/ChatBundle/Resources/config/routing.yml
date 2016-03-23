@@ -2,6 +2,10 @@ chat_example_client:
     path:     /client
     defaults: { _controller: ChatBundle:Default:exampleClient }
     
+chat_example_client_get_unread_messages:
+    path:     /client/getUnreadMessages
+    defaults: { _controller: ChatBundle:Default:getClientUnreadMessages }   
+ 
 chat_example_admin:
     path:     /admin
     defaults: { _controller: ChatBundle:Default:exampleAdmin }

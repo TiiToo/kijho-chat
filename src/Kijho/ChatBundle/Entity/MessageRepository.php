@@ -66,5 +66,24 @@ class MessageRepository extends EntityRepository {
 
         return $consult->getResult();
     }
+    
+    public function findClientUnreadMessages($nickname, $userId) {
+        $em = $this->getEntityManager();
+        
+        $consult = $em->createQuery("
+        SELECT m
+        FROM ChatBundle:Message m
+        WHERE m.destinationId = :client
+        AND m.destinationNickname = :clientNickname
+        AND m.readed = :unread
+        AND m.type = :adminToClient
+        ORDER BY m.date ASC");
+        $consult->setParameter('clientNickname', $nickname);
+        $consult->setParameter('client', $userId);
+        $consult->setParameter('unread', false);
+        $consult->setParameter('adminToClient', Message::TYPE_ADMIN_TO_CLIENT);
+
+        return $consult->getResult();
+    }
 
 }
