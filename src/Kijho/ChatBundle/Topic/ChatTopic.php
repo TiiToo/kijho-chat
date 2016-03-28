@@ -375,6 +375,24 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                         $connection->event($topic->getId(), [
                             'msg_type' => self::CLIENT_MESSAGES_PUT_AS_READED,
                         ]);
+                    } elseif ($eventType == self::UPDATE_SETTINGS) {
+
+                        $notificationSound = trim(strip_tags($event['notificationSound']));
+
+                        $searchUserSettings = array('userId' => $connection->userId, 'userType' => $connection->userType);
+                        $userSettings = $this->em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
+
+                        if ($userSettings instanceof Entity\UserChatSettings) {
+                            $userSettings->setNotificationSound($notificationSound);
+                            $this->em->persist($userSettings);
+                            $this->em->flush();
+                            
+                            //notificamos al usuario que sus configuraciones se actualizaron
+                            $connection->event($topic->getId(), [
+                                'msg_type' => self::SETTINGS_UPDATED,
+                                'msg' => 'Settings successfully updated'
+                            ]);
+                        }
                     }
                 }
             }

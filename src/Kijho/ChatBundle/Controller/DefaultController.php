@@ -13,11 +13,28 @@ use Kijho\ChatBundle\Form\UserChatSettingsType;
 class DefaultController extends Controller {
 
     public function clientPanelAction($nickname = null, $userId = '', $userType = '', $local = false) {
+        $em = $this->getDoctrine()->getManager();
+
+        //buscamos las configuraciones del usuario, sino tiene se las creamos
+        $searchUserSettings = array('userId'=>$userId, 'userType' => $userType);
+        $userSettings = $em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
+        if (!$userSettings) {
+            $userSettings = new UserChatSettings();
+            $userSettings->setUserId($userId);
+            $userSettings->setUserType($userType);
+            $em->persist($userSettings);
+            $em->flush();
+        }
+        
+        $userSettingsForm = $this->createForm(UserChatSettingsType::class, $userSettings);
+        
         return $this->render('ChatBundle:Default:indexClient.html.twig', array(
                     'local' => $local,
                     'nickname' => $nickname,
                     'userId' => $userId,
                     'userType' => $userType,
+                    'userSettings' => $userSettings,
+                    'userSettingsForm' => $userSettingsForm->createView(),
         ));
     }
 

@@ -124,3 +124,38 @@ and open the template in the editor.
 .badge-success {
     background-color: #00a651 !important;
 }
+
+.chat-settings {
+    width: 90%;
+    background-color: #f0f0f1;
+    padding: 12px;
+    margin: auto;
+    color: #373e4a;
+    border-radius: 4px;
+    margin-top: 12px;
+}
+
+.chat-settings i.entypo-cancel {
+    font-size: 16px;
+}
+
+.margin-top {
+    margin-top: 12px;
+}
+
+.no-padding{
+    padding: 0px;
+}
+
+.no-padding-left {
+    padding-left: 0px;
+}
+
+.no-padding-right {
+    padding-right: 0px;
+}
+
+.flt-left {
+    float: left;
+}
+
