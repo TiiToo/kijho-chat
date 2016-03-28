@@ -14,3 +14,46 @@ and open the template in the editor.
 .badge-success {
     background-color: #00a651 !important;
 }
+
+.chat-settings {
+    width: 90%;
+    background-color: #949494;
+    padding: 12px;
+    margin: auto;
+    color: #f0f0f1;
+    border-radius: 4px;
+}
+
+.chat-settings a {
+    color: #f0f0f1;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.chat-settings i.entypo-cancel {
+    font-size: 16px;
+}
+
+.flt-left {
+    float: left;
+}
+
+.margin-top {
+    margin-top: 12px;
+}
+
+.padding-top {
+    padding-top: 12px;
+}
+
+.no-padding{
+    padding: 0px;
+}
+
+.no-padding-left {
+    padding-left: 0px;
+}
+
+.no-padding-right {
+    padding-right: 0px;
+}

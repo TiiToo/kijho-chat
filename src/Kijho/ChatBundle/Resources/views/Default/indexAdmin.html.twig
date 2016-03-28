@@ -35,7 +35,7 @@
                     </button>
                     <ul class="dropdown-menu slidedown">
                         <li>
-                            <a href="#"><span class="glyphicon glyphicon-refresh"></span> Refresh</a>
+                            <a href="javascript:window.location.reload();"><span class="glyphicon glyphicon-refresh"></span> Refresh</a>
                         </li>
                         <li>
                             <a href="#"><span class="glyphicon glyphicon-ok-sign"></span> Online</a>
@@ -46,15 +46,58 @@
                         <li>
                             <a href="#"><span class="glyphicon glyphicon-time"></span> Away</a>
                         </li>
-                        <li class="divider"></li>
                         <li>
                             <a href="#"><span class="glyphicon glyphicon-off"></span> Offline</a>
+                        </li>
+                        <li class="divider"></li>
+                        <li>
+                            <a href="javascript:void(0);" class="display-settings"><span class="glyphicon glyphicon-cog"></span> Settings</a>
                         </li>
                     </ul>
                 </div>
                 
                 <i class="entypo-users"></i>Chat<span class="badge badge-success is-hidden">0</span>
             </h2>
+                
+            <div class="row chat-settings col-lg-12 hidden">
+                <a><i class="entypo-cog"></i> Chat Settings</a>
+                <i class="entypo-cancel display-settings pull-right"></i><br>
+                <div class="form-group margin-top">
+                    <div class="col-xs-9 no-padding-left">
+                        {{ form_label(userSettingsForm.notificationSound)}}
+                        {{ form_widget(userSettingsForm.notificationSound,{'attr':{'class':'form-control'}})}}
+                    </div>
+                    <div class="col-xs-3 no-padding" style="padding-top: 24px;">
+                        <a class="btn btn-sm play-sound no-padding"><i class="entypo-play"></i> Play</a>
+                    </div>
+                </div>
+                <div class="form-group col-xs-12 flt-left margin-top no-padding">
+                    <button class="btn btn-primary pull-right save-settings">Save Changes</button>
+                </div>
+                <div class="hidden">
+                    {% set sounds = { 0 : 'sounds-capisci.mp3',
+                                      1 : 'sounds-come-to-daddy.mp3', 
+                                      2 : 'sounds-communication-channel.mp3',
+                                      3 : 'sounds-credulous.mp3', 
+                                      4 : 'sounds-et-voila.mp3', 
+                                      5 : 'sounds-gets-in-the-way.mp3', 
+                                      6 : 'sounds-isnt-it.mp3',
+                                      7 : 'sounds-no-way.mp3',
+                                      8 : 'sounds-obey.mp3',
+                                      9 : 'sounds-pedantic.mp3',
+                                      10 : 'sounds-served.mp3',
+                                      11 : 'sounds-surprise-on-a-spring.mp3',
+                                      12 : 'sounds-worthwhile.mp3',
+                                      13 : 'sounds-you-know.mp3',
+                                      14 : 'sounds-your-turn.mp3',
+                                        } %}
+                    {% for sound in sounds %}
+                        <audio controls id="{{sound}}">
+                            <source src="{{asset('bundles/chat/sounds/'~sound)}}" type="audio/mpeg">
+                        </audio>
+                    {% endfor %}
+                </div>
+            </div>
 
             {% if local is defined and local == false %}
                 <span class="col-xs-12" id="container-notification"></span>
@@ -112,12 +155,6 @@
                         <span class="time">{{message.date|date('m/d/Y h:i a')}}</span>
                     </li>
                 {% endfor %}
-
-                {#<li class="opponent unread">
-                    <span class="user">Daniel A. Pena</span>
-                    <p>I am going out.</p>
-                    <span class="time">08:21</span>
-                </li>#}
             </ul>
         {% endfor %}
     </div>
@@ -213,6 +250,23 @@
                 prepareToMessage(clientId);
                 putMessagesReaded(session, clientId);
             });
+            
+            $(".display-settings").bind("click", function(e) {
+                $(".chat-settings").toggleClass('hidden');
+            });
+            
+            $("#chatbundle_user_chat_settings_type_notificationSound").bind("change", function(e) {
+                document.getElementById($(this).val()).play();
+            });
+            
+            $(".play-sound").bind("click", function(e) {
+                var sound = $("#chatbundle_user_chat_settings_type_notificationSound").val();
+                document.getElementById(sound).play();
+            });
+            
+            $(".save-settings").bind("click", function(e) {
+                saveSettings(session);
+            });
         }
 
 
@@ -222,6 +276,9 @@
             globalSession = null;
             $(".chat-textarea textarea").unbind();
             $(".open-client-conversation").unbind();
+            $(".display-settings").unbind();
+            $("#chatbundle_user_chat_settings_type_notificationSound").unbind();
+            $(".play-sound").unbind();
         }
 
         //permite realizar la conexion a una sala en especifico, y establecer un escucha de eventos
@@ -288,6 +345,8 @@
                 displayNotification('Message send successfully');
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CLIENT_TYPING')}}") {
                 clientTyping(payload);
+            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SETTINGS_UPDATED')}}") {
+                settingsUpdated();
             }
         }
 
@@ -397,6 +456,8 @@
 
             displayNotification('New message from ' + payload.nickname);
 
+            $(".play-sound").trigger('click');
+
             adminDestinations[payload.user_id] = payload.admin_destination;
 
             //buscamos el tab de conversacion del usuario en el listado de conversaciones
@@ -479,18 +540,27 @@
         }
 
 
+        /**
+         * Permite desplegar el mensaje que indica que un cliente esta escribiendo
+         **/
         function clientTyping(payload) {
             var tabConversation = $(".open-client-conversation[client-id='" + payload.user_id + "']");
             tabConversation.find("span.typing").removeClass('hidden');
             window.setTimeout(hideTyping, 2000);
         }
 
+        /**
+         * Permite desplegar un mensaje en el panel de notificaciones
+         **/
         function displayNotification(msg) {
             $("#container-notification").html(msg);
             $("#container-notification").removeClass('hidden');
             window.setTimeout(hideNotification, 2000);
         }
 
+        /**
+         * Permite ocultar el panel de notificaciones
+         **/
         function hideNotification() {
             var object = $("#container-notification");
             if (!object.hasClass('hidden')) {
@@ -498,7 +568,9 @@
             }
         }
 
-
+        /**
+         * Permite ocultar el mensaje que indica que un cliente esta escribiendo
+         **/
         function hideTyping() {
             $(".open-client-conversation span.typing").each(function () {
                 var object = $(this);
@@ -506,6 +578,30 @@
                     object.addClass('hidden');
                 }
             });
+        }
+
+        /**
+         * Permite enviar las nuevas configuraciones del chat al servidor 
+         * para que sean validadas y almacenadas
+         **/
+        function saveSettings(session) {
+            var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::UPDATE_SETTINGS')}}",
+                notificationSound: $("#chatbundle_user_chat_settings_type_notificationSound").val(),
+            };
+            session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
+            
+            $(".save-settings").html('Please wait..');
+            $(".save-settings").attr('disabled','disabled');
+        }
+        
+        /**
+         * Permite realizar cambios en pantalla una vez almacenadas las 
+         * configuraciones del chat
+         **/
+        function settingsUpdated() {
+            $(".save-settings").html('Save Changes');
+            $(".save-settings").removeAttr('disabled');
+            $(".chat-settings").toggleClass('hidden');
         }
 
 

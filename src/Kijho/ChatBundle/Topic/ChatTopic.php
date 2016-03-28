@@ -44,12 +44,14 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     const MESSAGE_SEND_SUCCESSFULLY = 'message_send_successfully';
     const CLIENT_TYPING = 'client_typing';
     const CLIENT_MESSAGES_PUT_AS_READED = 'client_messages_put_as_readed';
+    const SETTINGS_UPDATED = 'settings_updated';
 
     /**
      * Constantes para los tipos de mensajes que los usuarios envian al servidor
      */
     const MESSAGE_TO_ADMIN = 'message_to_admin';
     const PUT_MESSAGES_AS_READED = 'put_messages_as_readed';
+    const UPDATE_SETTINGS = 'update_settings';
 
     /**
      * Constante que controla el tiempo en el cual se actualiza el listado de usuarios
@@ -167,11 +169,14 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
 
         if ($topic->getId() == 'chat/channel') {
             if (isset($event['type']) && !empty($event['type'])) {
+
+                $eventType = trim(strip_tags($event['type']));
+
                 if ($connection->userType == self::USER_ADMIN) {
-                    if ($event['type'] == self::PUT_MESSAGES_AS_READED) {
+                    if ($eventType == self::PUT_MESSAGES_AS_READED) {
 
                         if (isset($event['clientId']) && !empty($event['clientId'])) {
-                            $clientId = $event['clientId'];
+                            $clientId = trim(strip_tags($event['clientId']));
 
                             //buscamos los mensajes que el cliente le ha enviado al administrador
                             $search = array('senderId' => $clientId, 'destinationId' => $connection->userId, 'readed' => false);
@@ -185,12 +190,12 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 $this->em->flush();
                             }
                         }
-                    } elseif ($event['type'] == self::MESSAGE_TO_CLIENT) {
+                    } elseif ($eventType == self::MESSAGE_TO_CLIENT) {
                         if (isset($event['clientId']) && !empty($event['clientId'])) {
-                            $clientId = $event['clientId'];
+                            $clientId = trim(strip_tags($event['clientId']));
 
                             //buscamos la conexion del cliente para enviarle el mensaje
-                            $message = $event['message'];
+                            $message = trim(strip_tags($event['message']));
 
                             //buscamos al administrador con el nickname para mandarle el mensaje
                             $clients = $this->getOnlineClients();
@@ -270,15 +275,33 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 }
                             }
                         }
+                    } elseif ($eventType == self::UPDATE_SETTINGS) {
+
+                        $notificationSound = trim(strip_tags($event['notificationSound']));
+
+                        $searchUserSettings = array('userId' => $connection->userId, 'userType' => $connection->userType);
+                        $userSettings = $this->em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
+
+                        if ($userSettings instanceof Entity\UserChatSettings) {
+                            $userSettings->setNotificationSound($notificationSound);
+                            $this->em->persist($userSettings);
+                            $this->em->flush();
+                            
+                            //notificamos al administrador que sus configuraciones se actualizaron
+                            $connection->event($topic->getId(), [
+                                'msg_type' => self::SETTINGS_UPDATED,
+                                'msg' => 'Settings successfully updated'
+                            ]);
+                        }
                     }
                 } elseif ($connection->userType == self::USER_CLIENT) {
-                    if ($event['type'] == self::MESSAGE_TO_ADMIN && isset($event['destination'])) {
+                    if ($eventType == self::MESSAGE_TO_ADMIN && isset($event['destination'])) {
 
-                        $message = $event['message'];
+                        $message = trim(strip_tags($event['message']));
                         $messageSaved = false;
                         $administrators = $this->getOnlineAdministrators();
 
-                        $adminId = $event['destination'];
+                        $adminId = trim(strip_tags($event['destination']));
 
 
                         //buscamos al administrador con el nickname para mandarle el mensaje
@@ -323,7 +346,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 'msg_date' => $cliMessage->getDate()->format('m/d/Y h:i a'),
                             ]);
                         }
-                    } elseif ($event['type'] == self::CLIENT_TYPING) {
+                    } elseif ($eventType == self::CLIENT_TYPING) {
 
                         //buscamos a los administradores para notificarles que el cliente esta escribiendo
                         $administrators = $this->getOnlineAdministrators();
@@ -335,11 +358,11 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 'user_id' => $connection->userId,
                             ]);
                         }
-                    } elseif ($event['type'] == self::PUT_MESSAGES_AS_READED) {
-                        
+                    } elseif ($eventType == self::PUT_MESSAGES_AS_READED) {
+
                         //buscamos los mensajes que el cliente tiene sin leer
                         $unreadMessages = $this->em->getRepository('ChatBundle:Message')->findClientUnreadMessages($connection->nickname, $connection->userId);
-                        
+
                         $currentDate = Util::getCurrentDate();
                         foreach ($unreadMessages as $message) {
                             $message->setReaded(true);
@@ -347,7 +370,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                             $this->em->persist($message);
                             $this->em->flush();
                         }
-                        
+
                         //notificamos al usuario que sus mensajes fueron marcados como leidos
                         $connection->event($topic->getId(), [
                             'msg_type' => self::CLIENT_MESSAGES_PUT_AS_READED,

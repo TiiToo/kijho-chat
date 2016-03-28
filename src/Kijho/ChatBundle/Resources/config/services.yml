@@ -22,3 +22,11 @@ services:
         class: Kijho\ChatBundle\RPC\RPCService
         tags:
             - { name: gos_web_socket.rpc }
+            
+    #servicio para las configuraciones de chat de los usuarios
+    chat.form.type.user_settings:
+        class: Kijho\ChatBundle\Form\UserChatSettingsType
+        arguments:
+            - "@service_container"
+        tags:
+            - { name: form.type }

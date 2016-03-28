@@ -7,6 +7,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Process\Process;
 use Symfony\Component\HttpFoundation\Request;
 use Kijho\ChatBundle\Entity\Message;
+use Kijho\ChatBundle\Entity\UserChatSettings;
+use Kijho\ChatBundle\Form\UserChatSettingsType;
 
 class DefaultController extends Controller {
 
@@ -39,6 +41,19 @@ class DefaultController extends Controller {
             $allConversations[$i]['messages'] = $conversation;
             $i++;
         }
+        
+        //buscamos las configuraciones del usuario, sino tiene se las creamos
+        $searchUserSettings = array('userId'=>$userId, 'userType' => $userType);
+        $userSettings = $em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
+        if (!$userSettings) {
+            $userSettings = new UserChatSettings();
+            $userSettings->setUserId($userId);
+            $userSettings->setUserType($userType);
+            $em->persist($userSettings);
+            $em->flush();
+        }
+        
+        $userSettingsForm = $this->createForm(UserChatSettingsType::class, $userSettings);
 
         return $this->render('ChatBundle:Default:indexAdmin.html.twig', array(
                     'local' => $local,
@@ -47,6 +62,8 @@ class DefaultController extends Controller {
                     'userType' => $userType,
                     'lastConversations' => $lastConversations,
                     'allConversations' => $allConversations,
+                    'userSettings' => $userSettings,
+                    'userSettingsForm' => $userSettingsForm->createView(),
         ));
     }
 

@@ -7,8 +7,8 @@ use Gos\Bundle\WebSocketBundle\RPC\RpcInterface;
 use Gos\Bundle\WebSocketBundle\Router\WampRequest;
 use Kijho\ChatBundle\Topic\ChatTopic;
 
-class RPCService implements RpcInterface
-{
+class RPCService implements RpcInterface {
+
     /**
      * Adds the params together
      *
@@ -19,27 +19,26 @@ class RPCService implements RpcInterface
      * @param array $params
      * @return int
      */
-    public function updateConnectionData(ConnectionInterface $connection, WampRequest $request, $params)
-    {
-        $connection->nickname = 'Guest-'.$connection->resourceId;
-        
+    public function updateConnectionData(ConnectionInterface $connection, WampRequest $request, $params) {
+        $connection->nickname = 'Guest-' . strip_tags($connection->resourceId);
+
         if (isset($params['nickname']) && !empty($params['nickname'])) {
-            $nickName = trim ($params['nickname']);
+            $nickName = trim(strip_tags($params['nickname']));
             $connection->nickname = $nickName;
         }
-        
-        $connection->userId = $connection->nickname;
+
+        $connection->userId = strip_tags($connection->nickname);
         if (isset($params['user_id']) && !empty($params['user_id'])) {
-            $userId = trim ($params['user_id']);
+            $userId = trim(strip_tags($params['user_id']));
             $connection->userId = $userId;
         }
-        
+
         $connection->userType = ChatTopic::USER_CLIENT;
         if (isset($params['user_type']) && !empty($params['user_type'])) {
-            $userType = trim ($params['user_type']);
+            $userType = trim(strip_tags($params['user_type']));
             $connection->userType = $userType;
         }
-        
+
         return array("result" => array_sum($params));
     }
 
@@ -48,8 +47,8 @@ class RPCService implements RpcInterface
      * 
      * @return string
      */
-    public function getName()
-    {
+    public function getName() {
         return 'rpc.service';
     }
+
 }
