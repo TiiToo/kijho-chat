@@ -29,6 +29,7 @@
             <div class="chat-inner">
                 <div class="panel panel-primary" style="margin: 8px;">
                     <div class="panel-heading panel-heading-chat" style="height: auto;">
+                        <span class="main-status user-status {{userSettings.status}}"></span>
                         <span class="glyphicon glyphicon-comment"></span>
                         Chat <span class="badge badge-success is-hidden">0</span>
                         <div class="btn-group pull-right">
@@ -40,16 +41,16 @@
                                     <a href="javascript:window.location.reload();"><span class="glyphicon glyphicon-refresh"></span>Refresh</a>
                                 </li>
                                 <li>
-                                    <a href="#"><span class="glyphicon glyphicon-ok-sign"></span>Available</a>
+                                    <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_ONLINE')}}"><span class="glyphicon glyphicon-ok-sign"></span>Online</a>
                                 </li>
                                 <li>
-                                    <a href="#"><span class="glyphicon glyphicon-remove"></span>Busy</a>
+                                    <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_BUSY')}}"><span class="glyphicon glyphicon-remove"></span>Busy</a>
                                 </li>
                                 <li>
-                                    <a href="#"><span class="glyphicon glyphicon-time"></span>Away</a>
+                                    <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_IDLE')}}"><span class="glyphicon glyphicon-time"></span>Away</a>
                                 </li>
                                 <li>
-                                    <a href="#"><span class="glyphicon glyphicon-off"></span>Offline</a>
+                                    <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_OFFLINE')}}"><span class="glyphicon glyphicon-off"></span>Offline</a>
                                 </li>
                                 <li class="divider"></li>
                                 <li>
@@ -201,6 +202,11 @@
             $(".save-settings").bind("click", function(e) {
                 saveSettings(session);
             });
+            
+            $(".change-status").bind("click", function(e) {
+                var newStatus = $(this).attr('status');
+                changeStatus(session, newStatus);
+            });
         }
 
         /**
@@ -214,6 +220,7 @@
             $("#chatbundle_user_chat_settings_type_notificationSound").unbind();
             $(".play-sound").unbind();
             $(".save-settings").unbind();
+            $(".change-status").unbind();
         }
 
         /**
@@ -275,6 +282,8 @@
                 window.setTimeout(resetUnreadCounters, 2000);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SETTINGS_UPDATED')}}") {
                 settingsUpdated();
+            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SELF_STATUS_UPDATED')}}") {
+                selfStatusUpdated(payload);
             }
         }
         
@@ -404,6 +413,24 @@
             $(".save-settings").html('Save Changes');
             $(".save-settings").removeAttr('disabled');
             $(".chat-settings").toggleClass('hidden');
+        }
+        
+        /**
+         * Permite solicitar al servidor el cambio de estado del usuario
+         */
+        function changeStatus(session, newStatus) {
+            var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHANGE_CLIENT_STATUS')}}",
+                newStatus: newStatus,
+            };
+            session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
+        }
+        
+        /**
+         * Permite modificar visualmente el cambio de estado realizado por el admin
+         */
+        function selfStatusUpdated(payload) {
+            $(".panel-heading span.main-status").removeClass(payload.previous_status);
+            $(".panel-heading span.main-status").addClass(payload.new_status);
         }
         
     </script>

@@ -38,6 +38,8 @@ class RPCService implements RpcInterface {
             $userType = trim(strip_tags($params['user_type']));
             $connection->userType = $userType;
         }
+        
+        $connection->status = ChatTopic::STATUS_ONLINE;
 
         return array("result" => array_sum($params));
     }

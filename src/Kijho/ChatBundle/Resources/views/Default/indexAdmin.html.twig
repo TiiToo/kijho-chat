@@ -38,16 +38,16 @@
                             <a href="javascript:window.location.reload();"><span class="glyphicon glyphicon-refresh"></span> Refresh</a>
                         </li>
                         <li>
-                            <a href="#"><span class="glyphicon glyphicon-ok-sign"></span> Online</a>
+                            <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_ONLINE')}}"><span class="glyphicon glyphicon-ok-sign"></span> Online</a>
                         </li>
                         <li>
-                            <a href="#"><span class="glyphicon glyphicon-remove"></span> Busy</a>
+                            <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_BUSY')}}"><span class="glyphicon glyphicon-remove"></span> Busy</a>
                         </li>
                         <li>
-                            <a href="#"><span class="glyphicon glyphicon-time"></span> Away</a>
+                            <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_IDLE')}}"><span class="glyphicon glyphicon-time"></span> Away</a>
                         </li>
                         <li>
-                            <a href="#"><span class="glyphicon glyphicon-off"></span> Offline</a>
+                            <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_OFFLINE')}}"><span class="glyphicon glyphicon-off"></span> Offline</a>
                         </li>
                         <li class="divider"></li>
                         <li>
@@ -56,7 +56,7 @@
                     </ul>
                 </div>
                 
-                <i class="entypo-users"></i>Chat<span class="badge badge-success is-hidden">0</span>
+                <span class="main-status user-status {{userSettings.status}}"></span><i class="entypo-users"></i>Chat<span class="badge badge-success is-hidden">0</span>
             </h2>
                 
             <div class="row chat-settings col-lg-12 hidden">
@@ -267,6 +267,11 @@
             $(".save-settings").bind("click", function(e) {
                 saveSettings(session);
             });
+            
+            $(".change-status").bind("click", function(e) {
+                var newStatus = $(this).attr('status');
+                changeStatus(session, newStatus);
+            });
         }
 
 
@@ -280,6 +285,7 @@
             $("#chatbundle_user_chat_settings_type_notificationSound").unbind();
             $(".play-sound").unbind();
             $(".save-settings").unbind();
+            $(".change-status").unbind();
         }
 
         //permite realizar la conexion a una sala en especifico, y establecer un escucha de eventos
@@ -348,6 +354,10 @@
                 clientTyping(payload);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SETTINGS_UPDATED')}}") {
                 settingsUpdated();
+            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SELF_STATUS_UPDATED')}}") {
+                selfStatusUpdated(payload);
+            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CLIENT_STATUS_UPDATED')}}") {
+                clientStatusUpdated(payload);
             }
         }
 
@@ -361,7 +371,7 @@
                 var element = $("#group-2 a[client-id='" + onlineUsers[i]['user_id'] + "']");
                 if (!$.isEmptyObject(element.html())) {
                     var spanStatus = $("#group-2 a[client-id='" + onlineUsers[i]['user_id'] + "'] span").first();
-                    spanStatus.attr('class', 'user-status is-online');
+                    spanStatus.attr('class', 'user-status '+ onlineUsers[i]['status']);
                 } else {
                     clientJoinRoom(onlineUsers[i]);
                 }
@@ -391,12 +401,13 @@
          * @param {type} payload
          **/
         function clientJoinRoom(payload) {
+            
             var element = $("#group-2 a[client-id='" + payload.user_id + "']");
             if (!$.isEmptyObject(element.html())) {
                 var spanStatus = $("#group-2 a[client-id='" + payload.user_id + "'] span").first();
-                spanStatus.attr('class', 'user-status is-online');
+                spanStatus.attr("class", "user-status "+payload.status);
             } else {
-                var htmlUser = '<a href="#" class="open-client-conversation" client-id="' + payload.user_id + '" data-conversation-history="#client-' + payload.user_id + '"><span class="user-status is-online"></span> <em>' + payload.nickname + '</em><span class="badge badge-info is-hidden">0</span></a>';
+                var htmlUser = '<a href="#" class="open-client-conversation" client-id="' + payload.user_id + '" data-conversation-history="#client-' + payload.user_id + '"><span class="user-status '+payload.status+'"></span> <em>' + payload.nickname + '</em><span class="badge badge-info is-hidden">0</span></a>';
                 var firstUser = $('#group-2 a').first();
                 if (firstUser.hasClass('disabled')) {
                     firstUser.remove();
@@ -603,6 +614,30 @@
             $(".save-settings").html('Save Changes');
             $(".save-settings").removeAttr('disabled');
             $(".chat-settings").toggleClass('hidden');
+        }
+        
+        /**
+         * Permite solicitar al servidor el cambio de estado del usuario
+         */
+        function changeStatus(session, newStatus) {
+            var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHANGE_ADMIN_STATUS')}}",
+                newStatus: newStatus,
+            };
+            session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
+        }
+        
+        /**
+         * Permite modificar visualmente el cambio de estado realizado por el admin
+         */
+        function selfStatusUpdated(payload) {
+            $(".chat-header span.main-status").removeClass(payload.previous_status);
+            $(".chat-header span.main-status").addClass(payload.new_status);
+        }
+        
+        function clientStatusUpdated(payload) {
+            var tabConversation = $(".open-client-conversation[client-id='" + payload.user_id + "']");
+            tabConversation.find("span.user-status").removeClass(payload.previous_status);
+            tabConversation.find("span.user-status").addClass(payload.new_status);
         }
 
 

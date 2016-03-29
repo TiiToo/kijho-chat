@@ -29,6 +29,12 @@ class UserChatSettings {
      * @ORM\Column(name="uset_notification_sound", type="string", nullable=true)
      */
     protected $notificationSound;
+    
+    /**
+     * Estado del usuario
+     * @ORM\Column(name="uset_status", type="string", nullable=true)
+     */
+    protected $status;
 
     /**
      * Identificador del usuario que tiene asociadas las configuraciones
@@ -68,6 +74,14 @@ class UserChatSettings {
 
     function setUserType($userType) {
         $this->userType = $userType;
+    }
+
+    function getStatus() {
+        return $this->status;
+    }
+
+    function setStatus($status) {
+        $this->status = $status;
     }
 
     /**

@@ -22,6 +22,14 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     const USER_ADMIN = 'admin';
 
     /**
+     * Constantes para los posibles estados de los usuarios del chat
+     */
+    const STATUS_ONLINE = 'is-online';
+    const STATUS_BUSY = 'is-busy';
+    const STATUS_IDLE = 'is-idle';
+    const STATUS_OFFLINE = 'is-offline';
+
+    /**
      * Canal por defecto del chat
      */
     const CHAT_CHANNEL = "chat/channel";
@@ -45,6 +53,8 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     const CLIENT_TYPING = 'client_typing';
     const CLIENT_MESSAGES_PUT_AS_READED = 'client_messages_put_as_readed';
     const SETTINGS_UPDATED = 'settings_updated';
+    const SELF_STATUS_UPDATED = 'self_status_updated';
+    const CLIENT_STATUS_UPDATED = 'client_status_updated';
 
     /**
      * Constantes para los tipos de mensajes que los usuarios envian al servidor
@@ -52,6 +62,8 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     const MESSAGE_TO_ADMIN = 'message_to_admin';
     const PUT_MESSAGES_AS_READED = 'put_messages_as_readed';
     const UPDATE_SETTINGS = 'update_settings';
+    const CHANGE_ADMIN_STATUS = 'change_admin_status';
+    const CHANGE_CLIENT_STATUS = 'change_client_status';
 
     /**
      * Constante que controla el tiempo en el cual se actualiza el listado de usuarios
@@ -109,6 +121,13 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
             });
         } elseif ($connection->userType == self::USER_CLIENT) {
 
+            //buscamos las configuraciones del cliente para setear su status
+            $searchUserSettings = array('userId' => $connection->userId, 'userType' => $connection->userType);
+            $userSettings = $this->em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
+            if ($userSettings instanceof Entity\UserChatSettings) {
+                $connection->status = $userSettings->getStatus();
+            }
+            
             //notificamos a los administradores que un nuevo cliente se conectó
             $administrators = $this->getOnlineAdministrators();
             foreach ($administrators as $adminTopic) {
@@ -117,6 +136,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                     'msg' => $connection->nickname . " has joined " . $topic->getId(),
                     'user_id' => $connection->userId,
                     'nickname' => $connection->nickname,
+                    'status' => $connection->status,
                 ]);
             }
         }
@@ -286,12 +306,37 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                             $userSettings->setNotificationSound($notificationSound);
                             $this->em->persist($userSettings);
                             $this->em->flush();
-                            
+
                             //notificamos al administrador que sus configuraciones se actualizaron
                             $connection->event($topic->getId(), [
                                 'msg_type' => self::SETTINGS_UPDATED,
                                 'msg' => 'Settings successfully updated'
                             ]);
+                        }
+                    } else if ($eventType == self::CHANGE_ADMIN_STATUS) {
+
+                        $newStatus = trim(strip_tags($event['newStatus']));
+                        $searchUserSettings = array('userId' => $connection->userId, 'userType' => $connection->userType);
+                        $userSettings = $this->em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
+
+                        if ($userSettings instanceof Entity\UserChatSettings) {
+                            $previousStatus = $userSettings->getStatus();
+                            $userSettings->setStatus($newStatus);
+                            $this->em->persist($userSettings);
+                            $this->em->flush();
+
+                            $connection->status = $newStatus;
+
+                            //notificamos al administrador que se cambio su estado
+                            $connection->event($topic->getId(), [
+                                'msg_type' => self::SELF_STATUS_UPDATED,
+                                'msg' => 'Status successfully updated',
+                                'previous_status' => $previousStatus,
+                                'new_status' => $connection->status,
+                            ]);
+
+                            //FIX_ME
+                            //debemos notificar a todos los clientes el cambio de status del admin
                         }
                     }
                 } elseif ($connection->userType == self::USER_CLIENT) {
@@ -386,12 +431,48 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                             $userSettings->setNotificationSound($notificationSound);
                             $this->em->persist($userSettings);
                             $this->em->flush();
-                            
+
                             //notificamos al usuario que sus configuraciones se actualizaron
                             $connection->event($topic->getId(), [
                                 'msg_type' => self::SETTINGS_UPDATED,
                                 'msg' => 'Settings successfully updated'
                             ]);
+                        }
+                    } else if ($eventType == self::CHANGE_CLIENT_STATUS) {
+
+                        $newStatus = trim(strip_tags($event['newStatus']));
+                        $searchUserSettings = array('userId' => $connection->userId, 'userType' => $connection->userType);
+                        $userSettings = $this->em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
+
+                        if ($userSettings instanceof Entity\UserChatSettings) {
+                            $previousStatus = $userSettings->getStatus();
+                            $userSettings->setStatus($newStatus);
+                            $this->em->persist($userSettings);
+                            $this->em->flush();
+
+                            $connection->status = $newStatus;
+
+                            //notificamos al cliente que se cambio su estado
+                            $connection->event($topic->getId(), [
+                                'msg_type' => self::SELF_STATUS_UPDATED,
+                                'msg' => 'Status successfully updated',
+                                'previous_status' => $previousStatus,
+                                'new_status' => $connection->status,
+                            ]);
+
+                            //FIX_ME
+                            //debemos notificar a todos los administradores el cambio de status del cliente
+                            $administrators = $this->getOnlineAdministrators();
+
+                            foreach ($administrators as $adminTopic) {
+                                $adminTopic->event($topic->getId(), [
+                                    'msg_type' => self::CLIENT_STATUS_UPDATED,
+                                    'nickname' => $connection->nickname,
+                                    'user_id' => $connection->userId,
+                                    'previous_status' => $previousStatus,
+                                    'new_status' => $connection->status,
+                                ]);
+                            }
                         }
                     }
                 }
@@ -475,7 +556,11 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
         if ($this->chatTopic) {
             foreach ($this->chatTopic->getIterator() as $subscriber) {
                 if ($subscriber->userType == self::USER_CLIENT) {
-                    $data = array('nickname' => $subscriber->nickname, 'user_id' => $subscriber->userId);
+                    $data = array(
+                        'nickname' => $subscriber->nickname,
+                        'user_id' => $subscriber->userId,
+                        'status' => $subscriber->status,
+                    );
                     if (!in_array($data, $onlineUsers)) {
                         array_push($onlineUsers, $data);
                     }
