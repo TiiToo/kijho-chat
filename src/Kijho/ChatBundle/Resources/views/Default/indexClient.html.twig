@@ -99,17 +99,44 @@
                             </div>
                         </div>
                     </div>
-                    <div class="panel-body">
-                        <ul class="chat" id="message-list">
-                        </ul>
+                    <div class="chat-container">
+                        <div class="panel-body ">
+                            <ul class="chat" id="message-list">
+                            </ul>
+                        </div>
+                        <div class="panel-footer">
+                            <div class="input-group">
+                                <input id="input-message" type="text" class="form-control input-sm" placeholder="Type your message here...">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-primary btn-sm send-message" id="btn-chat">
+                                        Send</button>
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="panel-footer">
-                        <div class="input-group">
-                            <input id="input-message" type="text" class="form-control input-sm" placeholder="Type your message here...">
-                            <span class="input-group-btn">
-                                <button class="btn btn-primary btn-sm send-message" id="btn-chat">
-                                    Send</button>
-                            </span>
+                            
+                    <div class="admin-offline hidden">
+                        <div class="panel-body" style="height: 333px;">
+                            <form>
+                            <p class="col-xs-12 margin-top">No personal support online, please fill out the form below to send and email:</p>
+                            <div class="col-xs-12 margin-top flt-left">
+                                <label>Email</label>
+                                <input type="text" class="form-control" placeholder="email" required="required">
+                            </div>
+                            <div class="col-xs-12 margin-top flt-left">
+                                <label>Subject</label>
+                                <input type="text" class="form-control" placeholder="subject" required="required">
+                            </div>
+                            <div class="col-xs-12 margin-top flt-left">
+                                <label>Message</label>
+                                <textarea class="form-control" placeholder="Type your message here..." required="required"></textarea>
+                            </div>
+                            <div class="col-xs-12 margin-top flt-left margin-bottom">
+                                <button class="btn btn-primary btn-sm pull-right">
+                                    Send
+                                </button>
+                            </div>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -126,6 +153,8 @@
         var webSocket = WS.connect(_WS_URI);
 
         var globalSession = null;
+        
+        var onlineAdministrators = 0;
 
         webSocket.on("socket/connect", function (session) {
             bindUI(session);
@@ -275,7 +304,6 @@
                 if (displayStatus == 'block') {
                     putMessagesReaded();
                 }
-                
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_SEND_SUCCESSFULLY')}}") {
                 appendHtmlMessageClient(payload);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CLIENT_MESSAGES_PUT_AS_READED')}}") {
@@ -284,6 +312,9 @@
                 settingsUpdated();
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SELF_STATUS_UPDATED')}}") {
                 selfStatusUpdated(payload);
+            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::JOIN_LEFT_ADMIN_TO_ROOM')}}") {
+                onlineAdministrators = parseInt(payload.online_administrators);
+                checkChatToAdmin();
             }
         }
         
@@ -431,6 +462,19 @@
         function selfStatusUpdated(payload) {
             $(".panel-heading span.main-status").removeClass(payload.previous_status);
             $(".panel-heading span.main-status").addClass(payload.new_status);
+        }
+        
+        /**
+         * Permite realizar cambios en pantalla acorde al numero de administradores online
+         */
+        function checkChatToAdmin() {
+            if (onlineAdministrators > 0) {
+                $(".chat-container").removeClass('hidden');
+                $(".admin-offline").addClass('hidden');
+            } else {
+                $(".chat-container").addClass('hidden');
+                $(".admin-offline").removeClass('hidden');
+            }
         }
         
     </script>

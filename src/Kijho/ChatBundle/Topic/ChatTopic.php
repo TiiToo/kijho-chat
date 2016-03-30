@@ -55,6 +55,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     const SETTINGS_UPDATED = 'settings_updated';
     const SELF_STATUS_UPDATED = 'self_status_updated';
     const CLIENT_STATUS_UPDATED = 'client_status_updated';
+    const JOIN_LEFT_ADMIN_TO_ROOM = 'join_left_admin_to_room';
 
     /**
      * Constantes para los tipos de mensajes que los usuarios envian al servidor
@@ -70,6 +71,12 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
      * conectados para el panel de usuarios online
      */
     const TIME_REFRESH_ONLINE_USERS = 3;
+
+    /**
+     * Constante que controla el tiempo en el cual se envia a los clientes el numero
+     * de administradores conectados
+     */
+    const TIME_REFRESH_ONLINE_ADMINISTRATORS = 2;
 
     /**
      * Instancia de la sala principal del chat (Clientes, Administradores, etc)
@@ -127,7 +134,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
             if ($userSettings instanceof Entity\UserChatSettings) {
                 $connection->status = $userSettings->getStatus();
             }
-            
+
             //notificamos a los administradores que un nuevo cliente se conectó
             $administrators = $this->getOnlineAdministrators();
             foreach ($administrators as $adminTopic) {
@@ -139,6 +146,13 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                     'status' => $connection->status,
                 ]);
             }
+
+            $topicTimer = $connection->PeriodicTimer;
+            $topicTimer->addPeriodicTimer('online_administrators', self::TIME_REFRESH_ONLINE_ADMINISTRATORS, function() use ($topic, $connection) {
+                $connection->event($topic->getId(), ['msg' => 'Online Administrators..',
+                    'msg_type' => self::JOIN_LEFT_ADMIN_TO_ROOM,
+                    'online_administrators' => count($this->getOnlineAdministrators())]);
+            });
         }
 
         //enviamos un mensaje de bienvenida al usuario
@@ -286,7 +300,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                         $adminTopic->event($topic->getId(), [
                                             'msg_type' => self::MESSAGE_FROM_CLIENT,
                                             'msg' => $message,
-                                            'nickname' => 'System',
+                                            'nickname' => $connection->nickname,
                                             'user_id' => $foundClient->userId,
                                             'msg_date' => $cliMessage->getDate()->format('m/d/Y h:i a'),
                                             'admin_destination' => $connection->userId,
@@ -460,7 +474,6 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 'new_status' => $connection->status,
                             ]);
 
-                            //FIX_ME
                             //debemos notificar a todos los administradores el cambio de status del cliente
                             $administrators = $this->getOnlineAdministrators();
 
@@ -577,5 +590,4 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     private function serverLog($msg) {
         echo($msg . PHP_EOL);
     }
-
 }
