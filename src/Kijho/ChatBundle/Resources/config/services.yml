@@ -30,3 +30,11 @@ services:
             - "@service_container"
         tags:
             - { name: form.type }
+            
+    #servicio para envio de mensaje de contacto desde el cliente a administradores
+    chat.form.type.contact_form:
+        class: Kijho\ChatBundle\Form\ContactFormType
+        arguments:
+            - "@service_container"
+        tags:
+            - { name: form.type }

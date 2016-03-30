@@ -12,6 +12,7 @@ use Doctrine\ORM\EntityManager;
 use Kijho\ChatBundle\Entity as Entity;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Kijho\ChatBundle\Util\Util;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimerInterface {
 
@@ -56,6 +57,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     const SELF_STATUS_UPDATED = 'self_status_updated';
     const CLIENT_STATUS_UPDATED = 'client_status_updated';
     const JOIN_LEFT_ADMIN_TO_ROOM = 'join_left_admin_to_room';
+    const EMAIL_SENT_SUCCESSFULLY = 'email_sent_successfully';
 
     /**
      * Constantes para los tipos de mensajes que los usuarios envian al servidor
@@ -65,6 +67,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     const UPDATE_SETTINGS = 'update_settings';
     const CHANGE_ADMIN_STATUS = 'change_admin_status';
     const CHANGE_CLIENT_STATUS = 'change_client_status';
+    const EMAIL_CLIENT_TO_ADMIN = 'email_client_to_admin';
 
     /**
      * Constante que controla el tiempo en el cual se actualiza el listado de usuarios
@@ -98,7 +101,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
      */
     protected $container;
 
-    public function __construct(EntityManager $em, $container) {
+    public function __construct(EntityManager $em, ContainerInterface $container) {
         $this->em = $em;
         $this->container = $container;
     }
@@ -487,6 +490,33 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 ]);
                             }
                         }
+                    } else if ($eventType == self::EMAIL_CLIENT_TO_ADMIN) {
+                        $email = trim(strip_tags($event['email']));
+                        $subject = trim(strip_tags($event['subject']));
+                        $content = trim(strip_tags($event['message']));
+
+                        $message = \Swift_Message::newInstance()
+                                ->setSubject($subject)
+                                ->setFrom($email)
+                                ->setTo('cnaranjo@kijho.com')
+                                ->setBody($this->renderView(
+                                        'ChatBundle:Email:contactForm.html.twig', array(
+                                    'email' => $email,
+                                    'subject' => $subject,
+                                    'message' => $content,
+                                        )), 'text/html');
+                        $this->container->get('mailer')->send($message);
+
+                        $mailer = $this->container->get('mailer');
+                        $spool = $mailer->getTransport()->getSpool();
+                        $transport = $this->container->get('swiftmailer.transport.real');
+                        $spool->flushQueue($transport);
+
+                        //notificamos al cliente que se envio su correo
+                        $connection->event($topic->getId(), [
+                            'msg_type' => self::EMAIL_SENT_SUCCESSFULLY,
+                            'msg' => 'Email successfully sent',
+                        ]);
                     }
                 }
             }
@@ -590,4 +620,5 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     private function serverLog($msg) {
         echo($msg . PHP_EOL);
     }
+
 }

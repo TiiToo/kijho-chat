@@ -117,26 +117,33 @@
                             
                     <div class="admin-offline hidden">
                         <div class="panel-body" style="height: 333px;">
-                            <form>
-                            <p class="col-xs-12 margin-top">No personal support online, please fill out the form below to send and email:</p>
-                            <div class="col-xs-12 margin-top flt-left">
-                                <label>Email</label>
-                                <input type="text" class="form-control" placeholder="email" required="required">
-                            </div>
-                            <div class="col-xs-12 margin-top flt-left">
-                                <label>Subject</label>
-                                <input type="text" class="form-control" placeholder="subject" required="required">
-                            </div>
-                            <div class="col-xs-12 margin-top flt-left">
-                                <label>Message</label>
-                                <textarea class="form-control" placeholder="Type your message here..." required="required"></textarea>
-                            </div>
-                            <div class="col-xs-12 margin-top flt-left margin-bottom">
-                                <button class="btn btn-primary btn-sm pull-right">
-                                    Send
-                                </button>
-                            </div>
+                            <form onsubmit="return false;" id="contact-form">
+                                <p class="col-xs-12 margin-top">No personal support online, please fill out the form below to send and email:</p>
+                                <div class="col-xs-12 margin-top flt-left">
+                                    {{ form_label(contactForm.email) }}
+                                    {{ form_widget(contactForm.email,{'attr':{'class':'form-control'}}) }}
+                                </div>
+                                <div class="col-xs-12 margin-top flt-left">
+                                    {{ form_label(contactForm.subject) }}
+                                    {{ form_widget(contactForm.subject,{'attr':{'class':'form-control'}}) }}
+                                </div>
+                                <div class="col-xs-12 margin-top flt-left">
+                                    {{ form_label(contactForm.message) }}
+                                    {{ form_widget(contactForm.message,{'attr':{'class':'form-control'}}) }}
+                                </div>
+                                <div class="col-xs-12 margin-top flt-left margin-bottom">
+                                    <button class="btn btn-primary btn-sm pull-right send-contact-form">Send</button>
+                                </div>
                             </form>
+                            <div class="col-xs-12 margin-top flt-left contact-message-notification hidden">
+                                <div class="alert alert-success">Message send successfully</div>
+                                <div class="col-xs-6 flt-left">
+                                    <a class="btn btn-primary btn-sm send-other-message">Send other message</a>
+                                </div>
+                                <div class="col-xs-6 flt-left">
+                                    <a class="btn btn-danger btn-sm pull-right close-message-notification">Close</a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -236,6 +243,19 @@
                 var newStatus = $(this).attr('status');
                 changeStatus(session, newStatus);
             });
+            
+            $(".send-contact-form").bind("click", function(e) {
+                sendContactForm(session);
+            });
+            
+            $(".send-other-message").bind("click", function(e) {
+                $(".contact-message-notification").addClass('hidden');
+                $("#contact-form").removeClass('hidden');
+            });
+            
+            $(".close-message-notification").bind("click", function(e) {
+                $("#display-chat").trigger('click');
+            });
         }
 
         /**
@@ -250,6 +270,9 @@
             $(".play-sound").unbind();
             $(".save-settings").unbind();
             $(".change-status").unbind();
+            $(".send-contact-form").unbind();
+            $(".send-other-message").unbind();
+            $(".close-message-notification").unbind();
         }
 
         /**
@@ -315,6 +338,8 @@
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::JOIN_LEFT_ADMIN_TO_ROOM')}}") {
                 onlineAdministrators = parseInt(payload.online_administrators);
                 checkChatToAdmin();
+            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::EMAIL_SENT_SUCCESSFULLY')}}") {
+                clearContactForm();
             }
         }
         
@@ -475,6 +500,53 @@
                 $(".chat-container").addClass('hidden');
                 $(".admin-offline").removeClass('hidden');
             }
+        }
+        
+        /**
+         * Permite enviar al servidor el formulario de contacto para enviar
+         * un correo al administrador cuando no hay ninguno online
+         */
+        function sendContactForm(session) {
+            
+            var email = $("#chatbundle_contact_form_type_email").val();
+            var subject = $("#chatbundle_contact_form_type_subject").val();
+            var message = $("#chatbundle_contact_form_type_message").val();
+            
+            if (email != '') {
+                if (subject != '') {
+                    if (message != '') {
+                        
+                        $(".send-contact-form").attr('disabled','disabled');
+                        $(".send-contact-form").html('Please wait..');
+                        
+                        var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::EMAIL_CLIENT_TO_ADMIN')}}",
+                            email: email,
+                            subject: subject,
+                            message: message
+                        };
+                        session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
+                    } else {
+                        $("#chatbundle_contact_form_type_message").focus();
+                    }
+                } else {
+                    $("#chatbundle_contact_form_type_subject").focus();
+                }
+            } else {
+                $("#chatbundle_contact_form_type_email").focus();
+            }
+        }
+        
+        /**
+         * Permite limpiar el formulario de envio de email al administrador
+         **/
+        function clearContactForm() {
+            $("#chatbundle_contact_form_type_email").val('');
+            $("#chatbundle_contact_form_type_subject").val('');
+            $("#chatbundle_contact_form_type_message").val('');
+            $(".send-contact-form").removeAttr('disabled');
+            $(".send-contact-form").html('Send');
+            $("#contact-form").addClass('hidden');
+            $(".contact-message-notification").removeClass('hidden');
         }
         
     </script>
