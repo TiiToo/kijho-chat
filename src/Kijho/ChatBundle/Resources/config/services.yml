@@ -38,3 +38,11 @@ services:
             - "@service_container"
         tags:
             - { name: form.type }
+    
+    #servicio para formularo de configuraciones generales del chat
+    chat.form.type.settings:
+        class: Kijho\ChatBundle\Form\ChatSettingsType
+        arguments:
+            - "@service_container"
+        tags:
+            - { name: form.type }

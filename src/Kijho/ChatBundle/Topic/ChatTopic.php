@@ -315,6 +315,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                     } elseif ($eventType == self::UPDATE_SETTINGS) {
 
                         $notificationSound = trim(strip_tags($event['notificationSound']));
+                        $emailOfflineMessages = trim(strip_tags($event['emailOfflineMessages']));
 
                         $searchUserSettings = array('userId' => $connection->userId, 'userType' => $connection->userType);
                         $userSettings = $this->em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
@@ -322,6 +323,13 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                         if ($userSettings instanceof Entity\UserChatSettings) {
                             $userSettings->setNotificationSound($notificationSound);
                             $this->em->persist($userSettings);
+
+                            $settings = $this->em->getRepository('ChatBundle:ChatSettings')->findOneBy(array(), array());
+                            if ($settings instanceof Entity\ChatSettings) {
+                                $settings->setEmailOfflineMessages($emailOfflineMessages);
+                                $this->em->persist($settings);
+                            }
+
                             $this->em->flush();
 
                             //notificamos al administrador que sus configuraciones se actualizaron
@@ -495,28 +503,31 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                         $subject = trim(strip_tags($event['subject']));
                         $content = trim(strip_tags($event['message']));
 
-                        $message = \Swift_Message::newInstance()
-                                ->setSubject($subject)
-                                ->setFrom($email)
-                                ->setTo('cnaranjo@kijho.com')
-                                ->setBody($this->renderView(
-                                        'ChatBundle:Email:contactForm.html.twig', array(
-                                    'email' => $email,
-                                    'subject' => $subject,
-                                    'message' => $content,
-                                        )), 'text/html');
-                        $this->container->get('mailer')->send($message);
+                        $chatSettings = $this->em->getRepository('ChatBundle:ChatSettings')->findOneBy(array(), array());
+                        if ($chatSettings instanceof Entity\ChatSettings && !empty($chatSettings->getEmailOfflineMessages())) {
+                            $message = \Swift_Message::newInstance()
+                                    ->setSubject($subject)
+                                    ->setFrom($email)
+                                    ->setTo($chatSettings->getEmailOfflineMessages())
+                                    ->setBody($this->renderView(
+                                            'ChatBundle:Email:contactForm.html.twig', array(
+                                        'email' => $email,
+                                        'subject' => $subject,
+                                        'message' => $content,
+                                    )), 'text/html');
+                            $this->container->get('mailer')->send($message);
 
-                        $mailer = $this->container->get('mailer');
-                        $spool = $mailer->getTransport()->getSpool();
-                        $transport = $this->container->get('swiftmailer.transport.real');
-                        $spool->flushQueue($transport);
+                            $mailer = $this->container->get('mailer');
+                            $spool = $mailer->getTransport()->getSpool();
+                            $transport = $this->container->get('swiftmailer.transport.real');
+                            $spool->flushQueue($transport);
 
-                        //notificamos al cliente que se envio su correo
-                        $connection->event($topic->getId(), [
-                            'msg_type' => self::EMAIL_SENT_SUCCESSFULLY,
-                            'msg' => 'Email successfully sent',
-                        ]);
+                            //notificamos al cliente que se envio su correo
+                            $connection->event($topic->getId(), [
+                                'msg_type' => self::EMAIL_SENT_SUCCESSFULLY,
+                                'msg' => 'Email successfully sent',
+                            ]);
+                        }
                     }
                 }
             }

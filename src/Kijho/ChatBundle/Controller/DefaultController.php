@@ -8,7 +8,9 @@ use Symfony\Component\Process\Process;
 use Symfony\Component\HttpFoundation\Request;
 use Kijho\ChatBundle\Entity\Message;
 use Kijho\ChatBundle\Entity\UserChatSettings;
+use Kijho\ChatBundle\Entity\ChatSettings;
 use Kijho\ChatBundle\Form\UserChatSettingsType;
+use Kijho\ChatBundle\Form\ChatSettingsType;
 use Kijho\ChatBundle\Form\ContactFormType;
 
 class DefaultController extends Controller {
@@ -76,6 +78,15 @@ class DefaultController extends Controller {
         
         $userSettingsForm = $this->createForm(UserChatSettingsType::class, $userSettings);
 
+        $chatSettings = $em->getRepository('ChatBundle:ChatSettings')->findOneBy(array(), array());
+        if (!$chatSettings) {
+            $chatSettings = new ChatSettings();
+            $em->persist($chatSettings);
+            $em->flush();
+        }
+        
+        $settingsForm = $this->createForm(ChatSettingsType::class, $chatSettings);
+        
         return $this->render('ChatBundle:Default:indexAdmin.html.twig', array(
                     'local' => $local,
                     'nickname' => $nickname,
@@ -85,6 +96,7 @@ class DefaultController extends Controller {
                     'allConversations' => $allConversations,
                     'userSettings' => $userSettings,
                     'userSettingsForm' => $userSettingsForm->createView(),
+                    'settingsForm' => $settingsForm->createView(),
         ));
     }
 

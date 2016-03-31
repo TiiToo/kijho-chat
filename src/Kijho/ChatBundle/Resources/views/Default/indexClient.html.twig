@@ -339,7 +339,7 @@
                 onlineAdministrators = parseInt(payload.online_administrators);
                 checkChatToAdmin();
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::EMAIL_SENT_SUCCESSFULLY')}}") {
-                clearContactForm();
+                clearContactForm(payload);
             }
         }
         
@@ -539,7 +539,7 @@
         /**
          * Permite limpiar el formulario de envio de email al administrador
          **/
-        function clearContactForm() {
+        function clearContactForm(payload) {
             $("#chatbundle_contact_form_type_email").val('');
             $("#chatbundle_contact_form_type_subject").val('');
             $("#chatbundle_contact_form_type_message").val('');
@@ -547,6 +547,7 @@
             $(".send-contact-form").html('Send');
             $("#contact-form").addClass('hidden');
             $(".contact-message-notification").removeClass('hidden');
+            $(".contact-message-notification div.alert-success").html(payload.msg);
         }
         
     </script>

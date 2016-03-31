@@ -72,6 +72,10 @@
                     </div>
                 </div>
                 <div class="form-group col-xs-12 flt-left margin-top no-padding">
+                    {{ form_label(settingsForm.emailOfflineMessages)}}
+                    {{ form_widget(settingsForm.emailOfflineMessages,{'attr':{'class':'form-control'}})}}
+                </div>
+                <div class="form-group col-xs-12 flt-left margin-top no-padding">
                     <button class="btn btn-primary pull-right save-settings">Save Changes</button>
                 </div>
                 <div class="hidden">
@@ -598,6 +602,7 @@
         function saveSettings(session) {
             var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::UPDATE_SETTINGS')}}",
                 notificationSound: $("#chatbundle_user_chat_settings_type_notificationSound").val(),
+                emailOfflineMessages: $("#chatbundle_chat_settings_type_emailOfflineMessages").val(),
             };
             session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
             
