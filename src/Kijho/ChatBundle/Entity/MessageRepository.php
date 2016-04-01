@@ -17,29 +17,39 @@ class MessageRepository extends EntityRepository {
     public function findClientChatNickNames($adminId) {
 
         $em = $this->getEntityManager();
-        
+
         $innerQuery = $em->createQuery("SELECT MAX(mes.date)
             FROM ChatBundle:Message mes
             WHERE mes.destinationId = :adminId
             AND mes.type = :clientAdmin 
             GROUP BY mes.senderNickname")
                 ->setMaxResults(1)
-                ->getDQL();
-        
-        $consult = $em->createQuery("
+                ->setParameter('adminId', $adminId)
+                ->setParameter('clientAdmin', Message::TYPE_CLIENT_TO_ADMIN);
+
+        $result = $innerQuery->getArrayResult();
+
+        if (!empty($result)) {
+
+            $dqlQuery = $innerQuery->getDQL();
+
+            $consult = $em->createQuery("
         SELECT m.senderId, m.senderNickname, m.date
         FROM ChatBundle:Message m
         WHERE m.destinationId = :adminId
         AND m.type = :clientAdmin 
-        AND m.date IN (" . $innerQuery . ")
+        AND m.date IN (" . $dqlQuery . ")
         GROUP BY m.senderNickname
         ORDER BY m.date DESC");
-        $consult->setParameter('adminId', $adminId);
-        $consult->setParameter('clientAdmin', Message::TYPE_CLIENT_TO_ADMIN);
+            $consult->setParameter('adminId', $adminId);
+            $consult->setParameter('clientAdmin', Message::TYPE_CLIENT_TO_ADMIN);
 
-        return $consult->getArrayResult();
+            return $consult->getArrayResult();
+        } else {
+            return $result;
+        }
     }
-    
+
     /**
      * Permite cargar una conversacion completa entre dos partes
      * @author Cesar Giraldo <cnaranjo@kijho.com> 07/03/2015
@@ -50,7 +60,7 @@ class MessageRepository extends EntityRepository {
     public function findConversationClientAdmin($clientId, $adminId) {
 
         $em = $this->getEntityManager();
-        
+
         $consult = $em->createQuery("
         SELECT m
         FROM ChatBundle:Message m
@@ -66,10 +76,10 @@ class MessageRepository extends EntityRepository {
 
         return $consult->getResult();
     }
-    
+
     public function findClientUnreadMessages($nickname, $userId) {
         $em = $this->getEntityManager();
-        
+
         $consult = $em->createQuery("
         SELECT m
         FROM ChatBundle:Message m

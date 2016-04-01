@@ -51,7 +51,7 @@ class DefaultController extends Controller {
     public function adminPanelAction($nickname = null, $userId = '', $userType = '', $local = false) {
 
         $em = $this->getDoctrine()->getManager();
-
+        
         //listado de usuarios que han chateado con el admin, ordenado descendentemente por la fecha del ultimo mensaje
         $lastConversations = $em->getRepository('ChatBundle:Message')->findClientChatNickNames($userId);
 
