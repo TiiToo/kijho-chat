@@ -4,8 +4,12 @@
     "type": "project",
     "autoload": {
         "psr-4": {
-            "": "src/"
-        }
+        "": "src/"
+        },
+        "classmap": [
+        "app/AppKernel.php",
+        "app/AppCache.php"
+        ]
     },
     "require": {
         "php": ">=5.4",
