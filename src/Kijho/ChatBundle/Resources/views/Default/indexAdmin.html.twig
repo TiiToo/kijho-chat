@@ -79,6 +79,12 @@
                     {{ form_label(settingsForm.enableCustomResponses)}}
                     {{ form_widget(settingsForm.enableCustomResponses,{'attr':{'class':''}})}}
                 </div>
+                <div id="container-custom-messages" class="form-group col-xs-12 flt-left no-padding">
+                    {% include 'ChatBundle:ChatSettings:customMessages.html.twig' %}
+                </div>
+                <div class="form-group col-xs-12 flt-left no-padding">
+                    <a class="btn btn-primary btn-sm no-padding add-custom-message"><i class="entypo-plus"></i></a>
+                </div>
                 <div class="form-group col-xs-12 flt-left margin-top no-padding">
                     <button class="btn btn-primary pull-right save-settings">Save Changes</button>
                 </div>
@@ -193,6 +199,11 @@
                 }
             });
         });
+        
+        $( "#container-custom-messages" ).on( "click", ".remove-custom-message", function( event ) {
+            removeCustomMessage($(this));
+        });
+        
     {% endblock %}
 
     {% block other_scripts %}
@@ -280,6 +291,10 @@
                 var newStatus = $(this).attr('status');
                 changeStatus(session, newStatus);
             });
+            
+            $(".add-custom-message").bind("click", function(e) {
+                addCustomMessage();
+            });
         }
 
 
@@ -294,6 +309,8 @@
             $(".play-sound").unbind();
             $(".save-settings").unbind();
             $(".change-status").unbind();
+            $(".add-custom-message").unbind();
+            $(".remove-custom-message").unbind();
         }
 
         //permite realizar la conexion a una sala en especifico, y establecer un escucha de eventos
@@ -604,9 +621,18 @@
          * para que sean validadas y almacenadas
          **/
         function saveSettings(session) {
+            
+            var customMessages = [];
+            $("#container-custom-messages textarea").each(function() {
+                customMessages.push($(this).val());
+            });
+            
+            console.log(customMessages);
+            
             var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::UPDATE_SETTINGS')}}",
                 notificationSound: $("#chatbundle_user_chat_settings_type_notificationSound").val(),
                 emailOfflineMessages: $("#chatbundle_chat_settings_type_emailOfflineMessages").val(),
+                customMessages: customMessages,
             };
             session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
             
@@ -642,12 +668,41 @@
             $(".chat-header span.main-status").addClass(payload.new_status);
         }
         
+        /**
+         * Permite actualizar en pantalla en nuevo estado de un cliente
+         */
         function clientStatusUpdated(payload) {
             var tabConversation = $(".open-client-conversation[client-id='" + payload.user_id + "']");
             tabConversation.find("span.user-status").removeClass(payload.previous_status);
             tabConversation.find("span.user-status").addClass(payload.new_status);
         }
 
+        /**
+         * Permite duplicar el html para poder ingresar una nueva frase
+         */
+        function addCustomMessage() {
+            var numberChilds = $("#container-custom-messages div.custom-message").length;
+            $("#container-custom-messages div.custom-message:last").clone().appendTo("#container-custom-messages");
+            var newChild = $("#container-custom-messages div.custom-message:last");
+            newChild.find('label:first').html(parseInt(numberChilds + 1) + '.');
+        }
+        
+        /**
+         * Permite eliminar el html correspondiente a una frase en especifico
+         */
+        function removeCustomMessage(object) {
+            
+            var numberChilds = $("#container-custom-messages div.custom-message").length;
+            
+            if (numberChilds > 1) {
+                object.parent().remove();
+                var index = 1;
+                $("#container-custom-messages div.custom-message").each(function() {
+                    $(this).find('label:first').html(index);
+                    index++;
+                });
+            }
+        }
 
     </script>
 {% endblock %}

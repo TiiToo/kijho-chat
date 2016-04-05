@@ -1,0 +1,13 @@
+{% for message in customMessages %}
+    <div class="col-xs-12 no-padding custom-message">
+        <label>{{loop.index}}.</label>
+        <a class="btn btn-danger btn-sm no-padding remove-custom-message flt-right"><i class="entypo-cancel"></i></a>
+        <textarea class="form-control flt-left">{{message}}</textarea>
+    </div>
+{% else %}
+    <div class="col-xs-12 no-padding custom-message">
+        <label>1.</label>
+        <a class="btn btn-danger btn-sm no-padding remove-custom-message flt-right"><i class="entypo-cancel"></i></a>
+        <textarea class="form-control"></textarea>
+    </div>
+{% endfor %}

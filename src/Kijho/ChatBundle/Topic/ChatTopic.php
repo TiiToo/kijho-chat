@@ -316,6 +316,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
 
                         $notificationSound = trim(strip_tags($event['notificationSound']));
                         $emailOfflineMessages = trim(strip_tags($event['emailOfflineMessages']));
+                        $customMessages = (array) $event['customMessages'];
 
                         $searchUserSettings = array('userId' => $connection->userId, 'userType' => $connection->userType);
                         $userSettings = $this->em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
@@ -327,6 +328,9 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                             $settings = $this->em->getRepository('ChatBundle:ChatSettings')->findOneBy(array(), array());
                             if ($settings instanceof Entity\ChatSettings) {
                                 $settings->setEmailOfflineMessages($emailOfflineMessages);
+                                
+                                $settings->setCustomMessages(json_encode($customMessages, true));
+                                
                                 $this->em->persist($settings);
                             }
 

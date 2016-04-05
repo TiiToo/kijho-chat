@@ -85,6 +85,8 @@ class DefaultController extends Controller {
             $em->flush();
         }
         
+        $customMessages = json_decode($chatSettings->getCustomMessages());
+        
         $settingsForm = $this->createForm(ChatSettingsType::class, $chatSettings);
         
         return $this->render('ChatBundle:Default:indexAdmin.html.twig', array(
@@ -96,6 +98,7 @@ class DefaultController extends Controller {
                     'allConversations' => $allConversations,
                     'userSettings' => $userSettings,
                     'userSettingsForm' => $userSettingsForm->createView(),
+                    'customMessages' => $customMessages,
                     'settingsForm' => $settingsForm->createView(),
         ));
     }

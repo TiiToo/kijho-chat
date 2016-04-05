@@ -38,6 +38,10 @@ and open the template in the editor.
     float: left;
 }
 
+.flt-right {
+    float: right;
+}
+
 .margin-top {
     margin-top: 12px;
 }
@@ -56,4 +60,22 @@ and open the template in the editor.
 
 .no-padding-right {
     padding-right: 0px;
+}
+
+.custom-message {
+    margin-bottom: 8px;
+    float: left;
+}
+
+.custom-message label {
+    vertical-align: top;
+    font-weight: bold;
+}
+
+.custom-message textarea {
+    color: #000;
+    width: 180px;
+    padding: 4px;
+    float: right;
+    margin-right: 8px;
 }
