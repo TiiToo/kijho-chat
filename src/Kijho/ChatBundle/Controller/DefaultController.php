@@ -54,7 +54,7 @@ class DefaultController extends Controller {
         
         //listado de usuarios que han chateado con el admin, ordenado descendentemente por la fecha del ultimo mensaje
         $lastConversations = $em->getRepository('ChatBundle:Message')->findClientChatNickNames($userId);
-
+        
         //buscamos las conversaciones completas entre el admin y los clientes
         $allConversations = array();
         $i = 0;

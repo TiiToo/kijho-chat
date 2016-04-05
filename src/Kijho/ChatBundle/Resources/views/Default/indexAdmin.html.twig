@@ -76,6 +76,10 @@
                     {{ form_widget(settingsForm.emailOfflineMessages,{'attr':{'class':'form-control'}})}}
                 </div>
                 <div class="form-group col-xs-12 flt-left margin-top no-padding">
+                    {{ form_label(settingsForm.enableCustomResponses)}}
+                    {{ form_widget(settingsForm.enableCustomResponses,{'attr':{'class':''}})}}
+                </div>
+                <div class="form-group col-xs-12 flt-left margin-top no-padding">
                     <button class="btn btn-primary pull-right save-settings">Save Changes</button>
                 </div>
                 <div class="hidden">

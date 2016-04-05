@@ -29,17 +29,17 @@ class MessageRepository extends EntityRepository {
 
         $result = $innerQuery->getArrayResult();
 
+        
         if (!empty($result)) {
 
             $dqlQuery = $innerQuery->getDQL();
-
+            
             $consult = $em->createQuery("
         SELECT m.senderId, m.senderNickname, m.date
         FROM ChatBundle:Message m
         WHERE m.destinationId = :adminId
         AND m.type = :clientAdmin 
         AND m.date IN (" . $dqlQuery . ")
-        GROUP BY m.senderNickname
         ORDER BY m.date DESC");
             $consult->setParameter('adminId', $adminId);
             $consult->setParameter('clientAdmin', Message::TYPE_CLIENT_TO_ADMIN);
