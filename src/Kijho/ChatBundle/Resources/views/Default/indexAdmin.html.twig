@@ -85,7 +85,7 @@
                 <div class="form-group col-xs-12 flt-left no-padding">
                     <a class="btn btn-primary btn-sm no-padding add-custom-message"><i class="entypo-plus"></i></a>
                 </div>
-                <div class="form-group col-xs-12 flt-left margin-top no-padding">
+                <div class="form-group col-xs-12 flt-left no-padding">
                     <button class="btn btn-primary pull-right save-settings">Save Changes</button>
                 </div>
                 <div class="hidden">
@@ -146,6 +146,9 @@
 
             <div class="chat-textarea">
                 <textarea class="form-control autogrow" placeholder="Type your message"></textarea>
+            </div>
+            <div class="col-xs-12 margin-bottom flt-left" id="container-custom-messages-to-send">
+                {% include 'ChatBundle:ChatSettings:customMessagesToSend.html.twig' %}
             </div>
         </div>
     </div>
@@ -295,6 +298,24 @@
             $(".add-custom-message").bind("click", function(e) {
                 addCustomMessage();
             });
+            
+            $(".send-custom-message").bind("click", function(e) {
+                sendCustomMessage();
+            });
+            
+            $(".show-custom-messages").bind("click", function(e) {
+                $("#container-custom-messages-to-send div.messages").removeClass('hidden');
+                $(".hide-custom-messages").removeClass('hidden');
+                $(".send-custom-message").removeClass('hidden');
+                $(this).addClass('hidden');
+            });
+            
+            $(".hide-custom-messages").bind("click", function(e) {
+                $("#container-custom-messages-to-send div.messages").addClass('hidden');
+                $(".show-custom-messages").removeClass('hidden');
+                $(".send-custom-message").addClass('hidden');
+                $(this).addClass('hidden');
+            });
         }
 
 
@@ -311,6 +332,9 @@
             $(".change-status").unbind();
             $(".add-custom-message").unbind();
             $(".remove-custom-message").unbind();
+            $(".send-custom-message").unbind();
+            $(".show-custom-messages").unbind();
+            $(".hide-custom-messages").unbind();
         }
 
         //permite realizar la conexion a una sala en especifico, y establecer un escucha de eventos
@@ -345,6 +369,8 @@
             }
 
             if (clientId != '' && clientId != 'undefined' && messageToClient != '') {
+                
+                
                 var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_TO_CLIENT')}}",
                     clientId: clientId,
                     message: messageToClient,
@@ -378,7 +404,7 @@
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CLIENT_TYPING')}}") {
                 clientTyping(payload);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SETTINGS_UPDATED')}}") {
-                settingsUpdated();
+                settingsUpdated(payload);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SELF_STATUS_UPDATED')}}") {
                 selfStatusUpdated(payload);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CLIENT_STATUS_UPDATED')}}") {
@@ -627,8 +653,6 @@
                 customMessages.push($(this).val());
             });
             
-            console.log(customMessages);
-            
             var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::UPDATE_SETTINGS')}}",
                 notificationSound: $("#chatbundle_user_chat_settings_type_notificationSound").val(),
                 emailOfflineMessages: $("#chatbundle_chat_settings_type_emailOfflineMessages").val(),
@@ -644,10 +668,11 @@
          * Permite realizar cambios en pantalla una vez almacenadas las 
          * configuraciones del chat
          **/
-        function settingsUpdated() {
+        function settingsUpdated(payload) {
             $(".save-settings").html('Save Changes');
             $(".save-settings").removeAttr('disabled');
             $(".chat-settings").toggleClass('hidden');
+            $("#container-custom-messages-to-send div.messages").html(payload.html_custom_messages);
         }
         
         /**
@@ -685,6 +710,8 @@
             $("#container-custom-messages div.custom-message:last").clone().appendTo("#container-custom-messages");
             var newChild = $("#container-custom-messages div.custom-message:last");
             newChild.find('label:first').html(parseInt(numberChilds + 1) + '.');
+            newChild.find('textarea').val('');
+            newChild.find('textarea').focus();
         }
         
         /**
@@ -702,6 +729,28 @@
                     index++;
                 });
             }
+        }
+        
+        /**
+         * Permite enviar mensajes predefinidos a los clientes
+         * @returns {undefined}
+         */
+        function sendCustomMessage() {
+            $(".custom-message-to-send input").each( function () {
+                var input = $(this);
+                if ( input.is(':checked') ) {
+                    messageToClient = $(".custom-message-to-send label[for='"+input.attr('id')+"']").html();
+                    if (messageToClient != '') {
+                        $(".chat-textarea textarea").val(messageToClient);
+                        sendMessage(globalSession);
+                        var e = jQuery.Event("keydown");
+                        e.which = 13;
+                        e.keyCode = 13;
+                        $(".chat-textarea textarea").trigger(e);
+                        $(".hide-custom-messages").trigger('click');
+                    }
+                }
+            });
         }
 
     </script>

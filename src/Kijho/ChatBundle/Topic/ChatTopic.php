@@ -328,18 +328,27 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                             $settings = $this->em->getRepository('ChatBundle:ChatSettings')->findOneBy(array(), array());
                             if ($settings instanceof Entity\ChatSettings) {
                                 $settings->setEmailOfflineMessages($emailOfflineMessages);
-                                
+
                                 $settings->setCustomMessages(json_encode($customMessages, true));
-                                
+
                                 $this->em->persist($settings);
                             }
 
                             $this->em->flush();
 
+
+                            $htmlCustomMessages = $this->renderView(
+                                'ChatBundle:ChatSettings:customMessagesToSend.html.twig', array(
+                                    'customMessages' => $customMessages,
+                                    'fromServer' => true
+                            ));
+
+
                             //notificamos al administrador que sus configuraciones se actualizaron
                             $connection->event($topic->getId(), [
                                 'msg_type' => self::SETTINGS_UPDATED,
-                                'msg' => 'Settings successfully updated'
+                                'msg' => 'Settings successfully updated',
+                                'html_custom_messages' => $htmlCustomMessages,
                             ]);
                         }
                     } else if ($eventType == self::CHANGE_ADMIN_STATUS) {
@@ -456,13 +465,13 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                         $searchUserSettings = array('userId' => $connection->userId, 'userType' => $connection->userType);
                         $userSettings = $this->em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
 
-                        if (!$userSettings ) {
+                        if (!$userSettings) {
                             $userSettings = new Entity\UserChatSettings();
                             $userSettings->setStatus($connection->status);
                             $userSettings->setUserId($connection->userId);
                             $userSettings->setUserType($connection->userType);
                         }
-                        
+
                         $userSettings->setNotificationSound($notificationSound);
                         $this->em->persist($userSettings);
                         $this->em->flush();
