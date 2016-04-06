@@ -98,3 +98,7 @@ and open the template in the editor.
     margin-bottom: 8px;
     padding: 4px;
 }
+
+#container-custom-messages-to-send div.messages label {
+    width: 90%;
+}

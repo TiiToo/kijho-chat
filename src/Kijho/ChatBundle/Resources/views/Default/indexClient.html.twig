@@ -1,81 +1,83 @@
 {% extends 'ChatBundle:Default:mainClient.html.twig' %}
 {% block title %}Chat Bundle{% endblock %}
 {% block content %}
-    
-        {% if local is defined and local == true %}
-            <div class="main-content">
-                <div class="row">
-                    <!-- Raw Links -->
-                    <div class="col-md-6 pull-right">
-                        <ul class="list-inline links-list ">
-                            <li>
-                                <a id="display-chat" href="#" data-toggle="chat" data-animate="1" data-collapse-sidebar="1">
-                                    <i class="entypo-chat"></i>
-                                    Chat
-                                    <span class="badge badge-success chat-notifications-badge is-hidden">0</span>
-                                </a>
-                            </li>
-                        </ul>
-                        <span id="container-notification"></span>
-                    </div>
-                </div>
-                <hr />
-                <div class="col-lg-12" style="height: 400px; min-height: 400px;">    
+
+    {% if local is defined and local == true %}
+        <div class="main-content">
+            <div class="row">
+                <!-- Raw Links -->
+                <div class="col-md-6 pull-right">
+                    <ul class="list-inline links-list ">
+                        <li>
+                            <a id="display-chat" href="#" data-toggle="chat" data-animate="1" data-collapse-sidebar="1">
+                                <i class="entypo-chat"></i>
+                                Chat
+                                <span class="badge badge-success chat-notifications-badge is-hidden">0</span>
+                            </a>
+                        </li>
+                    </ul>
+                    <span id="container-notification"></span>
                 </div>
             </div>
-        {% endif %}
-    
-        <div id="chat" class="fixed">
-            <div class="chat-inner">
-                <div class="panel panel-primary" style="margin: 8px;">
-                    <div class="panel-heading panel-heading-chat" style="height: auto;">
-                        <span class="main-status user-status {{userSettings.status}}"></span>
-                        <span class="glyphicon glyphicon-comment"></span>
-                        Chat <span class="badge badge-success is-hidden">0</span>
-                        <div class="btn-group pull-right">
-                            <button data-toggle="dropdown" class="btn btn-default btn-xs dropdown-toggle" type="button">
-                                <span class="glyphicon glyphicon-chevron-down"></span>
-                            </button>
-                            <ul class="dropdown-menu slidedown">
-                                <li>
-                                    <a href="javascript:window.location.reload();"><span class="glyphicon glyphicon-refresh"></span>Refresh</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_ONLINE')}}"><span class="glyphicon glyphicon-ok-sign"></span>Online</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_BUSY')}}"><span class="glyphicon glyphicon-remove"></span>Busy</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_IDLE')}}"><span class="glyphicon glyphicon-time"></span>Away</a>
-                                </li>
-                                <li>
-                                    <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_OFFLINE')}}"><span class="glyphicon glyphicon-off"></span>Offline</a>
-                                </li>
-                                <li class="divider"></li>
-                                <li>
-                                    <a href="javascript:void(0);" class="display-settings"><span class="glyphicon glyphicon-cog"></span>Settings</a>
-                                </li>
-                            </ul>
+            <hr />
+            <div class="col-lg-12" style="height: 400px; min-height: 400px;">    
+            </div>
+        </div>
+    {% endif %}
+
+    <div id="chat" class="fixed">
+        <div class="chat-inner">
+            <div class="panel panel-primary" style="margin: 8px;">
+                <div class="panel-heading panel-heading-chat" style="height: auto;">
+                    <span class="main-status user-status {{userSettings.status}}"></span>
+                    <span class="glyphicon glyphicon-comment"></span>
+                    Chat <span class="badge badge-success is-hidden">0</span>
+
+                    <span class="typing-text hidden"></span>
+                    <div class="btn-group pull-right">
+                        <button data-toggle="dropdown" class="btn btn-default btn-xs dropdown-toggle" type="button">
+                            <span class="glyphicon glyphicon-chevron-down"></span>
+                        </button>
+                        <ul class="dropdown-menu slidedown">
+                            <li>
+                                <a href="javascript:window.location.reload();"><span class="glyphicon glyphicon-refresh"></span>Refresh</a>
+                            </li>
+                            <li>
+                                <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_ONLINE')}}"><span class="glyphicon glyphicon-ok-sign"></span>Online</a>
+                            </li>
+                            <li>
+                                <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_BUSY')}}"><span class="glyphicon glyphicon-remove"></span>Busy</a>
+                            </li>
+                            <li>
+                                <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_IDLE')}}"><span class="glyphicon glyphicon-time"></span>Away</a>
+                            </li>
+                            <li>
+                                <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_OFFLINE')}}"><span class="glyphicon glyphicon-off"></span>Offline</a>
+                            </li>
+                            <li class="divider"></li>
+                            <li>
+                                <a href="javascript:void(0);" class="display-settings"><span class="glyphicon glyphicon-cog"></span>Settings</a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="row chat-settings col-lg-12 hidden">
+                        <a><i class="entypo-cog"></i> Chat Settings</a>
+                        <i class="entypo-cancel display-settings pull-right"></i><br>
+                        <div class="form-group margin-top">
+                            <div class="col-xs-9 no-padding-left">
+                                {{ form_label(userSettingsForm.notificationSound)}}
+                                {{ form_widget(userSettingsForm.notificationSound,{'attr':{'class':'form-control'}})}}
+                            </div>
+                            <div class="col-xs-3 no-padding" style="padding-top: 24px;">
+                                <a class="btn btn-sm play-sound no-padding"><i class="entypo-play"></i> Play</a>
+                            </div>
                         </div>
-                        
-                        <div class="row chat-settings col-lg-12 hidden">
-                            <a><i class="entypo-cog"></i> Chat Settings</a>
-                            <i class="entypo-cancel display-settings pull-right"></i><br>
-                            <div class="form-group margin-top">
-                                <div class="col-xs-9 no-padding-left">
-                                    {{ form_label(userSettingsForm.notificationSound)}}
-                                    {{ form_widget(userSettingsForm.notificationSound,{'attr':{'class':'form-control'}})}}
-                                </div>
-                                <div class="col-xs-3 no-padding" style="padding-top: 24px;">
-                                    <a class="btn btn-sm play-sound no-padding"><i class="entypo-play"></i> Play</a>
-                                </div>
-                            </div>
-                            <div class="form-group col-xs-12 flt-left margin-top no-padding">
-                                <button class="btn btn-primary pull-right save-settings">Save Changes</button>
-                            </div>
-                            <div class="hidden">
-                                {% set sounds = { 0 : 'sounds-capisci.mp3',
+                        <div class="form-group col-xs-12 flt-left margin-top no-padding">
+                            <button class="btn btn-primary pull-right save-settings">Save Changes</button>
+                        </div>
+                        <div class="hidden">
+                            {% set sounds = { 0 : 'sounds-capisci.mp3',
                                                   1 : 'sounds-come-to-daddy.mp3', 
                                                   2 : 'sounds-communication-channel.mp3',
                                                   3 : 'sounds-credulous.mp3', 
@@ -91,64 +93,64 @@
                                                   13 : 'sounds-you-know.mp3',
                                                   14 : 'sounds-your-turn.mp3',
                                                     } %}
-                                {% for sound in sounds %}
-                                    <audio controls id="{{sound}}">
-                                        <source src="{{asset('bundles/chat/sounds/'~sound)}}" type="audio/mpeg">
-                                    </audio>
-                                {% endfor %}
-                            </div>
+                            {% for sound in sounds %}
+                                <audio controls id="{{sound}}">
+                                    <source src="{{asset('bundles/chat/sounds/'~sound)}}" type="audio/mpeg">
+                                </audio>
+                            {% endfor %}
                         </div>
                     </div>
-                    <div class="chat-container">
-                        <div class="panel-body ">
-                            <ul class="chat" id="message-list">
-                            </ul>
-                        </div>
-                        <div class="panel-footer">
-                            <div class="input-group">
-                                <input id="input-message" type="text" class="form-control input-sm" placeholder="Type your message here...">
-                                <span class="input-group-btn">
-                                    <button class="btn btn-primary btn-sm send-message" id="btn-chat">
-                                        Send</button>
-                                </span>
-                            </div>
+                </div>
+                <div class="chat-container">
+                    <div class="panel-body ">
+                        <ul class="chat" id="message-list">
+                        </ul>
+                    </div>
+                    <div class="panel-footer">
+                        <div class="input-group">
+                            <input id="input-message" type="text" class="form-control input-sm" placeholder="Type your message here...">
+                            <span class="input-group-btn">
+                                <button class="btn btn-primary btn-sm send-message" id="btn-chat">
+                                    Send</button>
+                            </span>
                         </div>
                     </div>
-                            
-                    <div class="admin-offline hidden">
-                        <div class="panel-body" style="height: 333px;">
-                            <form onsubmit="return false;" id="contact-form">
-                                <p class="col-xs-12 margin-top">No personal support online, please fill out the form below to send and email:</p>
-                                <div class="col-xs-12 margin-top flt-left">
-                                    {{ form_label(contactForm.email) }}
-                                    {{ form_widget(contactForm.email,{'attr':{'class':'form-control'}}) }}
-                                </div>
-                                <div class="col-xs-12 margin-top flt-left">
-                                    {{ form_label(contactForm.subject) }}
-                                    {{ form_widget(contactForm.subject,{'attr':{'class':'form-control'}}) }}
-                                </div>
-                                <div class="col-xs-12 margin-top flt-left">
-                                    {{ form_label(contactForm.message) }}
-                                    {{ form_widget(contactForm.message,{'attr':{'class':'form-control'}}) }}
-                                </div>
-                                <div class="col-xs-12 margin-top flt-left margin-bottom">
-                                    <button class="btn btn-primary btn-sm pull-right send-contact-form">Send</button>
-                                </div>
-                            </form>
-                            <div class="col-xs-12 margin-top flt-left contact-message-notification hidden">
-                                <div class="alert alert-success">Message send successfully</div>
-                                <div class="col-xs-6 flt-left">
-                                    <a class="btn btn-primary btn-sm send-other-message">Send other message</a>
-                                </div>
-                                <div class="col-xs-6 flt-left">
-                                    <a class="btn btn-danger btn-sm pull-right close-message-notification">Close</a>
-                                </div>
+                </div>
+
+                <div class="admin-offline hidden">
+                    <div class="panel-body" style="height: 333px;">
+                        <form onsubmit="return false;" id="contact-form">
+                            <p class="col-xs-12 margin-top">No personal support online, please fill out the form below to send and email:</p>
+                            <div class="col-xs-12 margin-top flt-left">
+                                {{ form_label(contactForm.email) }}
+                                {{ form_widget(contactForm.email,{'attr':{'class':'form-control'}}) }}
+                            </div>
+                            <div class="col-xs-12 margin-top flt-left">
+                                {{ form_label(contactForm.subject) }}
+                                {{ form_widget(contactForm.subject,{'attr':{'class':'form-control'}}) }}
+                            </div>
+                            <div class="col-xs-12 margin-top flt-left">
+                                {{ form_label(contactForm.message) }}
+                                {{ form_widget(contactForm.message,{'attr':{'class':'form-control'}}) }}
+                            </div>
+                            <div class="col-xs-12 margin-top flt-left margin-bottom">
+                                <button class="btn btn-primary btn-sm pull-right send-contact-form">Send</button>
+                            </div>
+                        </form>
+                        <div class="col-xs-12 margin-top flt-left contact-message-notification hidden">
+                            <div class="alert alert-success">Message send successfully</div>
+                            <div class="col-xs-6 flt-left">
+                                <a class="btn btn-primary btn-sm send-other-message">Send other message</a>
+                            </div>
+                            <div class="col-xs-6 flt-left">
+                                <a class="btn btn-danger btn-sm pull-right close-message-notification">Close</a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 {% endblock %}
 
 {% block other_scripts %}
@@ -160,7 +162,7 @@
         var webSocket = WS.connect(_WS_URI);
 
         var globalSession = null;
-        
+
         var onlineAdministrators = 0;
 
         webSocket.on("socket/connect", function (session) {
@@ -175,7 +177,7 @@
             unbindUI();
         });
 
-        
+
         /**
          * Permite actualizar la informacion de la conexion del usuario
          * @param {type} session
@@ -217,43 +219,43 @@
             $(".send-message").bind("click", function (e) {
                 sendMessage(session);
             });
-            
+
             $("#display-chat").bind("click", function (e) {
                 putMessagesReaded();
             });
-            
-            $(".display-settings").bind("click", function(e) {
+
+            $(".display-settings").bind("click", function (e) {
                 $(".chat-settings").toggleClass('hidden');
             });
-            
-            $("#chatbundle_user_chat_settings_type_notificationSound").bind("change", function(e) {
+
+            $("#chatbundle_user_chat_settings_type_notificationSound").bind("change", function (e) {
                 document.getElementById($(this).val()).play();
             });
-            
-            $(".play-sound").bind("click", function(e) {
+
+            $(".play-sound").bind("click", function (e) {
                 var sound = $("#chatbundle_user_chat_settings_type_notificationSound").val();
                 document.getElementById(sound).play();
             });
-            
-            $(".save-settings").bind("click", function(e) {
+
+            $(".save-settings").bind("click", function (e) {
                 saveSettings(session);
             });
-            
-            $(".change-status").bind("click", function(e) {
+
+            $(".change-status").bind("click", function (e) {
                 var newStatus = $(this).attr('status');
                 changeStatus(session, newStatus);
             });
-            
-            $(".send-contact-form").bind("click", function(e) {
+
+            $(".send-contact-form").bind("click", function (e) {
                 sendContactForm(session);
             });
-            
-            $(".send-other-message").bind("click", function(e) {
+
+            $(".send-other-message").bind("click", function (e) {
                 $(".contact-message-notification").addClass('hidden');
                 $("#contact-form").removeClass('hidden');
             });
-            
-            $(".close-message-notification").bind("click", function(e) {
+
+            $(".close-message-notification").bind("click", function (e) {
                 $("#display-chat").trigger('click');
             });
         }
@@ -340,56 +342,59 @@
                 checkChatToAdmin();
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::EMAIL_SENT_SUCCESSFULLY')}}") {
                 clearContactForm(payload);
+            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::ADMIN_TYPING')}}") {
+                adminTyping(payload);
             }
         }
-        
+
         /**
          * Permite mostrar en el historial del chat, un mensaje que acaba de enviar el cliente
          * @param {type} payload
          **/
         function appendHtmlMessageClient(payload) {
             var html = '<li class="right clearfix"><span class="chat-img pull-right">'
-                                    +'<img src="http://placehold.it/50/FA6F57/fff&amp;text=ME" alt="User Avatar" class="img-circle">'
-                                +'</span>'
-                                +'<div class="chat-body clearfix">'
-                                    +'<div class="header">'
-                                        +'<small class=" text-muted"><span class="glyphicon glyphicon-time"></span>' + payload.msg_date + '</small>'
-                                        +'<strong class="pull-right primary-font">' + payload.nickname + '</strong>'
-                                    +'</div>'
-                                    +'<p>' + payload.msg + '</p>'
-                                +'</div>'
-                            +'</li>';
+                    + '<img src="http://placehold.it/50/FA6F57/fff&amp;text=ME" alt="User Avatar" class="img-circle">'
+                    + '</span>'
+                    + '<div class="chat-body clearfix">'
+                    + '<div class="header">'
+                    + '<small class=" text-muted"><span class="glyphicon glyphicon-time"></span>' + payload.msg_date + '</small>'
+                    + '<strong class="pull-right primary-font">' + payload.nickname + '</strong>'
+                    + '</div>'
+                    + '<p>' + payload.msg + '</p>'
+                    + '</div>'
+                    + '</li>';
             $("#message-list").append(html);
             scrollDown();
         }
-        
+
         /**
          * Permite mostrar en el historial del chat, un mensaje que fue enviado por un administrador
          * @param {type} payload
          **/
         function appendHtmlMessageAdmin(payload) {
             var html = '<li class="left clearfix"><span class="chat-img pull-left">'
-                                +'<img src="http://placehold.it/50/55C1E7/fff&amp;text=U" alt="User Avatar" class="img-circle">'
-                            +'</span>'
-                            +'<div class="chat-body clearfix">'
-                                +'<div class="header">'
-                                    +'<strong class="primary-font">' + payload.nickname + '</strong> <small class="pull-right text-muted">'
-                                        +'<span class="glyphicon glyphicon-time"></span>' + payload.msg_date + '</small>'
-                                +'</div>'
-                                +'<p>' + payload.msg + '</p>'
-                            +'</div>'
-                        +'</li>';
+                    + '<img src="http://placehold.it/50/55C1E7/fff&amp;text=U" alt="User Avatar" class="img-circle">'
+                    + '</span>'
+                    + '<div class="chat-body clearfix">'
+                    + '<div class="header">'
+                    + '<strong class="primary-font">' + payload.nickname + '</strong> <small class="pull-right text-muted">'
+                    + '<span class="glyphicon glyphicon-time"></span>' + payload.msg_date + '</small>'
+                    + '</div>'
+                    + '<p>' + payload.msg + '</p>'
+                    + '</div>'
+                    + '</li>';
             $("#message-list").append(html);
             scrollDown();
         }
-        
+
         /**
          * Permite hacer scroll down en el historial del chat
          **/
         function scrollDown() {
-            $("#message-list").scrollTop($("#message-list li:last").position().top - 50 );
-        };
-        
+            $("#message-list").scrollTop($("#message-list li:last").position().top - 50);
+        }
+        ;
+
         /**
          * Permite notificar al servidor que el usuario esta escribiendo un mensaje
          * @param {type} session
@@ -398,7 +403,7 @@
             var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CLIENT_TYPING')}}"};
             session.publish("chat/channel", data);
         }
-        
+
         /**
          * Permite verificar si el panel de chat esta oculto, para desplegarlo
          */
@@ -408,7 +413,7 @@
                 $("#display-chat").trigger('click');
             }
         }
-        
+
         /**
          * Permite actualizar los contadores de mensajes sin leer por el cliente
          */
@@ -426,17 +431,17 @@
                 secondSpanNotification.removeClass('is-hidden');
             }
         }
-        
+
         function resetUnreadCounters() {
             var spanNotification = $("#display-chat span.chat-notifications-badge");
             spanNotification.html('0');
             spanNotification.addClass('is-hidden');
-            
+
             var secondSpanNotification = $(".panel-heading-chat span.badge-success");
             secondSpanNotification.html('0');
             secondSpanNotification.addClass('is-hidden');
         }
-        
+
         /**
          * Permite marcar los mensajes enviados al cliente como leidos
          **/
@@ -446,7 +451,7 @@
                 globalSession.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
             }
         }
-        
+
         /**
          * Permite enviar las nuevas configuraciones del chat al servidor 
          * para que sean validadas y almacenadas
@@ -456,11 +461,11 @@
                 notificationSound: $("#chatbundle_user_chat_settings_type_notificationSound").val(),
             };
             session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
-            
+
             $(".save-settings").html('Please wait..');
-            $(".save-settings").attr('disabled','disabled');
+            $(".save-settings").attr('disabled', 'disabled');
         }
-        
+
         /**
          * Permite realizar cambios en pantalla una vez almacenadas las 
          * configuraciones del chat
@@ -470,7 +475,7 @@
             $(".save-settings").removeAttr('disabled');
             $(".chat-settings").toggleClass('hidden');
         }
-        
+
         /**
          * Permite solicitar al servidor el cambio de estado del usuario
          */
@@ -480,7 +485,7 @@
             };
             session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
         }
-        
+
         /**
          * Permite modificar visualmente el cambio de estado realizado por el admin
          */
@@ -488,7 +493,7 @@
             $(".panel-heading span.main-status").removeClass(payload.previous_status);
             $(".panel-heading span.main-status").addClass(payload.new_status);
         }
-        
+
         /**
          * Permite realizar cambios en pantalla acorde al numero de administradores online
          */
@@ -501,24 +506,24 @@
                 $(".admin-offline").removeClass('hidden');
             }
         }
-        
+
         /**
          * Permite enviar al servidor el formulario de contacto para enviar
          * un correo al administrador cuando no hay ninguno online
          */
         function sendContactForm(session) {
-            
+
             var email = $("#chatbundle_contact_form_type_email").val();
             var subject = $("#chatbundle_contact_form_type_subject").val();
             var message = $("#chatbundle_contact_form_type_message").val();
-            
+
             if (email != '') {
                 if (subject != '') {
                     if (message != '') {
-                        
-                        $(".send-contact-form").attr('disabled','disabled');
+
+                        $(".send-contact-form").attr('disabled', 'disabled');
                         $(".send-contact-form").html('Please wait..');
-                        
+
                         var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::EMAIL_CLIENT_TO_ADMIN')}}",
                             email: email,
                             subject: subject,
@@ -535,7 +540,7 @@
                 $("#chatbundle_contact_form_type_email").focus();
             }
         }
-        
+
         /**
          * Permite limpiar el formulario de envio de email al administrador
          **/
@@ -549,36 +554,52 @@
             $(".contact-message-notification").removeClass('hidden');
             $(".contact-message-notification div.alert-success").html(payload.msg);
         }
-        
+
+        function adminTyping(payload) {
+            $(".typing-text").html(payload.msg);
+            $(".typing-text").removeClass('hidden');
+            window.setTimeout(hideTyping, 2000);
+        }
+
+        /**
+         * Permite ocultar el mensaje que indica que un administrador esta escribiendo
+         **/
+        function hideTyping() {
+            var object = $(".typing-text");
+            if (!object.hasClass('hidden')) {
+                object.addClass('hidden');
+            }
+        }
+
     </script>
 {% endblock %}
 
 {% block scripts %}
-    
-    /**
-     * Ajax que permite consultar los mensajes que el usuario no ha leido
-     **/
-    $.ajax({
-        type: 'POST',
-        url: "{{path('chat_example_client_get_unread_messages')}}",
-        dataType: 'json',
-        data: {nickname: "{{nickname}}", userId: "{{userId}}"},
-        success: function (resp)
-        {
-            if (resp.result == '__OK__') {
-                var messages = JSON.parse(resp.messages)
-                if (messages.length > 0) {
-                    updateUnreadCounters(messages.length);
-                }
 
-                for (var i = 0; i < messages.length; i++) {
-                    appendHtmlMessageAdmin(messages[i]);
-                }
-            }
-        },
-        error: function (resp)
-        {
-            console.log("Error cargando los mensajes sin leer")
-        }
+    /**
+    * Ajax que permite consultar los mensajes que el usuario no ha leido
+    **/
+    $.ajax({
+    type: 'POST',
+    url: "{{path('chat_example_client_get_unread_messages')}}",
+    dataType: 'json',
+    data: {nickname: "{{nickname}}", userId: "{{userId}}"},
+    success: function (resp)
+    {
+    if (resp.result == '__OK__') {
+    var messages = JSON.parse(resp.messages)
+    if (messages.length > 0) {
+    updateUnreadCounters(messages.length);
+    }
+
+    for (var i = 0; i < messages.length; i++) {
+    appendHtmlMessageAdmin(messages[i]);
+    }
+    }
+    },
+    error: function (resp)
+    {
+    console.log("Error cargando los mensajes sin leer")
+    }
     });
 {% endblock %}

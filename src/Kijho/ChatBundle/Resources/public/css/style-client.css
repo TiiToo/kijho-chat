@@ -159,3 +159,8 @@ and open the template in the editor.
     float: left;
 }
 
+.typing-text {
+    font-size: 11px;
+    padding-left: 12px;
+    font-style: italic;
+}

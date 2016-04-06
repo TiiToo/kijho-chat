@@ -264,6 +264,8 @@
                 }
                 if (key == 13) {
                     sendMessage(session);
+                } else {
+                    notifyTyping(session);
                 }
             });
 
@@ -751,6 +753,19 @@
                     }
                 }
             });
+        }
+        
+        function notifyTyping(session) {
+            var textarea = $('.chat-textarea textarea');
+            var clientId = textarea.attr('destination-id') + "";
+
+            if (clientId != '' && clientId != 'undefined') {
+                
+                var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::ADMIN_TYPING')}}",
+                    clientId: clientId,
+                };
+                session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
+            }
         }
 
     </script>

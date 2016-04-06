@@ -52,6 +52,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     const MESSAGE_FROM_ADMIN = 'message_from_admin';
     const MESSAGE_SEND_SUCCESSFULLY = 'message_send_successfully';
     const CLIENT_TYPING = 'client_typing';
+    const ADMIN_TYPING = 'admin_typing';
     const CLIENT_MESSAGES_PUT_AS_READED = 'client_messages_put_as_readed';
     const SETTINGS_UPDATED = 'settings_updated';
     const SELF_STATUS_UPDATED = 'self_status_updated';
@@ -227,6 +228,23 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 $this->em->flush();
                             }
                         }
+                    } elseif ($eventType == self::ADMIN_TYPING) {
+                        if (isset($event['clientId']) && !empty($event['clientId'])) {
+                            $clientId = trim(strip_tags($event['clientId']));
+
+                            //buscamos al administrador con el nickname para mandarle el mensaje
+                            $clients = $this->getOnlineClients();
+                            $foundClient = null;
+
+                            foreach ($clients as $clientTopic) {
+                                if ($clientTopic->userId == $clientId) {
+                                    $clientTopic->event($topic->getId(), [
+                                        'msg_type' => self::ADMIN_TYPING,
+                                        'msg' => $connection->nickname." is typing...",
+                                    ]);
+                                }
+                            }
+                        }
                     } elseif ($eventType == self::MESSAGE_TO_CLIENT) {
                         if (isset($event['clientId']) && !empty($event['clientId'])) {
                             $clientId = trim(strip_tags($event['clientId']));
@@ -338,9 +356,9 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
 
 
                             $htmlCustomMessages = $this->renderView(
-                                'ChatBundle:ChatSettings:customMessagesToSend.html.twig', array(
-                                    'customMessages' => $customMessages,
-                                    'fromServer' => true
+                                    'ChatBundle:ChatSettings:customMessagesToSend.html.twig', array(
+                                'customMessages' => $customMessages,
+                                'fromServer' => true
                             ));
 
 
