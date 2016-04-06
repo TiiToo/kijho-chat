@@ -541,15 +541,26 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
 
                         $chatSettings = $this->em->getRepository('ChatBundle:ChatSettings')->findOneBy(array(), array());
                         if ($chatSettings instanceof Entity\ChatSettings && !empty($chatSettings->getEmailOfflineMessages())) {
+                            
+                            //guardamos el mensaje como un mensaje offline en BB.DD
+                            $offlineMessage = new Entity\OfflineMessage();
+                            $offlineMessage->setMessage($content);
+                            $offlineMessage->setSenderId($connection->userId);
+                            $offlineMessage->setSenderNickname($connection->nickname);
+                            $offlineMessage->setType(Entity\OfflineMessage::TYPE_CLIENT_TO_ADMIN);
+                            $offlineMessage->setSubject($subject);
+                            $offlineMessage->setEmail($email);
+                            
+                            $this->em->persist($offlineMessage);
+                            $this->em->flush();
+                            
                             $message = \Swift_Message::newInstance()
                                     ->setSubject($subject)
                                     ->setFrom($email)
                                     ->setTo($chatSettings->getEmailOfflineMessages())
                                     ->setBody($this->renderView(
                                             'ChatBundle:Email:contactForm.html.twig', array(
-                                        'email' => $email,
-                                        'subject' => $subject,
-                                        'message' => $content,
+                                        'offlineMessage' => $offlineMessage,
                                     )), 'text/html');
                             $this->container->get('mailer')->send($message);
 

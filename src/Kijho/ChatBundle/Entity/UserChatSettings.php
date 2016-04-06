@@ -7,7 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * User Chat Settings
  * @author Cesar Giraldo <cesargiraldo1108@gmail.com> 28/03/2016
- * @ORM\Table(name="user_chat_settings")
+ * @ORM\Table(name="chat_user_settings")
  * @ORM\Entity
  * @ORM\HasLifecycleCallbacks
  */

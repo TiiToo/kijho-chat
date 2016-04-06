@@ -554,7 +554,10 @@
             $(".contact-message-notification").removeClass('hidden');
             $(".contact-message-notification div.alert-success").html(payload.msg);
         }
-
+        
+        /**
+         * Permite mostrar en pantalla que un administrador esta escribiendo
+         **/
         function adminTyping(payload) {
             $(".typing-text").html(payload.msg);
             $(".typing-text").removeClass('hidden');
@@ -575,31 +578,30 @@
 {% endblock %}
 
 {% block scripts %}
-
     /**
-    * Ajax que permite consultar los mensajes que el usuario no ha leido
-    **/
+     * Ajax que permite consultar los mensajes que el usuario no ha leido
+     **/
     $.ajax({
-    type: 'POST',
-    url: "{{path('chat_example_client_get_unread_messages')}}",
-    dataType: 'json',
-    data: {nickname: "{{nickname}}", userId: "{{userId}}"},
-    success: function (resp)
-    {
-    if (resp.result == '__OK__') {
-    var messages = JSON.parse(resp.messages)
-    if (messages.length > 0) {
-    updateUnreadCounters(messages.length);
-    }
+        type: 'POST',
+        url: "{{path('chat_example_client_get_unread_messages')}}",
+        dataType: 'json',
+        data: {nickname: "{{nickname}}", userId: "{{userId}}"},
+        success: function (resp)
+        {
+            if (resp.result == '__OK__') {
+                var messages = JSON.parse(resp.messages)
+                if (messages.length > 0) {
+                    updateUnreadCounters(messages.length);
+                }
 
-    for (var i = 0; i < messages.length; i++) {
-    appendHtmlMessageAdmin(messages[i]);
-    }
-    }
-    },
-    error: function (resp)
-    {
-    console.log("Error cargando los mensajes sin leer")
-    }
+                for (var i = 0; i < messages.length; i++) {
+                    appendHtmlMessageAdmin(messages[i]);
+                }
+            }
+        },
+        error: function (resp)
+        {
+            console.log("Error cargando los mensajes sin leer")
+        }
     });
 {% endblock %}

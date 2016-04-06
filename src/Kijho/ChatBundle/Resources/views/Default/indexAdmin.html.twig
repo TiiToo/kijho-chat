@@ -755,6 +755,9 @@
             });
         }
         
+        /**
+         * Permite notificarle al cliente que el administrador le esta escribiendo un mensaje
+         */
         function notifyTyping(session) {
             var textarea = $('.chat-textarea textarea');
             var clientId = textarea.attr('destination-id') + "";
