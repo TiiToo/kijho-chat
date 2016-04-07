@@ -59,6 +59,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     const CLIENT_STATUS_UPDATED = 'client_status_updated';
     const JOIN_LEFT_ADMIN_TO_ROOM = 'join_left_admin_to_room';
     const EMAIL_SENT_SUCCESSFULLY = 'email_sent_successfully';
+    const CLIENT_AUTOMATIC_MESSAGE = 'client_automatic_message';
 
     /**
      * Constantes para los tipos de mensajes que los usuarios envian al servidor
@@ -240,7 +241,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 if ($clientTopic->userId == $clientId) {
                                     $clientTopic->event($topic->getId(), [
                                         'msg_type' => self::ADMIN_TYPING,
-                                        'msg' => $connection->nickname." is typing...",
+                                        'msg' => $connection->nickname . " is typing...",
                                     ]);
                                 }
                             }
@@ -334,6 +335,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
 
                         $notificationSound = trim(strip_tags($event['notificationSound']));
                         $emailOfflineMessages = trim(strip_tags($event['emailOfflineMessages']));
+                        $automaticWelcomeMessage = trim(strip_tags($event['automaticWelcomeMessage']));
                         $customMessages = (array) $event['customMessages'];
                         $enableCustomMessages = (boolean) trim(strip_tags($event['enableCustomMessages']));
 
@@ -349,12 +351,11 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 $settings->setEmailOfflineMessages($emailOfflineMessages);
                                 $settings->setEnableCustomResponses($enableCustomMessages);
                                 $settings->setCustomMessages(json_encode($customMessages, true));
-
+                                $settings->setAutomaticMessage($automaticWelcomeMessage);
                                 $this->em->persist($settings);
                             }
 
                             $this->em->flush();
-
 
                             $htmlCustomMessages = $this->renderView(
                                     'ChatBundle:ChatSettings:customMessagesToSend.html.twig', array(
@@ -396,6 +397,22 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                     }
                 } elseif ($connection->userType == self::USER_CLIENT) {
                     if ($eventType == self::MESSAGE_TO_ADMIN && isset($event['destination'])) {
+
+                        $sendAutomaticMessage = false;
+                        $automaticMessage = '';
+
+                        //debemos consultar si el el primer mensaje del cliente en el dia actual, para enviarle un mensaje automatico
+                        $chatSettings = $this->em->getRepository('ChatBundle:ChatSettings')->findOneBy(array(), array());
+                        if ($chatSettings instanceof Entity\ChatSettings && !empty($chatSettings->getAutomaticMessage())) {
+                            $date = Util::getCurrentStartDate();
+                            $clientMessages = $this->em->getRepository('ChatBundle:Message')->findClientMessagesFromDate($connection->userId, $date);
+                            if (empty($clientMessages)) {
+                                $sendAutomaticMessage = true;
+                                $automaticMessage = $chatSettings->getAutomaticMessage();
+                                $this->serverLog('se le debe enviar el mensaje automatico');
+                            }
+                        }
+
 
                         $message = trim(strip_tags($event['message']));
                         $messageSaved = false;
@@ -445,6 +462,15 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 'user_id' => $connection->userId,
                                 'msg_date' => $cliMessage->getDate()->format('m/d/Y h:i a'),
                             ]);
+
+                            if ($sendAutomaticMessage) {
+                                $connection->event($topic->getId(), [
+                                    'msg_type' => self::CLIENT_AUTOMATIC_MESSAGE,
+                                    'msg' => $automaticMessage,
+                                    'nickname' => 'System',
+                                    'msg_date' => Util::getCurrentDate()->format('m/d/Y h:i a'),
+                                ]);
+                            }
                         }
                     } elseif ($eventType == self::CLIENT_TYPING) {
 
@@ -540,7 +566,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
 
                         $chatSettings = $this->em->getRepository('ChatBundle:ChatSettings')->findOneBy(array(), array());
                         if ($chatSettings instanceof Entity\ChatSettings && !empty($chatSettings->getEmailOfflineMessages())) {
-                            
+
                             //guardamos el mensaje como un mensaje offline en BB.DD
                             $offlineMessage = new Entity\OfflineMessage();
                             $offlineMessage->setMessage($content);
@@ -549,10 +575,10 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                             $offlineMessage->setType(Entity\OfflineMessage::TYPE_CLIENT_TO_ADMIN);
                             $offlineMessage->setSubject($subject);
                             $offlineMessage->setEmail($email);
-                            
+
                             $this->em->persist($offlineMessage);
                             $this->em->flush();
-                            
+
                             $message = \Swift_Message::newInstance()
                                     ->setSubject($subject)
                                     ->setFrom($email)

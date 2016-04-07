@@ -344,6 +344,8 @@
                 clearContactForm(payload);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::ADMIN_TYPING')}}") {
                 adminTyping(payload);
+            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CLIENT_AUTOMATIC_MESSAGE')}}") {
+                displayAutomaticMessage(payload);
             }
         }
 
@@ -571,6 +573,16 @@
             var object = $(".typing-text");
             if (!object.hasClass('hidden')) {
                 object.addClass('hidden');
+            }
+        }
+        
+        function displayAutomaticMessage(payload) {
+            $(".play-sound").trigger('click');
+            appendHtmlMessageAdmin(payload);
+            updateUnreadCounters(1);
+            var displayStatus = $("#chat").css('display');
+            if (displayStatus == 'block') {
+                putMessagesReaded();
             }
         }
 

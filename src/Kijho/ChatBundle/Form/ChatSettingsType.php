@@ -30,6 +30,12 @@ class ChatSettingsType extends AbstractType {
                     'label' => 'Email to offline messages',
                     'attr' => array('placeholder' => 'info@yoursite.com')
                 ))
+                ->add('automaticMessage', Type\TextareaType::class, array(
+                    'required' => true,
+                    //'label' => $this->translator->trans('backend.user_role.name')
+                    'label' => 'Automatic welcome message',
+                    'attr' => array('placeholder' => 'Type here your welcome message')
+                ))
                 ->add('enableCustomResponses', Type\CheckboxType::class, array(
                     'required' => false,
                     //'label' => $this->translator->trans('backend.user_role.name')

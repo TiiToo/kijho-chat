@@ -14,5 +14,12 @@ class Util {
         $datetime->setTimezone($timezone);
         return $datetime;
     }
-
+    
+    public static function getCurrentStartDate($zone = 'America/Bogota') {
+        $timezone = new \DateTimeZone($zone);
+        $datetime = new \DateTime('now');
+        $datetime->setTimezone($timezone);
+        $datetime->setTime(00, 00, 00);
+        return $datetime;
+    }
 }

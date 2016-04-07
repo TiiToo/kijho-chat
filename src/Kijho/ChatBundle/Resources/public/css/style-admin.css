@@ -88,6 +88,10 @@ and open the template in the editor.
     margin-right: 8px;
 }
 
+#container-custom-messages {
+    margin-bottom: 8px;
+}
+
 #container-custom-messages-to-send div.messages {
     border: 1px solid #c0c0c0;
     border-radius: 4px;

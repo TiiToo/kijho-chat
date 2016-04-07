@@ -29,6 +29,12 @@ class ChatSettings {
     protected $emailOfflineMessages;
     
     /**
+     * Mensajes automatico que se le envia a un cliente que acaba de enviarle un mensaje al administrador
+     * @ORM\Column(name="cset_automatic_message", type="text", nullable=true)
+     */
+    protected $automaticMessage;
+    
+    /**
      * Boolean que permite establecer si el sistema debe desplegar los mensajes
      * por defecto a la hora de responder a un cliente
      * @ORM\Column(name="cset_enable_custom_responses", type="boolean", nullable=true)
@@ -67,6 +73,14 @@ class ChatSettings {
 
     function setCustomMessages($customMessages) {
         $this->customMessages = $customMessages;
+    }
+    
+    function getAutomaticMessage() {
+        return $this->automaticMessage;
+    }
+
+    function setAutomaticMessage($automaticMessage) {
+        $this->automaticMessage = $automaticMessage;
     }
 
     /**

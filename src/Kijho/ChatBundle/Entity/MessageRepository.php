@@ -10,7 +10,7 @@ class MessageRepository extends EntityRepository {
      * Permite obtener los nombres de los clientes y la ultima fecha en la que enviarion
      * mensajes a un administrador en especifico, ordenados desde el mensaje 
      * mas reciente al mas antiguo
-     * @author Cesar Giraldo <cnaranjo@kijho.com> 07/03/2015
+     * @author Cesar Giraldo <cnaranjo@kijho.com> 07/03/2016
      * @param string $adminId identificador del administrador
      * @return type
      */
@@ -29,11 +29,11 @@ class MessageRepository extends EntityRepository {
 
         $result = $innerQuery->getArrayResult();
 
-        
+
         if (!empty($result)) {
 
             $dqlQuery = $innerQuery->getDQL();
-            
+
             $consult = $em->createQuery("
         SELECT m.senderId, m.senderNickname, m.date
         FROM ChatBundle:Message m
@@ -52,7 +52,7 @@ class MessageRepository extends EntityRepository {
 
     /**
      * Permite cargar una conversacion completa entre dos partes
-     * @author Cesar Giraldo <cnaranjo@kijho.com> 07/03/2015
+     * @author Cesar Giraldo <cnaranjo@kijho.com> 07/03/2016
      * @param string $clientId identificador de uno de los involucrados en la conversacion
      * @param string $adminId identificador del segundo usuario involucrado en la conversacion
      * @return type
@@ -77,6 +77,14 @@ class MessageRepository extends EntityRepository {
         return $consult->getResult();
     }
 
+    /**
+     * Permite buscar los mensajes sin leer por el cliente 
+     * que los administradores le han enviado
+     * @author Cesar Giraldo <cnaranjo@kijho.com> 07/03/2016
+     * @param type $nickname
+     * @param type $userId
+     * @return type
+     */
     public function findClientUnreadMessages($nickname, $userId) {
         $em = $this->getEntityManager();
 
@@ -94,6 +102,33 @@ class MessageRepository extends EntityRepository {
         $consult->setParameter('adminToClient', Message::TYPE_ADMIN_TO_CLIENT);
 
         return $consult->getResult();
+    }
+
+    
+    /**
+     * Permite obtener el listado de mensajes que un cliente le ha enviado a un administrador
+     * desde una fecha determinada
+     * @author Cesar Giraldo <cnaranjo@kijho.com> 07/04/2016
+     * @param type $clientId
+     * @param type $startDate
+     * @return type
+     */
+    public function findClientMessagesFromDate($clientId, $startDate) {
+        $em = $this->getEntityManager();
+
+        $consult = $em->createQuery("
+        SELECT m
+        FROM ChatBundle:Message m
+        WHERE 
+        m.senderId = :client
+        AND m.type = :clientToAdmin 
+        AND m.date >= :startDate
+        ORDER BY m.date ASC");
+        $consult->setParameter('client', $clientId);
+        $consult->setParameter('startDate', $startDate);
+        $consult->setParameter('clientToAdmin', Message::TYPE_CLIENT_TO_ADMIN);
+
+        return $consult->getArrayResult();
     }
 
 }
