@@ -79,11 +79,11 @@
                     {{ form_label(settingsForm.enableCustomResponses)}}
                     {{ form_widget(settingsForm.enableCustomResponses,{'attr':{'class':''}})}}
                 </div>
-                <div id="container-custom-messages" class="form-group col-xs-12 flt-left no-padding">
+                <div id="container-custom-messages" class="form-group col-xs-12 flt-left no-padding {% if not chatSettings.enableCustomResponses %} hidden {% endif %}">
                     {% include 'ChatBundle:ChatSettings:customMessages.html.twig' %}
                 </div>
                 <div class="form-group col-xs-12 flt-left no-padding">
-                    <a class="btn btn-primary btn-sm no-padding add-custom-message"><i class="entypo-plus"></i></a>
+                    <a class="btn btn-primary btn-sm no-padding add-custom-message {% if not chatSettings.enableCustomResponses %} hidden {% endif %}"><i class="entypo-plus"></i></a>
                 </div>
                 <div class="form-group col-xs-12 flt-left no-padding">
                     <button class="btn btn-primary pull-right save-settings">Save Changes</button>
@@ -147,7 +147,7 @@
             <div class="chat-textarea">
                 <textarea class="form-control autogrow" placeholder="Type your message"></textarea>
             </div>
-            <div class="col-xs-12 margin-bottom flt-left" id="container-custom-messages-to-send">
+            <div class="col-xs-12 margin-bottom flt-left {% if not chatSettings.enableCustomResponses %} hidden {% endif %}" id="container-custom-messages-to-send">
                 {% include 'ChatBundle:ChatSettings:customMessagesToSend.html.twig' %}
             </div>
         </div>
@@ -318,6 +318,17 @@
                 $(".send-custom-message").addClass('hidden');
                 $(this).addClass('hidden');
             });
+            
+            $("#chatbundle_chat_settings_type_enableCustomResponses").bind("change", function(e) {
+                var object = $(this);
+                if ( object.is(':checked') ) {
+                    $("#container-custom-messages").removeClass('hidden');
+                    $(".add-custom-message").removeClass('hidden');
+                } else {
+                    $("#container-custom-messages").addClass('hidden');
+                    $(".add-custom-message").addClass('hidden');
+                }
+            });
         }
 
 
@@ -337,6 +348,7 @@
             $(".send-custom-message").unbind();
             $(".show-custom-messages").unbind();
             $(".hide-custom-messages").unbind();
+            $("#chatbundle_chat_settings_type_enableCustomResponses").unbind();
         }
 
         //permite realizar la conexion a una sala en especifico, y establecer un escucha de eventos
@@ -655,9 +667,16 @@
                 customMessages.push($(this).val());
             });
             
+            var enableCustomMessages = false;
+            
+            if ( $("#chatbundle_chat_settings_type_enableCustomResponses").is(':checked') ) {
+                enableCustomMessages = true;
+            }
+            
             var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::UPDATE_SETTINGS')}}",
                 notificationSound: $("#chatbundle_user_chat_settings_type_notificationSound").val(),
                 emailOfflineMessages: $("#chatbundle_chat_settings_type_emailOfflineMessages").val(),
+                enableCustomMessages: enableCustomMessages,
                 customMessages: customMessages,
             };
             session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
@@ -675,6 +694,12 @@
             $(".save-settings").removeAttr('disabled');
             $(".chat-settings").toggleClass('hidden');
             $("#container-custom-messages-to-send div.messages").html(payload.html_custom_messages);
+            
+            if (payload.enableCustomMessages) {
+                $("#container-custom-messages-to-send").removeClass('hidden');
+            } else {
+                $("#container-custom-messages-to-send").addClass('hidden');
+            }
         }
         
         /**

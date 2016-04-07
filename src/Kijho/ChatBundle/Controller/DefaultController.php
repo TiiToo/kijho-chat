@@ -98,6 +98,7 @@ class DefaultController extends Controller {
                     'allConversations' => $allConversations,
                     'userSettings' => $userSettings,
                     'userSettingsForm' => $userSettingsForm->createView(),
+                    'chatSettings' => $chatSettings,
                     'customMessages' => $customMessages,
                     'settingsForm' => $settingsForm->createView(),
         ));

@@ -335,6 +335,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                         $notificationSound = trim(strip_tags($event['notificationSound']));
                         $emailOfflineMessages = trim(strip_tags($event['emailOfflineMessages']));
                         $customMessages = (array) $event['customMessages'];
+                        $enableCustomMessages = (boolean) trim(strip_tags($event['enableCustomMessages']));
 
                         $searchUserSettings = array('userId' => $connection->userId, 'userType' => $connection->userType);
                         $userSettings = $this->em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
@@ -346,7 +347,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                             $settings = $this->em->getRepository('ChatBundle:ChatSettings')->findOneBy(array(), array());
                             if ($settings instanceof Entity\ChatSettings) {
                                 $settings->setEmailOfflineMessages($emailOfflineMessages);
-
+                                $settings->setEnableCustomResponses($enableCustomMessages);
                                 $settings->setCustomMessages(json_encode($customMessages, true));
 
                                 $this->em->persist($settings);
@@ -366,6 +367,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                             $connection->event($topic->getId(), [
                                 'msg_type' => self::SETTINGS_UPDATED,
                                 'msg' => 'Settings successfully updated',
+                                'enableCustomMessages' => $enableCustomMessages,
                                 'html_custom_messages' => $htmlCustomMessages,
                             ]);
                         }
@@ -390,9 +392,6 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 'previous_status' => $previousStatus,
                                 'new_status' => $connection->status,
                             ]);
-
-                            //FIX_ME
-                            //debemos notificar a todos los clientes el cambio de status del admin
                         }
                     }
                 } elseif ($connection->userType == self::USER_CLIENT) {
