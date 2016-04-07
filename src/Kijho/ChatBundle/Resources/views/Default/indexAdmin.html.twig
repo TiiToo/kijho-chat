@@ -159,6 +159,8 @@
 
     <!-- Chat Histories -->
     <div class="container-chats">
+        {% set lastDate = '' %}
+        {% set lastHour = '' %}
         {% for clientConversation in allConversations %}
             <ul class="chat-history" id="client-{{clientConversation.data.senderId}}">
                 {% for message in clientConversation.messages %}
@@ -173,7 +175,17 @@
                     <li class="{{userClass~' '~readClass}}">
                         <span class="user">{{message.senderNickname}}</span>
                         <p>{{message.message}}</p>
-                        <span class="time">{{message.date|date('m/d/Y h:i a')}}</span>
+                        <span class="time">
+                            {% if message.date|date('d/m/Y') != lastDate %}
+                                {% set lastDate = message.date|date('d/m/Y') %}
+                                {{ lastDate }}
+                            {% endif %}
+                            {% if message.date|date('h:i a') != lastHour %}
+                                {% set lastHour = message.date|date('h:i a') %}
+                                {{ lastHour }}
+                            {% endif %}
+                            {#{{message.date|date('h:i a')}}#}
+                        </span>
                     </li>
                 {% endfor %}
             </ul>

@@ -106,3 +106,23 @@ and open the template in the editor.
 #container-custom-messages-to-send div.messages label {
     width: 90%;
 }
+
+.conversation-body li {
+    text-align: right;
+    display: block;
+    padding: 6px !important;
+    border-bottom: 1px solid #484848;
+}
+
+.conversation-body li p {
+    margin-bottom: 4px;
+}
+
+.conversation-body li span.user {
+    font-style: italic;
+    font-weight: normal;
+}
+
+.conversation-body li.odd {
+    text-align: left;
+}

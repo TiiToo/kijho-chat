@@ -283,7 +283,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                         'msg' => $message,
                                         'nickname' => $connection->nickname,
                                         'user_id' => $connection->userId,
-                                        'msg_date' => $adminMessage->getDate()->format('m/d/Y h:i a'),
+                                        'msg_date' => $adminMessage->getDate()->format('h:i a'),
                                     ]);
                                 }
                             }
@@ -294,7 +294,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 'msg' => $message,
                                 'nickname' => $connection->nickname,
                                 'user_id' => $connection->userId,
-                                'msg_date' => $adminMessage->getDate()->format('m/d/Y h:i a'),
+                                'msg_date' => $adminMessage->getDate()->format('h:i a'),
                             ]);
 
                             /**
@@ -324,7 +324,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                             'msg' => $message,
                                             'nickname' => $connection->nickname,
                                             'user_id' => $foundClient->userId,
-                                            'msg_date' => $cliMessage->getDate()->format('m/d/Y h:i a'),
+                                            'msg_date' => $cliMessage->getDate()->format('h:i a'),
                                             'admin_destination' => $connection->userId,
                                         ]);
                                     }
@@ -447,7 +447,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                     'msg' => $message,
                                     'nickname' => $connection->nickname,
                                     'user_id' => $connection->userId,
-                                    'msg_date' => $cliMessage->getDate()->format('m/d/Y h:i a'),
+                                    'msg_date' => $cliMessage->getDate()->format('h:i a'),
                                     'admin_destination' => $adminId,
                                 ]);
                             }
@@ -460,7 +460,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 'msg' => $message,
                                 'nickname' => $connection->nickname,
                                 'user_id' => $connection->userId,
-                                'msg_date' => $cliMessage->getDate()->format('m/d/Y h:i a'),
+                                'msg_date' => $cliMessage->getDate()->format('h:i a'),
                             ]);
 
                             if ($sendAutomaticMessage) {
@@ -468,7 +468,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                     'msg_type' => self::CLIENT_AUTOMATIC_MESSAGE,
                                     'msg' => $automaticMessage,
                                     'nickname' => 'System',
-                                    'msg_date' => Util::getCurrentDate()->format('m/d/Y h:i a'),
+                                    'msg_date' => Util::getCurrentDate()->format('h:i a'),
                                 ]);
                             }
                         }
