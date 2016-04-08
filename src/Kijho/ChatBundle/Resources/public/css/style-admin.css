@@ -126,3 +126,7 @@ and open the template in the editor.
 .conversation-body li.odd {
     text-align: left;
 }
+
+.steal-chat {
+    margin: 4px;
+}

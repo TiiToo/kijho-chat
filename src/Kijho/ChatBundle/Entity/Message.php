@@ -83,6 +83,12 @@ class Message {
      */
     protected $destinationId;
 
+    /**
+     * Boolean que permite saber si un mensaje fue robado o no de otra conversacion
+     * @ORM\Column(name="mess_is_steal", type="boolean", nullable=true)
+     */
+    protected $isStealMessage;
+    
     function getId() {
         return $this->id;
     }
@@ -158,6 +164,14 @@ class Message {
     function setDateReaded($dateReaded) {
         $this->dateReaded = $dateReaded;
     }
+    
+    function getIsStealMessage() {
+        return $this->isStealMessage;
+    }
+
+    function setIsStealMessage($isStealMessage) {
+        $this->isStealMessage = $isStealMessage;
+    }
 
     /**
      * Set Page initial status before persisting
@@ -169,6 +183,9 @@ class Message {
         }
         if (null === $this->getReaded()) {
             $this->setReaded(false);
+        }
+        if (null === $this->getIsStealMessage()) {
+            $this->setIsStealMessage(false);
         }
     }
 

@@ -57,23 +57,46 @@ class MessageRepository extends EntityRepository {
      * @param string $adminId identificador del segundo usuario involucrado en la conversacion
      * @return type
      */
-    public function findConversationClientAdmin($clientId, $adminId) {
+    public function findConversationClientAdmin($clientId, $adminId, $steal = null, $startDate = null, $endDate = null) {
 
         $em = $this->getEntityManager();
+
+        $extraQuery = '';
+
+        if ($startDate) {
+            $extraQuery .= ' AND m.date >= :startDate ';
+        }
+        if ($endDate) {
+            $extraQuery .= ' AND m.date <= :endDate ';
+        }
+
+        if ($steal !== null) {
+            if ($steal === true) {
+                $extraQuery .= ' AND m.isStealMessage = TRUE ';
+            } elseif ($steal === false) {
+                $extraQuery .= ' AND m.isStealMessage = FALSE ';
+            }
+        }
 
         $consult = $em->createQuery("
         SELECT m
         FROM ChatBundle:Message m
         WHERE 
-        (m.senderId = :client AND m.destinationId = :admin)
-        OR (m.senderId = :admin AND m.destinationId = :client)
-        AND (m.type = :clientToAdmin OR m.type = :adminToClient)
-        ORDER BY m.date ASC");
+        ((m.senderId = :client AND m.destinationId = :admin)
+        OR (m.senderId = :admin AND m.destinationId = :client))
+        AND (m.type = :clientToAdmin OR m.type = :adminToClient) " . $extraQuery
+                . " ORDER BY m.date ASC");
         $consult->setParameter('client', $clientId);
         $consult->setParameter('admin', $adminId);
         $consult->setParameter('clientToAdmin', Message::TYPE_CLIENT_TO_ADMIN);
         $consult->setParameter('adminToClient', Message::TYPE_ADMIN_TO_CLIENT);
 
+        if ($startDate) {
+            $consult->setParameter('startDate', $startDate);
+        }
+        if ($endDate) {
+            $consult->setParameter('endDate', $endDate);
+        }
         return $consult->getResult();
     }
 
@@ -104,7 +127,6 @@ class MessageRepository extends EntityRepository {
         return $consult->getResult();
     }
 
-    
     /**
      * Permite obtener el listado de mensajes que un cliente le ha enviado a un administrador
      * desde una fecha determinada

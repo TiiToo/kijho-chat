@@ -6348,7 +6348,7 @@ textareatable .replace-inputs input {
   color: #7f8186;
 }
 #chat .chat-group > a {
-  position: relative;
+  /*position: relative;*/
   color: #bec0c2;
   -moz-transition: background 250ms ease-in-out;
   -o-transition: background 250ms ease-in-out;

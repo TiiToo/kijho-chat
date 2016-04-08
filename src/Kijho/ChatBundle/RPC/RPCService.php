@@ -40,6 +40,12 @@ class RPCService implements RpcInterface {
         }
         
         $connection->status = ChatTopic::STATUS_ONLINE;
+        
+        //esta variable se usa para determinar con que administrador 
+        //esta hablando cada usuario (en especial los los clientes)
+        $connection->onlineWithClient = '';
+        $connection->onlineWithAdmin = '';
+        
 
         return array("result" => array_sum($params));
     }

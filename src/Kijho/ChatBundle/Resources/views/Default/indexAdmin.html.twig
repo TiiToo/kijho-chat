@@ -128,7 +128,8 @@
             <div class="chat-group" id="group-2">
                 <strong>All Chats</strong>
                 {% for conversation in lastConversations %}
-                    <a href="#" class="open-client-conversation" client-id="{{conversation.senderId}}" data-conversation-history="#client-{{conversation.senderId}}"><span class="user-status is-offline"></span> <em>{{conversation.senderNickname}}</em> <span class="typing hidden pull-right"><i>Typing...</i></span></a>
+                    <a href="#" class="open-client-conversation" client-id="{{conversation.senderId}}" online-with="" data-conversation-history="#client-{{conversation.senderId}}"><span class="user-status is-offline"></span> <em>{{conversation.senderNickname}}</em> <span class="typing hidden pull-right"><i>Typing...</i></span></a>
+                    <button class="hidden pull-right steal-chat" client-id="{{conversation.senderId}}" title="Steal Conversation"><i class="entypo-eye"></i></button>
                 {% else %}
                     <a class="disabled" href="return false;">No chat history.</a>
                 {% endfor %}
@@ -223,6 +224,10 @@
             removeCustomMessage($(this));
         });
         
+        
+        $( "#group-2" ).on( "click", ".steal-chat", function( event ) {
+            stealConversation($(this));
+        });
     {% endblock %}
 
     {% block other_scripts %}
@@ -447,10 +452,26 @@
          * @param {string} onlineUsers
          **/
         function refreshOnlineUsers(onlineUsers) {
+            
             //verificamos si los online estan en el listado de conversaciones para ponerlos online (verde)
             for (i = 0; i < onlineUsers.length; i++) {
                 var element = $("#group-2 a[client-id='" + onlineUsers[i]['user_id'] + "']");
+                
                 if (!$.isEmptyObject(element.html())) {
+                    element.attr('online-with', onlineUsers[i]['onlineWithAdmin']);
+                    
+                    var stealElement = $("#group-2 button.steal-chat[client-id='" + onlineUsers[i]['user_id'] + "']");
+                    
+                    if (onlineUsers[i]['onlineWithAdmin'] != '' 
+                        && onlineUsers[i]['onlineWithAdmin'] != "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_ALL_ADMINISTRATORS')}}"
+                            && onlineUsers[i]['onlineWithAdmin'] != "{{nickname}}") {
+                            console.log(onlineUsers[i]['onlineWithAdmin']);
+                            stealElement.removeClass('hidden');
+                            console.log('se puede reclamar la conversacion para '+onlineUsers[i]['user_id']);
+                    } else {
+                        stealElement.addClass('hidden');
+                    }
+                    
                     var spanStatus = $("#group-2 a[client-id='" + onlineUsers[i]['user_id'] + "'] span").first();
                     spanStatus.attr('class', 'user-status '+ onlineUsers[i]['status']);
                 } else {
@@ -488,7 +509,9 @@
                 var spanStatus = $("#group-2 a[client-id='" + payload.user_id + "'] span").first();
                 spanStatus.attr("class", "user-status "+payload.status);
             } else {
-                var htmlUser = '<a href="#" class="open-client-conversation" client-id="' + payload.user_id + '" data-conversation-history="#client-' + payload.user_id + '"><span class="user-status '+payload.status+'"></span> <em>' + payload.nickname + '</em><span class="badge badge-info is-hidden">0</span></a>';
+                var htmlUser = '<a href="#" class="open-client-conversation" client-id="' + payload.user_id + '" online-with="" data-conversation-history="#client-' + payload.user_id + '"><span class="user-status '+payload.status+'"></span> <em>' + payload.nickname + '</em> <span class="badge badge-info is-hidden">0</span> <span class="typing hidden pull-right"><i>Typing...</i></span></a>';
+                htmlUser += '<button class="hidden pull-right steal-chat" client-id="' + payload.user_id + '" title="Steal Conversation"><i class="entypo-eye"></i></button>';
+                
                 var firstUser = $('#group-2 a').first();
                 if (firstUser.hasClass('disabled')) {
                     firstUser.remove();
@@ -810,6 +833,21 @@
                     clientId: clientId,
                 };
                 session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
+            }
+        }
+        
+        /**
+         * Esta funcion permite solicitar al servidor el robo de una conversacion
+         * de un cliente, el cual estaba hablando con otro administrador
+         **/
+        function stealConversation(object) {
+            var clientId = object.attr('client-id');
+            
+            if (clientId != '' && clientId != 'undefined') {
+                var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STEAL_CONVERSATION_WITH_CLIENT')}}",
+                    clientId: clientId,
+                };
+                globalSession.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
             }
         }
 

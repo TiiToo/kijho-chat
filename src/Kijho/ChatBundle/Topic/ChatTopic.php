@@ -70,6 +70,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     const CHANGE_ADMIN_STATUS = 'change_admin_status';
     const CHANGE_CLIENT_STATUS = 'change_client_status';
     const EMAIL_CLIENT_TO_ADMIN = 'email_client_to_admin';
+    const STEAL_CONVERSATION_WITH_CLIENT = 'steal_conversation_with_client';
 
     /**
      * Constante que controla el tiempo en el cual se actualiza el listado de usuarios
@@ -260,6 +261,9 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                             foreach ($clients as $clientTopic) {
                                 if ($clientTopic->userId == $clientId) {
 
+                                    //indicamos que el admin esta hablando con el cliente
+                                    $connection->onlineWithClient = $clientTopic->nickname;
+
                                     $foundClient = $clientTopic;
 
                                     //se utiliza la variable $messageSaved, para solo guardar un mensaje 
@@ -278,6 +282,9 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                         $messageSaved = true;
                                     }
 
+                                    //indicamos que el cliente esta hablando con el admin
+                                    $clientTopic->onlineWithAdmin = $connection->nickname;
+
                                     $clientTopic->event($topic->getId(), [
                                         'msg_type' => self::MESSAGE_FROM_ADMIN,
                                         'msg' => $message,
@@ -287,6 +294,8 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                     ]);
                                 }
                             }
+
+
 
                             //notificamos al administrador que su mensaje se envio exitosamente
                             $connection->event($topic->getId(), [
@@ -312,7 +321,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                         $cliMessage = new Entity\Message();
                                         $cliMessage->setMessage($message);
                                         $cliMessage->setSenderId($foundClient->userId);
-                                        $cliMessage->setSenderNickname('System');
+                                        $cliMessage->setSenderNickname($foundClient->nickname);
                                         $cliMessage->setDestinationId($adminTopic->userId);
                                         $cliMessage->setDestinationNickname($adminTopic->nickname);
                                         $cliMessage->setType(Entity\Message::TYPE_CLIENT_TO_ADMIN);
@@ -394,6 +403,112 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 'new_status' => $connection->status,
                             ]);
                         }
+                    } else if ($eventType == self::STEAL_CONVERSATION_WITH_CLIENT) {
+
+                        //debemos buscar el cliente con el que se quiere conversar
+                        if (isset($event['clientId']) && !empty($event['clientId'])) {
+                            $clientId = trim(strip_tags($event['clientId']));
+
+                            //buscamos el cliente
+                            //debemos saber con que administrador esta hablando
+                            $clients = $this->getOnlineClients();
+                            $clientConnection = null;
+                            $adminNickname = null;
+                            foreach ($clients as $clientTopic) {
+                                if ($clientTopic->userId == $clientId) {
+                                    $clientConnection = $clientTopic;
+                                    $adminNickname = $clientTopic->onlineWithAdmin;
+                                    break;
+                                }
+                            }
+
+                            if ($adminNickname) {
+
+
+                                //buscamos el administrador con quien esta hablando el cliente
+                                $administrators = $this->getOnlineAdministrators();
+                                $adminId = null;
+                                $previousAdmin = null;
+                                foreach ($administrators as $adminTopic) {
+                                    if ($adminTopic->nickname == $adminNickname) {
+                                        $adminId = $adminTopic->userId;
+                                        $previousAdmin = $adminTopic;
+                                        break;
+                                    }
+                                }
+
+
+                                if ($adminId) {
+
+                                    $this->serverLog('vamos bien : ' . $adminId);
+                                    //debemos consultar el listado de todos los mensajes del dia actual entre ese cliente y ese admin (mensajes no robados)
+                                    $startDate = Util::getCurrentStartDate();
+                                    $endDate = Util::getCurrentDate();
+
+                                    $this->serverLog($startDate->format('d/m/Y H:i'));
+                                    $this->serverLog($endDate->format('d/m/Y H:i'));
+
+                                    //consultamos y duplicamos los mensajes en base de datos, pero guardandolos con el identificador del admin (senderId, destinationId)
+                                    $conversation = $this->em->getRepository('ChatBundle:Message')->findConversationClientAdmin($clientId, $adminId, false, $startDate, $endDate);
+                                    $stealMessages = array();
+                                    foreach ($conversation as $message) {
+                                        $stealMessage = clone $message;
+                                        if ($stealMessage->getType() == Entity\Message::TYPE_CLIENT_TO_ADMIN) {
+                                            $stealMessage->setDestinationId($connection->userId);
+                                        } elseif ($stealMessage->getType() == Entity\Message::TYPE_ADMIN_TO_CLIENT) {
+                                            $stealMessage->setSenderId($connection->userId);
+                                        }
+                                        $stealMessage->setIsStealMessage(true);
+                                        $this->em->persist($stealMessage);
+                                        array_push($stealMessages, $stealMessage);
+                                    }
+                                    $this->em->flush();
+
+
+                                    //debemos guardar y enviar una notificacion al anterior administrador, para que sepa quien llevara a cabo la conversacion.
+                                    if ($previousAdmin && $clientConnection) {
+                                        $message = 'Automatic Message: ' . $connection->nickname . ' will receive and will respond the client messages';
+                                        $cliMessage = new Entity\Message();
+                                        $cliMessage->setMessage($message);
+                                        $cliMessage->setSenderId($clientConnection->userId);
+                                        $cliMessage->setSenderNickname($clientConnection->nickname);
+                                        $cliMessage->setDestinationId($previousAdmin->userId);
+                                        $cliMessage->setDestinationNickname($previousAdmin->nickname);
+                                        $cliMessage->setType(Entity\Message::TYPE_CLIENT_TO_ADMIN);
+                                        $this->em->persist($cliMessage);
+                                        $this->em->flush();
+
+                                        $previousAdmin->event($topic->getId(), [
+                                            'msg_type' => self::MESSAGE_FROM_CLIENT,
+                                            'msg' => $message,
+                                            'nickname' => $connection->nickname,
+                                            'user_id' => $clientConnection->userId,
+                                            'msg_date' => $cliMessage->getDate()->format('h:i a'),
+                                            'admin_destination' => $connection->userId,
+                                        ]);
+                                        
+                                        $previousAdmin->onlineWithClient = '';
+                                    }
+
+                                    //podemos enviar una notificacion al cliente indicando que otro administrador atendera sus mensajes
+                                    if ($clientConnection) {
+                                        $clientConnection->event($topic->getId(), [
+                                            'msg_type' => self::MESSAGE_FROM_ADMIN,
+                                            'msg' => "Automatic Message: ".$connection->nickname.' will be continue the conversation.',
+                                            'nickname' => $connection->nickname,
+                                            'user_id' => $connection->userId,
+                                            'msg_date' => Util::getCurrentDate()->format('h:i a'),
+                                        ]);
+                                        
+                                        //cambiamos las variables onlineWithClient y onlineWithAdmin segun corresponda
+                                        $clientConnection->onlineWithAdmin = $connection->nickname;
+                                        $connection->onlineWithClient = $clientConnection->nickname;
+                                    }
+
+                                    //debemos enviar el listado de mensajes robados al nuevo admin, para que vea la conversacion
+                                }
+                            }
+                        }
                     }
                 } elseif ($connection->userType == self::USER_CLIENT) {
                     if ($eventType == self::MESSAGE_TO_ADMIN && isset($event['destination'])) {
@@ -440,6 +555,13 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                     $this->em->persist($cliMessage);
                                     $this->em->flush();
                                     $messageSaved = true;
+
+                                    //indicamos que el cliente esta hablando con el admin
+                                    if ($adminId == self::MESSAGE_ALL_ADMINISTRATORS) {
+                                        $connection->onlineWithAdmin = $adminId;
+                                    } else {
+                                        $connection->onlineWithAdmin = $adminTopic->nickname;
+                                    }
                                 }
 
                                 $adminTopic->event($topic->getId(), [
@@ -454,6 +576,9 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                         }
 
                         if ($messageSaved) {
+
+
+
                             //notificamos al usuario que su mensaje se envio exitosamente
                             $connection->event($topic->getId(), [
                                 'msg_type' => self::MESSAGE_SEND_SUCCESSFULLY,
@@ -686,6 +811,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                         'nickname' => $subscriber->nickname,
                         'user_id' => $subscriber->userId,
                         'status' => $subscriber->status,
+                        'onlineWithAdmin' => $subscriber->onlineWithAdmin
                     );
                     if (!in_array($data, $onlineUsers)) {
                         array_push($onlineUsers, $data);
