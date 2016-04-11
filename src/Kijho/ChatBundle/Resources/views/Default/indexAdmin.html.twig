@@ -444,6 +444,8 @@
                 selfStatusUpdated(payload);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CLIENT_STATUS_UPDATED')}}") {
                 clientStatusUpdated(payload);
+            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGES_FROM_OTHER_CONVERSATION')}}") {
+                messagesFromOtherConversation(payload);
             }
         }
 
@@ -848,6 +850,69 @@
                     clientId: clientId,
                 };
                 globalSession.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
+            }
+        }
+        
+        function messagesFromOtherConversation(payload) {
+            displayNotification('Conversation stealed successfully');
+
+            //buscamos el tab de conversacion del usuario en el listado de conversaciones
+            var element = $(".open-client-conversation[client-id='" + payload.client_id + "']");
+            
+            var messages = payload.messages;
+            var userIdentifier = payload.client_id;
+            
+            console.log(messages.length);
+            
+            if (!$.isEmptyObject(element.html())) {
+                
+                for (var i = 0; i < messages.length; i++) {
+                    increaseUnreadCounters(element);
+                    
+                    //armamos el html con el mensaje del usuario
+                    if (messages[i].type == "{{constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_CLIENT_TO_ADMIN')}}") {
+                        var htmlMessage = '<li class="opponent unread">';
+                    } else if (messages[i].type == "{{constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_ADMIN_TO_CLIENT')}}") {
+                        var htmlMessage = '<li class="user unread">';
+                    }
+                    
+                    htmlMessage += '<span class="user">' + messages[i].sender_nickname + '</span>';
+
+                    htmlMessage += '<p>' + messages[i].message + '</p>'
+                            + '<span class="time">' + messages[i].hour + '</span>'
+                            + '</li>';
+
+                    //buscamos el panel de mensajes del usuario
+                    var chatContainer = $("#client-" + userIdentifier);
+
+                    if (!$.isEmptyObject(chatContainer.html())) {
+                        chatContainer.append(htmlMessage);
+                    } else {
+                        //si no habia un panel de mensajes para el usuario, le creamos uno
+                        var html = '<ul class="chat-history" id="client-' + userIdentifier + '">'
+                                + htmlMessage + '</ul>';
+                        $(".container-chats").append(html);
+                    }      
+                }
+                
+                neonChat.prefetchMessages();
+
+                //verificamos si la ventana de chat esta abierta
+                var display = $('.chat-conversation').css('display');
+
+                if (display == 'block') {
+                    //si esta abierta preguntamos si el mensaje entrante es del chat abierto
+                    var userId = $(".chat-conversation div.chat-textarea textarea.form-control").attr('destination-id');
+                    if (userId == userIdentifier) {
+                        //debemos marcar los mensajes como leidos
+                        if (globalSession) {
+
+                            neonChat.resetUnreads(element.attr('id'));
+                            neonChat.puffUnreadsAll();
+                        }
+                        neonChat.renderMessages(neonChat.$current_user.attr('id'));
+                    }
+                }
             }
         }
 

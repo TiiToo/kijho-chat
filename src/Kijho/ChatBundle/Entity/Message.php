@@ -188,5 +188,29 @@ class Message {
             $this->setIsStealMessage(false);
         }
     }
+    
+    /**
+     * Permite obtener la informacion del mensaje en un arreglo
+     * @return type
+     */
+    public function getArrayData() {
+        
+        $arrayData = [
+            'date' => $this->getDate()->format('d/m/Y'),
+            'hour' => $this->getDate()->format('h:i a'),
+            'destination_id' => $this->getDestinationId(),
+            'destination_nickname' => $this->getDestinationNickname(),
+            'message' => $this->getMessage(),
+            'sender_id' => $this->getSenderId(),
+            'sender_nickname' => $this->getSenderNickname(),
+            'type' => $this->getType(),
+            'is_readed' => $this->getReaded(),
+        ];
+        
+        return $arrayData;
+        
+        
+        
+    }
 
 }

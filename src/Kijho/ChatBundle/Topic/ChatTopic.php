@@ -60,6 +60,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     const JOIN_LEFT_ADMIN_TO_ROOM = 'join_left_admin_to_room';
     const EMAIL_SENT_SUCCESSFULLY = 'email_sent_successfully';
     const CLIENT_AUTOMATIC_MESSAGE = 'client_automatic_message';
+    const MESSAGES_FROM_OTHER_CONVERSATION = 'messages_from_other_conversation';
 
     /**
      * Constantes para los tipos de mensajes que los usuarios envian al servidor
@@ -460,7 +461,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                         }
                                         $stealMessage->setIsStealMessage(true);
                                         $this->em->persist($stealMessage);
-                                        array_push($stealMessages, $stealMessage);
+                                        array_push($stealMessages, $stealMessage->getArrayData());
                                     }
                                     $this->em->flush();
 
@@ -475,6 +476,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                         $cliMessage->setDestinationId($previousAdmin->userId);
                                         $cliMessage->setDestinationNickname($previousAdmin->nickname);
                                         $cliMessage->setType(Entity\Message::TYPE_CLIENT_TO_ADMIN);
+                                        $cliMessage->setDate(Util::getCurrentDate());
                                         $this->em->persist($cliMessage);
                                         $this->em->flush();
 
@@ -506,6 +508,11 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                     }
 
                                     //debemos enviar el listado de mensajes robados al nuevo admin, para que vea la conversacion
+                                    $connection->event($topic->getId(), [
+                                        'msg_type' => self::MESSAGES_FROM_OTHER_CONVERSATION,
+                                        'client_id' => $clientId,
+                                        'messages' => $stealMessages,
+                                    ]);
                                 }
                             }
                         }
