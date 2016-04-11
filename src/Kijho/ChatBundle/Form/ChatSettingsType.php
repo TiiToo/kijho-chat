@@ -25,13 +25,13 @@ class ChatSettingsType extends AbstractType {
     public function buildForm(FormBuilderInterface $builder, array $options) {
         $builder
                 ->add('emailOfflineMessages', Type\EmailType::class, array(
-                    'required' => true,
+                    'required' => false,
                     //'label' => $this->translator->trans('backend.user_role.name')
                     'label' => 'Email to offline messages',
                     'attr' => array('placeholder' => 'info@yoursite.com')
                 ))
                 ->add('automaticMessage', Type\TextareaType::class, array(
-                    'required' => true,
+                    'required' => false,
                     //'label' => $this->translator->trans('backend.user_role.name')
                     'label' => 'Automatic welcome message',
                     'attr' => array('placeholder' => 'Type here your welcome message')
@@ -39,7 +39,7 @@ class ChatSettingsType extends AbstractType {
                 ->add('enableCustomResponses', Type\CheckboxType::class, array(
                     'required' => false,
                     //'label' => $this->translator->trans('backend.user_role.name')
-                    'label' => 'Enable custom responses',
+                    'label' => 'Enable custom messages',
                     'attr' => array()
                 ))
         ;

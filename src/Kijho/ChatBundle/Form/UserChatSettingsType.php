@@ -25,7 +25,7 @@ class UserChatSettingsType extends AbstractType {
     public function buildForm(FormBuilderInterface $builder, array $options) {
         $builder
                 ->add('notificationSound', Type\ChoiceType::class, array(
-                    'required' => true,
+                    'required' => false,
                     //'label' => $this->translator->trans('backend.user_role.name')
                     'label' => 'Notification Sound',
                     'choices' => array(
