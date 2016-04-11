@@ -60,49 +60,48 @@
                             </li>
                         </ul>
                     </div>
-
-                    <div class="row chat-settings col-lg-12 hidden">
-                        <a><i class="entypo-cog"></i> Chat Settings</a>
-                        <i class="entypo-cancel display-settings pull-right"></i><br>
-                        <div class="form-group margin-top">
-                            <div class="col-xs-9 no-padding-left">
-                                {{ form_label(userSettingsForm.notificationSound)}}
-                                {{ form_widget(userSettingsForm.notificationSound,{'attr':{'class':'form-control'}})}}
-                            </div>
-                            <div class="col-xs-3 no-padding" style="padding-top: 24px;">
-                                <a class="btn btn-sm play-sound no-padding"><i class="entypo-play"></i> Play</a>
-                            </div>
-                        </div>
-                        <div class="form-group col-xs-12 flt-left margin-top no-padding">
-                            <button class="btn btn-primary pull-right save-settings">Save Changes</button>
-                        </div>
-                        <div class="hidden">
-                            {% set sounds = { 0 : 'sounds-capisci.mp3',
-                                                  1 : 'sounds-come-to-daddy.mp3', 
-                                                  2 : 'sounds-communication-channel.mp3',
-                                                  3 : 'sounds-credulous.mp3', 
-                                                  4 : 'sounds-et-voila.mp3', 
-                                                  5 : 'sounds-gets-in-the-way.mp3', 
-                                                  6 : 'sounds-isnt-it.mp3',
-                                                  7 : 'sounds-no-way.mp3',
-                                                  8 : 'sounds-obey.mp3',
-                                                  9 : 'sounds-pedantic.mp3',
-                                                  10 : 'sounds-served.mp3',
-                                                  11 : 'sounds-surprise-on-a-spring.mp3',
-                                                  12 : 'sounds-worthwhile.mp3',
-                                                  13 : 'sounds-you-know.mp3',
-                                                  14 : 'sounds-your-turn.mp3',
-                                                    } %}
-                            {% for sound in sounds %}
-                                <audio controls id="{{sound}}">
-                                    <source src="{{asset('bundles/chat/sounds/'~sound)}}" type="audio/mpeg">
-                                </audio>
-                            {% endfor %}
-                        </div>
-                    </div>
                 </div>
                 <div class="chat-container">
                     <div class="panel-body ">
+                        <div class="row chat-settings col-lg-12 hidden">
+                            <a><i class="entypo-cog"></i> Chat Settings</a>
+                            <i class="entypo-cancel display-settings pull-right"></i><br>
+                            <div class="form-group margin-top">
+                                <div class="col-xs-9 no-padding-left">
+                                    {{ form_label(userSettingsForm.notificationSound)}}
+                                    {{ form_widget(userSettingsForm.notificationSound,{'attr':{'class':'form-control'}})}}
+                                </div>
+                                <div class="col-xs-3 no-padding" style="padding-top: 24px;">
+                                    <a class="btn btn-sm play-sound no-padding"><i class="entypo-play"></i> Play</a>
+                                </div>
+                            </div>
+                            <div class="form-group col-xs-12 flt-left margin-top no-padding">
+                                <button class="btn btn-primary pull-right save-settings">Save Changes</button>
+                            </div>
+                            <div class="hidden">
+                                {% set sounds = { 0 : 'sounds-capisci.mp3',
+                                                      1 : 'sounds-come-to-daddy.mp3', 
+                                                      2 : 'sounds-communication-channel.mp3',
+                                                      3 : 'sounds-credulous.mp3', 
+                                                      4 : 'sounds-et-voila.mp3', 
+                                                      5 : 'sounds-gets-in-the-way.mp3', 
+                                                      6 : 'sounds-isnt-it.mp3',
+                                                      7 : 'sounds-no-way.mp3',
+                                                      8 : 'sounds-obey.mp3',
+                                                      9 : 'sounds-pedantic.mp3',
+                                                      10 : 'sounds-served.mp3',
+                                                      11 : 'sounds-surprise-on-a-spring.mp3',
+                                                      12 : 'sounds-worthwhile.mp3',
+                                                      13 : 'sounds-you-know.mp3',
+                                                      14 : 'sounds-your-turn.mp3',
+                                                        } %}
+                                {% for sound in sounds %}
+                                    <audio controls id="{{sound}}">
+                                        <source src="{{asset('bundles/chat/sounds/'~sound)}}" type="audio/mpeg">
+                                    </audio>
+                                {% endfor %}
+                            </div>
+                        </div>
                         <ul class="chat" id="message-list">
                             {% for message in todayMessages %}
                                 {% if message.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_CLIENT_TO_ADMIN') %}
