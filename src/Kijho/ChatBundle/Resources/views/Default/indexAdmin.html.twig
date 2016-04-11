@@ -9,7 +9,7 @@
                 <div class="col-md-6 pull-right">
                     <ul class="list-inline links-list ">
                         <li>
-                            <a id="display-chat" href="#" data-toggle="chat" data-animate="1" data-collapse-sidebar="1">
+                            <a class="display-chat" href="#" data-toggle="chat" data-animate="1" data-collapse-sidebar="1">
                                 <i class="entypo-chat"></i>
                                 Chat
                                 <span class="badge badge-success chat-notifications-badge is-hidden">0</span>
@@ -197,7 +197,7 @@
 
 {% block scripts %}
         {# Damos click en este boton para desplegar el panel #}
-        $("#display-chat").trigger('click');
+        $(".display-chat").trigger('click');
 
         {# Ejecutamos una funcion periodicamente para verificar el estado del servidor #}
         window.setInterval(verifyServerConnection, 4000);

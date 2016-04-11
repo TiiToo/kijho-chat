@@ -9,7 +9,7 @@
                 <div class="col-md-6 pull-right">
                     <ul class="list-inline links-list ">
                         <li>
-                            <a id="display-chat" href="#" data-toggle="chat" data-animate="1" data-collapse-sidebar="1">
+                            <a class="display-chat" href="#" data-toggle="chat" data-animate="1" data-collapse-sidebar="1">
                                 <i class="entypo-chat"></i>
                                 Chat
                                 <span class="badge badge-success chat-notifications-badge is-hidden">0</span>
@@ -146,7 +146,7 @@
                 </div>
 
                 <div class="admin-offline hidden">
-                    <div class="panel-body" style="height: 333px;">
+                    <div class="panel-body">
                         <form onsubmit="return false;" id="contact-form">
                             <p class="col-xs-12 margin-top">No personal support online, please fill out the form below to send and email:</p>
                             <div class="col-xs-12 margin-top flt-left">
@@ -248,7 +248,7 @@
                 sendMessage(session);
             });
 
-            $("#display-chat").bind("click", function (e) {
+            $(".display-chat").bind("click", function (e) {
                 putMessagesReaded();
             });
 
@@ -284,7 +284,7 @@
             });
 
             $(".close-message-notification").bind("click", function (e) {
-                $("#display-chat").trigger('click');
+                $(".display-chat").trigger('click');
             });
         }
 
@@ -440,7 +440,7 @@
         function displayChatPanel() {
             var displayStatus = $("#chat").css('display');
             if (displayStatus == 'none') {
-                $("#display-chat").trigger('click');
+                $(".display-chat").trigger('click');
             }
         }
 
@@ -448,7 +448,7 @@
          * Permite actualizar los contadores de mensajes sin leer por el cliente
          */
         function updateUnreadCounters(counter) {
-            var spanNotification = $("#display-chat span.chat-notifications-badge");
+            var spanNotification = $(".display-chat span.chat-notifications-badge");
             var currentNumber = parseInt(spanNotification.html());
             currentNumber += counter;
             spanNotification.html(currentNumber);
@@ -463,7 +463,7 @@
         }
 
         function resetUnreadCounters() {
-            var spanNotification = $("#display-chat span.chat-notifications-badge");
+            var spanNotification = $(".display-chat span.chat-notifications-badge");
             spanNotification.html('0');
             spanNotification.addClass('is-hidden');
 
