@@ -129,7 +129,7 @@ class MessageRepository extends EntityRepository {
 
     /**
      * Permite obtener el listado de mensajes que un cliente le ha enviado a un administrador
-     * desde una fecha determinada
+     * o viceversa desde una fecha determinada
      * @author Cesar Giraldo <cnaranjo@kijho.com> 07/04/2016
      * @param type $clientId
      * @param type $startDate
@@ -142,13 +142,18 @@ class MessageRepository extends EntityRepository {
         SELECT m
         FROM ChatBundle:Message m
         WHERE 
-        m.senderId = :client
-        AND m.type = :clientToAdmin 
+        ((m.senderId = :client
+        AND m.type = :clientToAdmin)
+        OR (m.destinationId = :client
+        AND m.type = :adminToClient
+        ))
         AND m.date >= :startDate
+        AND m.isStealMessage = FALSE
         ORDER BY m.date ASC");
         $consult->setParameter('client', $clientId);
         $consult->setParameter('startDate', $startDate);
         $consult->setParameter('clientToAdmin', Message::TYPE_CLIENT_TO_ADMIN);
+        $consult->setParameter('adminToClient', Message::TYPE_ADMIN_TO_CLIENT);
 
         return $consult->getArrayResult();
     }

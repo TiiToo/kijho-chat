@@ -12,6 +12,7 @@ use Kijho\ChatBundle\Entity\ChatSettings;
 use Kijho\ChatBundle\Form\UserChatSettingsType;
 use Kijho\ChatBundle\Form\ChatSettingsType;
 use Kijho\ChatBundle\Form\ContactFormType;
+use Kijho\ChatBundle\Util\Util;
 
 class DefaultController extends Controller {
 
@@ -32,12 +33,14 @@ class DefaultController extends Controller {
         $userSettingsForm = $this->createForm(UserChatSettingsType::class, $userSettings);
         $contactForm = $this->createForm(ContactFormType::class);
         
+        $todayMessages = $em->getRepository('ChatBundle:Message')->findClientMessagesFromDate($userId, Util::getCurrentStartDate());
         
         return $this->render('ChatBundle:Default:indexClient.html.twig', array(
                     'local' => $local,
                     'nickname' => $nickname,
                     'userId' => $userId,
                     'userType' => $userType,
+                    'todayMessages' => $todayMessages,
                     'userSettings' => $userSettings,
                     'userSettingsForm' => $userSettingsForm->createView(),
                     'contactForm' => $contactForm->createView(),

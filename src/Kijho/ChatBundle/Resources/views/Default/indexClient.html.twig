@@ -104,6 +104,35 @@
                 <div class="chat-container">
                     <div class="panel-body ">
                         <ul class="chat" id="message-list">
+                            {% for message in todayMessages %}
+                                {% if message.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_CLIENT_TO_ADMIN') %}
+                                    <li class="right clearfix">
+                                        <span class="chat-img pull-right">
+                                            <img src="http://placehold.it/50/FA6F57/fff&amp;text=ME" alt="User Avatar" class="img-circle">
+                                        </span>
+                                        <div class="chat-body clearfix">
+                                            <div class="header">
+                                                <small class=" text-muted"><span class="glyphicon glyphicon-time"></span>{{ message.date|date('h:i a')}} </small>
+                                                <strong class="pull-right primary-font">{{message.senderNickname}}</strong>
+                                            </div>
+                                            <p>{{message.message}}</p>
+                                        </div>
+                                    </li>
+                                {% elseif message.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_ADMIN_TO_CLIENT') %}
+                                    <li class="left clearfix">
+                                        <span class="chat-img pull-left">
+                                            <img src="http://placehold.it/50/55C1E7/fff&amp;text=U" alt="User Avatar" class="img-circle">
+                                        </span>
+                                        <div class="chat-body clearfix">
+                                            <div class="header">
+                                                <strong class="primary-font">{{message.senderNickname}} </strong> <small class="pull-right text-muted">
+                                                <span class="glyphicon glyphicon-time"></span>{{ message.date|date('h:i a')}} </small>
+                                            </div>
+                                            <p>{{message.message}} </p>
+                                        </div>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
                         </ul>
                     </div>
                     <div class="panel-footer">
