@@ -8,7 +8,7 @@
         <meta name="description" content="Kijho Chat" />
         <meta name="author" content="" />
         
-        <title>{% block title %}Chat Bundle{% endblock %}</title>     
+        <title>{% block title %}{{'global.chat'|trans}}{% endblock %}</title>     
         
         <link rel="stylesheet" href="{{ asset('bundles/chat/assets/js/jquery-ui/css/no-theme/jquery-ui-1.10.3.custom.min.css') }}">
         <link rel="stylesheet" href="{{ asset('bundles/chat/assets/css/font-icons/entypo/css/entypo.css') }}">
@@ -22,8 +22,6 @@
         <link rel="stylesheet" href=" {{ asset('bundles/chat/css/style-admin.css') }}" media="screen">
         
         <script src="{{ asset('bundles/chat/assets/js/jquery-1.11.0.min.js') }}"></script>
-        
-        
     </head><!--/head-->
     <body class="page-body  page-fade">
 

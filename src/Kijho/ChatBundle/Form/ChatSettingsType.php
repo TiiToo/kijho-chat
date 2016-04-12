@@ -26,20 +26,17 @@ class ChatSettingsType extends AbstractType {
         $builder
                 ->add('emailOfflineMessages', Type\EmailType::class, array(
                     'required' => false,
-                    //'label' => $this->translator->trans('backend.user_role.name')
-                    'label' => 'Email to offline messages',
+                    'label' => $this->translator->trans('admin_settings.email_offline_messages'),
                     'attr' => array('placeholder' => 'info@yoursite.com')
                 ))
                 ->add('automaticMessage', Type\TextareaType::class, array(
                     'required' => false,
-                    //'label' => $this->translator->trans('backend.user_role.name')
-                    'label' => 'Automatic welcome message',
+                    'label' => $this->translator->trans('admin_settings.automatic_welcome_message'),
                     'attr' => array('placeholder' => 'Type here your welcome message')
                 ))
                 ->add('enableCustomResponses', Type\CheckboxType::class, array(
                     'required' => false,
-                    //'label' => $this->translator->trans('backend.user_role.name')
-                    'label' => 'Enable custom messages',
+                    'label' => $this->translator->trans('admin_settings.enable_custom_messages'),
                     'attr' => array()
                 ))
         ;

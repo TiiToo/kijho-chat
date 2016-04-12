@@ -6,7 +6,7 @@
         </div>
     {% endfor %}
 {% else %}
-    <label>Custom Messages</label>
+    <label>{{'admin.custom_messages'|trans}}</label>
     <a class="btn btn-default btn-sm no-padding pull-right show-custom-messages"><i class="entypo-down"></i></a>
     <a class="btn btn-default btn-sm no-padding pull-right hide-custom-messages hidden"><i class="entypo-up"></i></a>
     <div class="messages hidden">
@@ -17,5 +17,5 @@
             </div>
         {% endfor %}
     </div>
-    <a class="btn btn-default btn-sm pull-right send-custom-message hidden">Send</a>
+    <a class="btn btn-default btn-sm pull-right send-custom-message hidden">{{'global.send'|trans}}</a>
 {% endif %}

@@ -1,5 +1,5 @@
 {% extends 'ChatBundle:Default:mainAdmin.html.twig' %}
-{% block title %}Chat Bundle - Admin{% endblock %}
+{% block title %}{{'global.chat'|trans}} - {{'admin.administrator'|trans}}{% endblock %}
 {% block content %}
 
     {% if local is defined and local == true %}
@@ -11,7 +11,7 @@
                         <li>
                             <a class="display-chat" href="#" data-toggle="chat" data-animate="1" data-collapse-sidebar="1">
                                 <i class="entypo-chat"></i>
-                                Chat
+                                {{'global.chat'|trans}}
                                 <span class="badge badge-success chat-notifications-badge is-hidden">0</span>
                             </a>
                         </li>
@@ -35,32 +35,32 @@
                     </button>
                     <ul class="dropdown-menu slidedown">
                         <li>
-                            <a href="javascript:window.location.reload();"><span class="glyphicon glyphicon-refresh"></span> Refresh</a>
+                            <a href="javascript:window.location.reload();"><span class="glyphicon glyphicon-refresh"></span> {{'global.refresh'|trans}}</a>
                         </li>
                         <li>
-                            <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_ONLINE')}}"><span class="glyphicon glyphicon-ok-sign"></span> Online</a>
+                            <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_ONLINE')}}"><span class="glyphicon glyphicon-ok-sign"></span> {{'global.online'|trans}}</a>
                         </li>
                         <li>
-                            <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_BUSY')}}"><span class="glyphicon glyphicon-remove"></span> Busy</a>
+                            <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_BUSY')}}"><span class="glyphicon glyphicon-remove"></span> {{'global.busy'|trans}}</a>
                         </li>
                         <li>
-                            <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_IDLE')}}"><span class="glyphicon glyphicon-time"></span> Away</a>
+                            <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_IDLE')}}"><span class="glyphicon glyphicon-time"></span> {{'global.away'|trans}}</a>
                         </li>
                         <li>
-                            <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_OFFLINE')}}"><span class="glyphicon glyphicon-off"></span> Offline</a>
+                            <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_OFFLINE')}}"><span class="glyphicon glyphicon-off"></span> {{'global.offline'|trans}}</a>
                         </li>
                         <li class="divider"></li>
                         <li>
-                            <a href="javascript:void(0);" class="display-settings"><span class="glyphicon glyphicon-cog"></span> Settings</a>
+                            <a href="javascript:void(0);" class="display-settings"><span class="glyphicon glyphicon-cog"></span> {{'admin_settings.settings'|trans}}</a>
                         </li>
                     </ul>
                 </div>
                 
-                <span class="main-status user-status {{userSettings.status}}"></span><i class="entypo-users"></i>Chat<span class="badge badge-success is-hidden">0</span>
+                <span class="main-status user-status {{userSettings.status}}"></span><i class="entypo-users"></i>{{'global.chat'|trans}}<span class="badge badge-success is-hidden">0</span>
             </h2>
                 
             <div class="row chat-settings col-lg-12 hidden">
-                <a><i class="entypo-cog"></i> Chat Settings</a>
+                <a><i class="entypo-cog"></i> {{'admin_settings.settings'|trans}}</a>
                 <i class="entypo-cancel display-settings pull-right"></i><br>
                 <div class="form-group margin-top">
                     <div class="col-xs-9 no-padding-left">
@@ -68,7 +68,7 @@
                         {{ form_widget(userSettingsForm.notificationSound,{'attr':{'class':'form-control'}})}}
                     </div>
                     <div class="col-xs-3 no-padding" style="padding-top: 24px;">
-                        <a class="btn btn-sm play-sound no-padding"><i class="entypo-play"></i> Play</a>
+                        <a class="btn btn-sm play-sound no-padding"><i class="entypo-play"></i> {{'global.play'|trans}}</a>
                     </div>
                 </div>
                 <div class="form-group col-xs-12 flt-left margin-top no-padding">
@@ -90,7 +90,7 @@
                     <a class="btn btn-primary btn-sm no-padding add-custom-message {% if not chatSettings.enableCustomResponses %} hidden {% endif %}"><i class="entypo-plus"></i></a>
                 </div>
                 <div class="form-group col-xs-12 flt-left no-padding">
-                    <button class="btn btn-primary pull-right save-settings">Save Changes</button>
+                    <button class="btn btn-primary pull-right save-settings">{{'global.save_changes'|trans}}</button>
                 </div>
                 <div class="hidden">
                     {% set sounds = { 0 : 'sounds-capisci.mp3',
@@ -121,17 +121,17 @@
                 <span class="col-xs-12" id="container-notification"></span>
             {% endif %}
             <div class="col-xs-12" id="container-server-start" style="display: none;">
-                <p>Chat server offline, please start manually.</p>
-                <a class="btn btn-success btn-md start-gos-server">Click To Start Chat Server</a>
+                <p>{{'admin_settings.server_offline_message'|trans}}</p>
+                <a class="btn btn-success btn-md start-gos-server">{{'admin_settings.start_server_message'|trans}}</a>
             </div>
 
             <div class="chat-group" id="group-2">
-                <strong>All Chats</strong>
+                <strong>{{'admin.clients'|trans}}</strong>
                 {% for conversation in lastConversations %}
-                    <a href="#" class="open-client-conversation" client-id="{{conversation.senderId}}" online-with="" data-conversation-history="#client-{{conversation.senderId}}"><span class="user-status is-offline"></span> <em>{{conversation.senderNickname}}</em> <span class="typing hidden pull-right"><i>Typing...</i></span></a>
-                    <button class="hidden pull-right steal-chat" client-id="{{conversation.senderId}}" title="Steal Conversation"><i class="entypo-eye"></i></button>
+                    <a href="#" class="open-client-conversation" client-id="{{conversation.senderId}}" online-with="" data-conversation-history="#client-{{conversation.senderId}}"><span class="user-status is-offline"></span> <em>{{conversation.senderNickname}}</em> <span class="typing hidden pull-right"><i>{{'global.typing'|trans}}</i></span></a>
+                    <button class="hidden pull-right steal-chat" client-id="{{conversation.senderId}}" title="{{'admin.steal_conversation'|trans}}"><i class="entypo-eye"></i></button>
                 {% else %}
-                    <a class="disabled" href="return false;">No chat history.</a>
+                    <a class="disabled" href="return false;">{{'admin.no_chat_history'|trans}}</a>
                 {% endfor %}
             </div>
         </div>
@@ -150,7 +150,7 @@
             </ul>
 
             <div class="chat-textarea">
-                <textarea class="form-control autogrow" placeholder="Type your message"></textarea>
+                <textarea class="form-control autogrow" placeholder="{{'global.type_your_message'|trans}}"></textarea>
             </div>
             <div class="col-xs-12 margin-bottom flt-left {% if not chatSettings.enableCustomResponses %} hidden {% endif %}" id="container-custom-messages-to-send">
                 {% include 'ChatBundle:ChatSettings:customMessagesToSend.html.twig' %}
@@ -174,7 +174,7 @@
                         {% set readClass = 'unread' %}
                     {% endif %}
                     <li class="{{userClass~' '~readClass}}">
-                        <span class="user">{{message.senderNickname}}</span>
+                        {#<span class="user">{{message.senderNickname}}</span>#}
                         <p>{{message.message}}</p>
                         <span class="time">
                             {% if message.date|date('d/m/Y') != lastDate %}
@@ -185,7 +185,6 @@
                                 {% set lastHour = message.date|date('h:i a') %}
                                 {{ lastHour }}
                             {% endif %}
-                            {#{{message.date|date('h:i a')}}#}
                         </span>
                     </li>
                 {% endfor %}
@@ -203,7 +202,7 @@
         window.setInterval(verifyServerConnection, 4000);
 
         $(".start-gos-server").click(function () {
-            $(this).html('Please wait..');
+            $(this).html("{{'global.please_wait'|trans}}");
             $.ajax({
                 type: 'POST',
                 url: "{{path('chat_start_gos_server')}}",
@@ -469,7 +468,6 @@
                             && onlineUsers[i]['onlineWithAdmin'] != "{{nickname}}") {
                             console.log(onlineUsers[i]['onlineWithAdmin']);
                             stealElement.removeClass('hidden');
-                            console.log('se puede reclamar la conversacion para '+onlineUsers[i]['user_id']);
                     } else {
                         stealElement.addClass('hidden');
                     }
@@ -511,8 +509,8 @@
                 var spanStatus = $("#group-2 a[client-id='" + payload.user_id + "'] span").first();
                 spanStatus.attr("class", "user-status "+payload.status);
             } else {
-                var htmlUser = '<a href="#" class="open-client-conversation" client-id="' + payload.user_id + '" online-with="" data-conversation-history="#client-' + payload.user_id + '"><span class="user-status '+payload.status+'"></span> <em>' + payload.nickname + '</em> <span class="badge badge-info is-hidden">0</span> <span class="typing hidden pull-right"><i>Typing...</i></span></a>';
-                htmlUser += '<button class="hidden pull-right steal-chat" client-id="' + payload.user_id + '" title="Steal Conversation"><i class="entypo-eye"></i></button>';
+                var htmlUser = '<a href="#" class="open-client-conversation" client-id="' + payload.user_id + '" online-with="" data-conversation-history="#client-' + payload.user_id + '"><span class="user-status '+payload.status+'"></span> <em>' + payload.nickname + '</em> <span class="badge badge-info is-hidden">0</span> <span class="typing hidden pull-right"><i>{{'global.typing'|trans}}</i></span></a>';
+                htmlUser += '<button class="hidden pull-right steal-chat" client-id="' + payload.user_id + '" title="{{'admin.steal_conversation'|trans}}"><i class="entypo-eye"></i></button>';
                 
                 var firstUser = $('#group-2 a').first();
                 if (firstUser.hasClass('disabled')) {
@@ -572,7 +570,7 @@
          **/
         function messageFromClient(payload) {
 
-            displayNotification('New message from ' + payload.nickname);
+            displayNotification("{{'admin.new_message_from'|trans}}" + payload.nickname);
 
             $(".play-sound").trigger('click');
 
@@ -587,9 +585,9 @@
                 var htmlMessage = '<li class="opponent unread">';
 
                 if (payload.admin_destination == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_ALL_ADMINISTRATORS')}}") {
-                    htmlMessage += '<span class="user pull-left">' + payload.nickname + ' <i class="pull-right">(Waiting for and Admin Response)</i></span>';
+                    htmlMessage += '<span class="user pull-left">' + payload.nickname + ' <i class="pull-right">({{'admin.waiting_admin_response'|trans}})</i></span>';
                 } else {
-                    htmlMessage += '<span class="user">' + payload.nickname + '</span>';
+                    //htmlMessage += '<span class="user">' + payload.nickname + '</span>';
                 }
                 htmlMessage += '<p>' + payload.msg + '</p>'
                         + '<span class="time">' + payload.msg_date + '</span>'
@@ -723,7 +721,7 @@
             };
             session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
             
-            $(".save-settings").html('Please wait..');
+            $(".save-settings").html("{{'global.please_wait'|trans}}");
             $(".save-settings").attr('disabled','disabled');
         }
         
@@ -732,7 +730,7 @@
          * configuraciones del chat
          **/
         function settingsUpdated(payload) {
-            $(".save-settings").html('Save Changes');
+            $(".save-settings").html("{{'global.save_changes'|trans}}");
             $(".save-settings").removeAttr('disabled');
             $(".chat-settings").toggleClass('hidden');
             $("#container-custom-messages-to-send div.messages").html(payload.html_custom_messages);
@@ -854,7 +852,7 @@
         }
         
         function messagesFromOtherConversation(payload) {
-            displayNotification('Conversation stealed successfully');
+            displayNotification("{{'admin.stealed_conversation'|trans}}");
 
             //buscamos el tab de conversacion del usuario en el listado de conversaciones
             var element = $(".open-client-conversation[client-id='" + payload.client_id + "']");

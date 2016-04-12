@@ -1,5 +1,5 @@
 {% extends 'ChatBundle:Default:mainClient.html.twig' %}
-{% block title %}Chat Bundle{% endblock %}
+{% block title %}{{'global.chat'|trans}}{% endblock %}
 {% block content %}
 
     {% if local is defined and local == true %}
@@ -11,7 +11,7 @@
                         <li>
                             <a class="display-chat" href="#" data-toggle="chat" data-animate="1" data-collapse-sidebar="1">
                                 <i class="entypo-chat"></i>
-                                Chat
+                                {{'global.chat'|trans}}
                                 <span class="badge badge-success chat-notifications-badge is-hidden">0</span>
                             </a>
                         </li>
@@ -31,7 +31,7 @@
                 <div class="panel-heading panel-heading-chat" style="height: auto;">
                     <span class="main-status user-status {{userSettings.status}}"></span>
                     <span class="glyphicon glyphicon-comment"></span>
-                    Chat <span class="badge badge-success is-hidden">0</span>
+                    {{'global.chat'|trans}} <span class="badge badge-success is-hidden">0</span>
 
                     <span class="typing-text hidden"></span>
                     <div class="btn-group pull-right">
@@ -40,29 +40,29 @@
                         </button>
                         <ul class="dropdown-menu slidedown">
                             <li>
-                                <a href="javascript:window.location.reload();"><span class="glyphicon glyphicon-refresh"></span>Refresh</a>
+                                <a href="javascript:window.location.reload();"><span class="glyphicon glyphicon-refresh"></span>{{'global.refresh'|trans}}</a>
                             </li>
                             <li>
-                                <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_ONLINE')}}"><span class="glyphicon glyphicon-ok-sign"></span>Online</a>
+                                <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_ONLINE')}}"><span class="glyphicon glyphicon-ok-sign"></span>{{'global.online'|trans}}</a>
                             </li>
                             <li>
-                                <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_BUSY')}}"><span class="glyphicon glyphicon-remove"></span>Busy</a>
+                                <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_BUSY')}}"><span class="glyphicon glyphicon-remove"></span>{{'global.busy'|trans}}</a>
                             </li>
                             <li>
-                                <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_IDLE')}}"><span class="glyphicon glyphicon-time"></span>Away</a>
+                                <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_IDLE')}}"><span class="glyphicon glyphicon-time"></span>{{'global.away'|trans}}</a>
                             </li>
                             <li>
-                                <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_OFFLINE')}}"><span class="glyphicon glyphicon-off"></span>Offline</a>
+                                <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_OFFLINE')}}"><span class="glyphicon glyphicon-off"></span>{{'global.offline'|trans}}</a>
                             </li>
                             <li class="divider"></li>
                             <li>
-                                <a href="javascript:void(0);" class="display-settings"><span class="glyphicon glyphicon-cog"></span>Settings</a>
+                                <a href="javascript:void(0);" class="display-settings"><span class="glyphicon glyphicon-cog"></span>{{'admin_settings.settings'|trans}}</a>
                             </li>
                         </ul>
                     </div>
                 </div>
                 <div class="row chat-settings col-lg-12 hidden">
-                    <a><i class="entypo-cog"></i> Chat Settings</a>
+                    <a><i class="entypo-cog"></i> {{'admin_settings.settings'|trans}}</a>
                     <i class="entypo-cancel display-settings pull-right"></i><br>
                     <div class="form-group margin-top">
                         <div class="col-xs-9 no-padding-left">
@@ -70,11 +70,11 @@
                             {{ form_widget(userSettingsForm.notificationSound,{'attr':{'class':'form-control'}})}}
                         </div>
                         <div class="col-xs-3" style="padding: 24px 0px 0px 0px;">
-                            <a class="btn btn-sm play-sound"><i class="entypo-play"></i> Play</a>
+                            <a class="btn btn-sm play-sound"><i class="entypo-play"></i> {{'global.play'|trans}}</a>
                         </div>
                     </div>
                     <div class="form-group col-xs-12 flt-left margin-top no-padding">
-                        <button class="btn btn-primary pull-right save-settings">Save Changes</button>
+                        <button class="btn btn-primary pull-right save-settings">{{'global.save_changes'|trans}}</button>
                     </div>
                     <div class="hidden">
                         {% set sounds = { 0 : 'sounds-capisci.mp3',
@@ -136,10 +136,10 @@
                     </div>
                     <div class="panel-footer">
                         <div class="input-group">
-                            <input id="input-message" type="text" class="form-control input-sm" placeholder="Type your message here...">
+                            <input id="input-message" type="text" class="form-control input-sm" placeholder="{{'global.type_your_message'|trans}}">
                             <span class="input-group-btn">
                                 <button class="btn btn-primary btn-sm send-message" id="btn-chat">
-                                    Send</button>
+                                    {{'global.send'|trans}}</button>
                             </span>
                         </div>
                     </div>
@@ -148,7 +148,7 @@
                 <div class="admin-offline hidden">
                     <div class="panel-body">
                         <form onsubmit="return false;" id="contact-form">
-                            <p class="col-xs-12 margin-top">No personal support online, please fill out the form below to send and email:</p>
+                            <p class="col-xs-12 margin-top">{{'client_email.no_admin_online'|trans}}</p>
                             <div class="col-xs-12 margin-top flt-left">
                                 {{ form_label(contactForm.email) }}
                                 {{ form_widget(contactForm.email,{'attr':{'class':'form-control'}}) }}
@@ -162,16 +162,16 @@
                                 {{ form_widget(contactForm.message,{'attr':{'class':'form-control'}}) }}
                             </div>
                             <div class="col-xs-12 margin-top flt-left margin-bottom">
-                                <button class="btn btn-primary btn-sm pull-right send-contact-form">Send</button>
+                                <button class="btn btn-primary btn-sm pull-right send-contact-form">{{'global.send'|trans}}</button>
                             </div>
                         </form>
                         <div class="col-xs-12 margin-top flt-left contact-message-notification hidden">
-                            <div class="alert alert-success">Message send successfully</div>
+                            <div class="alert alert-success">{{'client_email.message_send'|trans}}</div>
                             <div class="col-xs-6 flt-left">
-                                <a class="btn btn-primary btn-sm send-other-message">Send other message</a>
+                                <a class="btn btn-primary btn-sm send-other-message">{{'client_email.send_other_message'|trans}}</a>
                             </div>
                             <div class="col-xs-6 flt-left">
-                                <a class="btn btn-danger btn-sm pull-right close-message-notification">Close</a>
+                                <a class="btn btn-danger btn-sm pull-right close-message-notification">{{'global.close'|trans}}</a>
                             </div>
                         </div>
                     </div>
@@ -492,7 +492,7 @@
             };
             session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
 
-            $(".save-settings").html('Please wait..');
+            $(".save-settings").html("{{'global.please_wait'|trans}}");
             $(".save-settings").attr('disabled', 'disabled');
         }
 
@@ -501,7 +501,7 @@
          * configuraciones del chat
          **/
         function settingsUpdated() {
-            $(".save-settings").html('Save Changes');
+            $(".save-settings").html("{{'global.save_changes'|trans}}");
             $(".save-settings").removeAttr('disabled');
             $(".chat-settings").toggleClass('hidden');
         }
@@ -552,7 +552,7 @@
                     if (message != '') {
 
                         $(".send-contact-form").attr('disabled', 'disabled');
-                        $(".send-contact-form").html('Please wait..');
+                        $(".send-contact-form").html("{{'global.please_wait'|trans}}");
 
                         var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::EMAIL_CLIENT_TO_ADMIN')}}",
                             email: email,

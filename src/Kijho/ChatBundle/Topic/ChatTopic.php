@@ -105,9 +105,16 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
      */
     protected $container;
 
+    /**
+     * Esta variable contendra la instancia del traductor
+     * @var type 
+     */
+    protected $translator;
+
     public function __construct(EntityManager $em, ContainerInterface $container) {
         $this->em = $em;
         $this->container = $container;
+        $this->translator = $this->container->get('translator');
     }
 
     /**
@@ -121,7 +128,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
 
         if ($topic->getId() == 'chat/channel') {
             $this->chatTopic = $topic;
-            $this->serverLog($connection->nickname . ' (' . $connection->userType . ') se ha conectado al chat');
+            $this->serverLog($connection->nickname . ' (' . $connection->userType . ') ' . $this->translator->trans('server.user_connected'));
         }
 
         if ($connection->userType == self::USER_ADMIN) {
@@ -147,7 +154,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
             foreach ($administrators as $adminTopic) {
                 $adminTopic->event($topic->getId(), [
                     'msg_type' => self::SERVER_NEW_CLIENT_CONNECTION,
-                    'msg' => $connection->nickname . " has joined " . $topic->getId(),
+                    'msg' => $connection->nickname . $this->translator->trans('server.has_joined') . $topic->getId(),
                     'user_id' => $connection->userId,
                     'nickname' => $connection->nickname,
                     'status' => $connection->status,
@@ -156,7 +163,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
 
             $topicTimer = $connection->PeriodicTimer;
             $topicTimer->addPeriodicTimer('online_administrators', self::TIME_REFRESH_ONLINE_ADMINISTRATORS, function() use ($topic, $connection) {
-                $connection->event($topic->getId(), ['msg' => 'Online Administrators..',
+                $connection->event($topic->getId(), ['msg' => $this->translator->trans('server.online_administrators'),
                     'msg_type' => self::JOIN_LEFT_ADMIN_TO_ROOM,
                     'online_administrators' => count($this->getOnlineAdministrators())]);
             });
@@ -164,7 +171,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
 
         //enviamos un mensaje de bienvenida al usuario
         $connection->event($topic->getId(), [
-            'msg' => 'Hi ' . $connection->nickname . ', welcome to chat',
+            'msg' => $this->translator->trans('server.hi') . $connection->nickname . ', ' . $this->translator->trans('server.welcome_to_chat'),
             'msg_type' => self::SERVER_WELCOME_MESSAGE,
         ]);
     }
@@ -185,7 +192,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
             foreach ($administrators as $adminTopic) {
                 $adminTopic->event($topic->getId(), [
                     'msg_type' => self::SERVER_CLIENT_LEFT_ROOM,
-                    'msg' => $connection->nickname . " has left " . $topic->getId(),
+                    'msg' => $connection->nickname . $this->translator->trans('server.has_left') . $topic->getId(),
                     'user_id' => $connection->userId,
                 ]);
             }
@@ -238,12 +245,11 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                             //buscamos al administrador con el nickname para mandarle el mensaje
                             $clients = $this->getOnlineClients();
                             $foundClient = null;
-
                             foreach ($clients as $clientTopic) {
                                 if ($clientTopic->userId == $clientId) {
                                     $clientTopic->event($topic->getId(), [
                                         'msg_type' => self::ADMIN_TYPING,
-                                        'msg' => $connection->nickname . " is typing...",
+                                        'msg' => $connection->nickname . $this->translator->trans('server.is_typing'),
                                     ]);
                                 }
                             }
@@ -313,8 +319,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                              */
                             $notifyOtherAdmins = (boolean) $event['notifyOtherAdmins'];
                             if ($notifyOtherAdmins && $foundClient) {
-
-                                $message = 'Automatic Message: ' . $connection->nickname . ' will receive and will respond the client messages';
+                                $message = $this->translator->trans('server.automatic_message') . $connection->nickname . $this->translator->trans('server.will_continue_conversation');
 
                                 $administrators = $this->getOnlineAdministrators();
                                 foreach ($administrators as $adminTopic) {
@@ -373,11 +378,11 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 'fromServer' => true
                             ));
 
-
+                            //$this->translator->trans('server.automatic_message')
                             //notificamos al administrador que sus configuraciones se actualizaron
                             $connection->event($topic->getId(), [
                                 'msg_type' => self::SETTINGS_UPDATED,
-                                'msg' => 'Settings successfully updated',
+                                'msg' => $this->translator->trans('server.settings_updated'),
                                 'enableCustomMessages' => $enableCustomMessages,
                                 'html_custom_messages' => $htmlCustomMessages,
                             ]);
@@ -399,7 +404,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                             //notificamos al administrador que se cambio su estado
                             $connection->event($topic->getId(), [
                                 'msg_type' => self::SELF_STATUS_UPDATED,
-                                'msg' => 'Status successfully updated',
+                                'msg' => $this->translator->trans('server.status_updated'),
                                 'previous_status' => $previousStatus,
                                 'new_status' => $connection->status,
                             ]);
@@ -438,10 +443,8 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                     }
                                 }
 
-
                                 if ($adminId) {
 
-                                    $this->serverLog('vamos bien : ' . $adminId);
                                     //debemos consultar el listado de todos los mensajes del dia actual entre ese cliente y ese admin (mensajes no robados)
                                     $startDate = Util::getCurrentStartDate();
                                     $endDate = Util::getCurrentDate();
@@ -468,7 +471,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
 
                                     //debemos guardar y enviar una notificacion al anterior administrador, para que sepa quien llevara a cabo la conversacion.
                                     if ($previousAdmin && $clientConnection) {
-                                        $message = 'Automatic Message: ' . $connection->nickname . ' will receive and will respond the client messages';
+                                        $message = 'Automatic Message: ' . $connection->nickname . $this->translator->trans('server.will_continue_conversation');
                                         $cliMessage = new Entity\Message();
                                         $cliMessage->setMessage($message);
                                         $cliMessage->setSenderId($clientConnection->userId);
@@ -488,7 +491,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                             'msg_date' => $cliMessage->getDate()->format('h:i a'),
                                             'admin_destination' => $connection->userId,
                                         ]);
-                                        
+
                                         $previousAdmin->onlineWithClient = '';
                                     }
 
@@ -496,12 +499,12 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                     if ($clientConnection) {
                                         $clientConnection->event($topic->getId(), [
                                             'msg_type' => self::MESSAGE_FROM_ADMIN,
-                                            'msg' => "Automatic Message: ".$connection->nickname.' will be continue the conversation.',
+                                            'msg' => "Automatic Message: " . $connection->nickname . $this->translator->trans('server.will_continue_conversation_short'),
                                             'nickname' => $connection->nickname,
                                             'user_id' => $connection->userId,
                                             'msg_date' => Util::getCurrentDate()->format('h:i a'),
                                         ]);
-                                        
+
                                         //cambiamos las variables onlineWithClient y onlineWithAdmin segun corresponda
                                         $clientConnection->onlineWithAdmin = $connection->nickname;
                                         $connection->onlineWithClient = $clientConnection->nickname;
@@ -531,7 +534,6 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                             if (empty($clientMessages)) {
                                 $sendAutomaticMessage = true;
                                 $automaticMessage = $chatSettings->getAutomaticMessage();
-                                $this->serverLog('se le debe enviar el mensaje automatico');
                             }
                         }
 
@@ -583,8 +585,6 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                         }
 
                         if ($messageSaved) {
-
-
 
                             //notificamos al usuario que su mensaje se envio exitosamente
                             $connection->event($topic->getId(), [
@@ -654,7 +654,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                         //notificamos al usuario que sus configuraciones se actualizaron
                         $connection->event($topic->getId(), [
                             'msg_type' => self::SETTINGS_UPDATED,
-                            'msg' => 'Settings successfully updated'
+                            'msg' => $this->translator->trans('server.settings_updated')
                         ]);
                     } else if ($eventType == self::CHANGE_CLIENT_STATUS) {
 
@@ -673,7 +673,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                             //notificamos al cliente que se cambio su estado
                             $connection->event($topic->getId(), [
                                 'msg_type' => self::SELF_STATUS_UPDATED,
-                                'msg' => 'Status successfully updated',
+                                'msg' => $this->translator->trans('server.status_updated'),
                                 'previous_status' => $previousStatus,
                                 'new_status' => $connection->status,
                             ]);
@@ -726,10 +726,10 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                             $transport = $this->container->get('swiftmailer.transport.real');
                             $spool->flushQueue($transport);
 
-                            //notificamos al cliente que se envio su correo
+                            //notificamos al cliente que se envio su correo email_send
                             $connection->event($topic->getId(), [
                                 'msg_type' => self::EMAIL_SENT_SUCCESSFULLY,
-                                'msg' => 'Email successfully sent',
+                                'msg' => $this->translator->trans('server.email_send'),
                             ]);
                         }
                     }

@@ -25,27 +25,26 @@ class ContactFormType extends AbstractType {
         $builder
                 ->add('email', Type\EmailType::class, array(
                     'required' => true,
-                    //'label' => $this->translator->trans('backend.user_role.name')
-                    'label' => 'Email',
+                    'label' => $this->translator->trans('client_email.email'),
                     'mapped' => false,
                     'attr' => array(
-                        'placeholder' => 'Type your email here..'
+                        'placeholder' => $this->translator->trans('client_email.type_email'),
                     )
                 ))
                 ->add('subject', Type\TextType::class, array(
                     'required' => true,
-                    'label' => 'Subject',
+                    'label' => $this->translator->trans('client_email.subject'),
                     'mapped' => false,
                     'attr' => array(
-                        'placeholder' => 'Type the subject here..'
+                        'placeholder' => $this->translator->trans('client_email.type_subject'),
                     )
                 ))
                 ->add('message', Type\TextareaType::class, array(
                     'required' => true,
-                    'label' => 'Message',
+                    'label' => $this->translator->trans('client_email.message'),
                     'mapped' => false,
                     'attr' => array(
-                        'placeholder' => 'Type your message here..'
+                        'placeholder' => $this->translator->trans('global.type_your_message')
                     )
                 ))
         ;

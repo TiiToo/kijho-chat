@@ -26,8 +26,7 @@ class UserChatSettingsType extends AbstractType {
         $builder
                 ->add('notificationSound', Type\ChoiceType::class, array(
                     'required' => false,
-                    //'label' => $this->translator->trans('backend.user_role.name')
-                    'label' => 'Notification Sound',
+                    'label' => $this->translator->trans('admin_settings.notification_sound'),
                     'choices' => array(
                         'sounds-capisci.mp3' => 'Capisci',
                         'sounds-come-to-daddy.mp3' => 'Come to Daddy',
