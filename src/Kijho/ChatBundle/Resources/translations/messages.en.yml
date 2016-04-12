@@ -14,6 +14,8 @@ global:
     type_your_message: "Type your message here.."
     please_wait: "Please wait.."
     close: "Close"
+    nickname: "Nickname"
+    date: "Date"
 
 admin:
     administrator: "Administrator"
@@ -43,6 +45,8 @@ client_email:
     message: "Message"
     message_send: "Message send successfully"
     send_other_message: "Send other message"
+    new_offline_message: "New Offline Message"
+    offline_message_intro: "Hi there, you have a new offline message:"
     
 server:
     hi: "Hi "

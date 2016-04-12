@@ -579,7 +579,7 @@
             $("#chatbundle_contact_form_type_subject").val('');
             $("#chatbundle_contact_form_type_message").val('');
             $(".send-contact-form").removeAttr('disabled');
-            $(".send-contact-form").html('Send');
+            $(".send-contact-form").html("{{'global.send'|trans}}");
             $("#contact-form").addClass('hidden');
             $(".contact-message-notification").removeClass('hidden');
             $(".contact-message-notification div.alert-success").html(payload.msg);

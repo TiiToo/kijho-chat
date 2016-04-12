@@ -14,6 +14,8 @@ global:
     type_your_message: "Escribe tu mensaje aqui.."
     please_wait: "Por favor espere.."
     close: "Cerrar"
+    nickname: "Nickname"
+    date: "Fecha"
 
 admin:
     administrator: "Administrador"
@@ -43,6 +45,8 @@ client_email:
     message: "Mensaje"
     message_send: "Mensaje enviado exitosamente"
     send_other_message: "Enviar otro mensaje"
+    new_offline_message: "Nuevo Message Offline"
+    offline_message_intro: "Hola, alguien te ha enviado un mensaje mientras estabas desconectado:"
     
 server:
     hi: "Hola "

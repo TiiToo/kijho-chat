@@ -6,27 +6,27 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     </head>
     <body>
-        <h2>New Message</h2>
-        <p>Hi there, you have a new offline message:</p>
+        <h2>{{'client_email.new_offline_message'|trans}}</h2>
+        <p>{{'client_email.offline_message_intro'|trans}}</p>
         <table>
             <tr>
-                <td><strong>Date:</strong></td>
+                <td><strong>{{'global.date'|trans}}:</strong></td>
                 <td>{{offlineMessage.date|date('d/m/Y h:i a')}}</td>
             </tr>
             <tr>
-                <td><strong>Nickname:</strong></td>
+                <td><strong>{{'global.nickname'|trans}}:</strong></td>
                 <td>{{offlineMessage.senderNickname}}</td>
             </tr>
             <tr>
-                <td><strong>Email:</strong></td>
+                <td><strong>{{'client_email.email'|trans}}:</strong></td>
                 <td>{{offlineMessage.email}}</td>
             </tr>
             <tr>
-                <td><strong>Subject:</strong></td>
+                <td><strong>{{'client_email.subject'|trans}}:</strong></td>
                 <td>{{offlineMessage.subject}}</td>
             </tr>
             <tr>
-                <td><strong>Message:</strong></td>
+                <td><strong>{{'client_email.message'|trans}}:</strong></td>
                 <td>{{offlineMessage.message|raw}}</td>
             </tr>
         </table>
