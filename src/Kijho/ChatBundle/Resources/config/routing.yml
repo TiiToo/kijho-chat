@@ -1,29 +1,15 @@
 chat_example_client:
-    path:     /{_locale}/client
+    path:     /client
     defaults: { _controller: ChatBundle:Default:exampleClient }
-    
-_redirect_client:
-    path: /client
-    defaults:
-        _controller: FrameworkBundle:Redirect:redirect
-        route: chat_example_client
-        permanent: true
 
 chat_example_client_get_unread_messages:
     path:     /client/getUnreadMessages
     defaults: { _controller: ChatBundle:Default:getClientUnreadMessages }   
  
 chat_example_admin:
-    path:     /{_locale}/admin
+    path:     /admin
     defaults: { _controller: ChatBundle:Default:exampleAdmin }
     
-_redirect_admin:
-    path: /admin
-    defaults:
-        _controller: FrameworkBundle:Redirect:redirect
-        route: chat_example_admin
-        permanent: true
-
 chat_admin:
     path:     /adminPanel
     defaults: { _controller: ChatBundle:Default:adminPanel }
