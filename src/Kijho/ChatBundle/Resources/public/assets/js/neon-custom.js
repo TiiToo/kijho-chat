@@ -368,10 +368,14 @@ var public_vars = public_vars || {};
 				trigger = attrDefault($this, 'trigger', 'hover'),
 				popover_class = $this.hasClass('tooltip-secondary') ? 'tooltip-secondary' : ($this.hasClass('tooltip-primary') ? 'tooltip-primary' : ($this.hasClass('tooltip-default') ? 'tooltip-default' : ''));
 			
-			$this.tooltip({
-				placement: placement,
-				trigger: trigger
-			});
+                        try {
+                            $this.tooltip({
+                                    placement: placement,
+                                    trigger: trigger
+                            });
+                        } catch(err) {
+                            console.log('$this.tooltip is not a function..');
+                        }
 
 			$this.on('shown.bs.tooltip', function(ev)
 			{
