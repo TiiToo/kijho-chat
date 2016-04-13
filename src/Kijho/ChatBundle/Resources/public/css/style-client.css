@@ -103,7 +103,7 @@ and open the template in the editor.
     background-color: #f7f7f9 !important;
     border: 1px solid #e1e1e8 !important;
     height: 396px !important;
-    margin: auto !important;
+    margin: auto;
 }
 
 .chat-inner {
