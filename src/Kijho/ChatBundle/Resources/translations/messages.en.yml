@@ -37,7 +37,10 @@ admin_settings:
     notification_sound: "Notification Sound"
     
 client_email:
+    support_offline: "Support Team Offline"
     no_admin_online: "No personal support online, please fill out the form below to send and email:"
+    server_offline: "Chat Server Offline"
+    server_offline_message: "Were sorry, chat server is currently offline. Please try again later or fill out the form below to send and email:"
     email: "Email"
     type_email: "Type your email here.."
     subject: "Subject"
@@ -62,3 +65,4 @@ server:
     settings_updated: "Settings successfully updated"
     status_updated: "Status successfully updated"
     email_send: "Email successfully send"
+    error_sending_message: "Error while sending email"

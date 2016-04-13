@@ -158,7 +158,9 @@ class DefaultController extends Controller {
         try {
             //$process = new Process('./start-gos.sh &');
             $process = new Process('php ../app/console gos:websocket:server&');
-            $process->run();
+            //$process->mustRun();
+            $process->start();
+            //$process->run();
             //$this->runProcess($process);
         } catch (\Exception $exc) {
             $response = array(

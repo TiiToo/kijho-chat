@@ -37,7 +37,10 @@ admin_settings:
     notification_sound: "Sonido de Notificación"
     
 client_email:
+    support_offline: "Equipo de Soporte fuera de linea"
     no_admin_online: "No hay personal de soporte en linea, por favor rellene el siguiente formulario para enviar un correo electrónico:"
+    server_offline: "Servidor de Chat fuera de linea"
+    server_offline_message: "Lo sentimos, el servidor de chat esta fuera de linea. Por favor intente de nuevo mas tarde o rellene el siguiente formulario para enviar un correo electrónico:"
     email: "Correo"
     type_email: "Escribe tu correo aquí.."
     subject: "Asunto"
@@ -62,3 +65,4 @@ server:
     settings_updated: "Configuración actualizada exitosamente"
     status_updated: "Estado actualizado exitosamente"
     email_send: "Correo enviado exitosamente"
+    error_sending_message: "Error enviando el mensaje"

@@ -144,11 +144,21 @@
                         </div>
                     </div>
                 </div>
-
+   
                 <div class="admin-offline hidden">
                     <div class="panel-body">
                         <form onsubmit="return false;" id="contact-form">
-                            <p class="col-xs-12 margin-top">{{'client_email.no_admin_online'|trans}}</p>
+                            
+                            <div class="col-xs-12 margin-top admin-offline-message">
+                                <h3>{{'client_email.support_offline'|trans}}</h3>
+                                <p>{{'client_email.no_admin_online'|trans}}</p>
+                            </div>
+                            
+                            <div class="col-xs-12 margin-top server-down-message hidden">
+                                <h3>{{'client_email.server_offline'|trans}}</h3>
+                                <p>{{'client_email.server_offline_message'|trans}}</p>
+                            </div>
+                            
                             <div class="col-xs-12 margin-top flt-left">
                                 {{ form_label(contactForm.email) }}
                                 {{ form_widget(contactForm.email,{'attr':{'class':'form-control'}}) }}
@@ -198,11 +208,14 @@
             console.log("Successfully Connected!");
             updateConnectionData(session)
             joinChatRoom(session);
+            notifyServerUp();
         });
 
         webSocket.on("socket/disconnect", function (error) {
             console.log("Disconnected for " + error.reason + " with code " + error.code);
             unbindUI();
+            onlineAdministrators = 0;
+            notifyServerDown();
         });
 
 
@@ -273,19 +286,6 @@
                 var newStatus = $(this).attr('status');
                 changeStatus(session, newStatus);
             });
-
-            $(".send-contact-form").bind("click", function (e) {
-                sendContactForm(session);
-            });
-
-            $(".send-other-message").bind("click", function (e) {
-                $(".contact-message-notification").addClass('hidden');
-                $("#contact-form").removeClass('hidden');
-            });
-
-            $(".close-message-notification").bind("click", function (e) {
-                $(".display-chat").trigger('click');
-            });
         }
 
         /**
@@ -300,9 +300,6 @@
             $(".play-sound").unbind();
             $(".save-settings").unbind();
             $(".change-status").unbind();
-            $(".send-contact-form").unbind();
-            $(".send-other-message").unbind();
-            $(".close-message-notification").unbind();
         }
 
         /**
@@ -368,8 +365,6 @@
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::JOIN_LEFT_ADMIN_TO_ROOM')}}") {
                 onlineAdministrators = parseInt(payload.online_administrators);
                 checkChatToAdmin();
-            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::EMAIL_SENT_SUCCESSFULLY')}}") {
-                clearContactForm(payload);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::ADMIN_TYPING')}}") {
                 adminTyping(payload);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CLIENT_AUTOMATIC_MESSAGE')}}") {
@@ -538,40 +533,6 @@
         }
 
         /**
-         * Permite enviar al servidor el formulario de contacto para enviar
-         * un correo al administrador cuando no hay ninguno online
-         */
-        function sendContactForm(session) {
-
-            var email = $("#chatbundle_contact_form_type_email").val();
-            var subject = $("#chatbundle_contact_form_type_subject").val();
-            var message = $("#chatbundle_contact_form_type_message").val();
-
-            if (email != '') {
-                if (subject != '') {
-                    if (message != '') {
-
-                        $(".send-contact-form").attr('disabled', 'disabled');
-                        $(".send-contact-form").html("{{'global.please_wait'|trans}}");
-
-                        var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::EMAIL_CLIENT_TO_ADMIN')}}",
-                            email: email,
-                            subject: subject,
-                            message: message
-                        };
-                        session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
-                    } else {
-                        $("#chatbundle_contact_form_type_message").focus();
-                    }
-                } else {
-                    $("#chatbundle_contact_form_type_subject").focus();
-                }
-            } else {
-                $("#chatbundle_contact_form_type_email").focus();
-            }
-        }
-
-        /**
          * Permite limpiar el formulario de envio de email al administrador
          **/
         function clearContactForm(payload) {
@@ -613,6 +574,26 @@
                 putMessagesReaded();
             }
         }
+        
+        /**
+         * Permite realizar cambios en pantalla cuendo el servidor esta fuera de linea
+         */
+        function notifyServerDown() {
+            $(".chat-container").addClass('hidden');
+            $(".admin-offline").removeClass('hidden');
+            $(".admin-offline-message").addClass('hidden');
+            $(".server-down-message").removeClass('hidden');
+        }
+        
+        /**
+         * Permite realizar cambios en pantalla cuendo el servidor esta en linea
+         */
+        function notifyServerUp() {
+            $(".chat-container").removeClass('hidden');
+            $(".admin-offline").addClass('hidden');
+            $(".admin-offline-message").removeClass('hidden');
+            $(".server-down-message").addClass('hidden');
+        }
 
     </script>
 {% endblock %}
@@ -642,6 +623,69 @@
         error: function (resp)
         {
             console.log("Error cargando los mensajes sin leer")
+        }
+    });
+    
+    
+    $(".send-other-message").click(function (e) {
+        $(".contact-message-notification").addClass('hidden');
+        $("#contact-form").removeClass('hidden');
+    });
+
+    $(".close-message-notification").click(function (e) {
+        $(".display-chat").trigger('click');
+    });
+    
+    /**
+    * Permite enviar al servidor el formulario de contacto para enviar
+    * un correo al administrador cuando no hay ninguno online
+    */
+    $(".send-contact-form").click(function (e) {
+        
+        var email = $("#chatbundle_contact_form_type_email").val();
+        var subject = $("#chatbundle_contact_form_type_subject").val();
+        var message = $("#chatbundle_contact_form_type_message").val();
+
+        if (email != '') {
+            if (subject != '') {
+                if (message != '') {
+
+                    $(".send-contact-form").attr('disabled', 'disabled');
+                    $(".send-contact-form").html("{{'global.please_wait'|trans}}");
+
+                    var data = {
+                        email: email,
+                        subject: subject,
+                        message: message,
+                        userId: "{{userId}}",
+                        nickname: "{{nickname}}"
+                    };
+                    
+                    $.ajax({
+                        type: 'POST',
+                        url: "{{path('chat_example_client_send_offline_message')}}",
+                        dataType: 'json',
+                        data: data,
+                        success: function (resp)
+                        {
+                            
+                            if (resp.result == '__OK__') {
+                                clearContactForm(resp);
+                            }
+                        },
+                        error: function (resp)
+                        {
+                            console.log("Error cargando los mensajes sin leer")
+                        }
+                    });
+                } else {
+                    $("#chatbundle_contact_form_type_message").focus();
+                }
+            } else {
+                $("#chatbundle_contact_form_type_subject").focus();
+            }
+        } else {
+            $("#chatbundle_contact_form_type_email").focus();
         }
     });
 {% endblock %}

@@ -58,7 +58,6 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     const SELF_STATUS_UPDATED = 'self_status_updated';
     const CLIENT_STATUS_UPDATED = 'client_status_updated';
     const JOIN_LEFT_ADMIN_TO_ROOM = 'join_left_admin_to_room';
-    const EMAIL_SENT_SUCCESSFULLY = 'email_sent_successfully';
     const CLIENT_AUTOMATIC_MESSAGE = 'client_automatic_message';
     const MESSAGES_FROM_OTHER_CONVERSATION = 'messages_from_other_conversation';
 
@@ -70,7 +69,6 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     const UPDATE_SETTINGS = 'update_settings';
     const CHANGE_ADMIN_STATUS = 'change_admin_status';
     const CHANGE_CLIENT_STATUS = 'change_client_status';
-    const EMAIL_CLIENT_TO_ADMIN = 'email_client_to_admin';
     const STEAL_CONVERSATION_WITH_CLIENT = 'steal_conversation_with_client';
 
     /**
@@ -690,47 +688,6 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                     'new_status' => $connection->status,
                                 ]);
                             }
-                        }
-                    } else if ($eventType == self::EMAIL_CLIENT_TO_ADMIN) {
-                        $email = trim(strip_tags($event['email']));
-                        $subject = trim(strip_tags($event['subject']));
-                        $content = trim(strip_tags($event['message']));
-
-                        $chatSettings = $this->em->getRepository('ChatBundle:ChatSettings')->findOneBy(array(), array());
-                        if ($chatSettings instanceof Entity\ChatSettings && !empty($chatSettings->getEmailOfflineMessages())) {
-
-                            //guardamos el mensaje como un mensaje offline en BB.DD
-                            $offlineMessage = new Entity\OfflineMessage();
-                            $offlineMessage->setMessage($content);
-                            $offlineMessage->setSenderId($connection->userId);
-                            $offlineMessage->setSenderNickname($connection->nickname);
-                            $offlineMessage->setType(Entity\OfflineMessage::TYPE_CLIENT_TO_ADMIN);
-                            $offlineMessage->setSubject($subject);
-                            $offlineMessage->setEmail($email);
-
-                            $this->em->persist($offlineMessage);
-                            $this->em->flush();
-
-                            $message = \Swift_Message::newInstance()
-                                    ->setSubject($subject)
-                                    ->setFrom($email)
-                                    ->setTo($chatSettings->getEmailOfflineMessages())
-                                    ->setBody($this->renderView(
-                                            'ChatBundle:Email:contactForm.html.twig', array(
-                                        'offlineMessage' => $offlineMessage,
-                                    )), 'text/html');
-                            $this->container->get('mailer')->send($message);
-
-                            $mailer = $this->container->get('mailer');
-                            $spool = $mailer->getTransport()->getSpool();
-                            $transport = $this->container->get('swiftmailer.transport.real');
-                            $spool->flushQueue($transport);
-
-                            //notificamos al cliente que se envio su correo email_send
-                            $connection->event($topic->getId(), [
-                                'msg_type' => self::EMAIL_SENT_SUCCESSFULLY,
-                                'msg' => $this->translator->trans('server.email_send'),
-                            ]);
                         }
                     }
                 }

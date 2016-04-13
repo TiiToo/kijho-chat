@@ -164,3 +164,7 @@ and open the template in the editor.
     padding-left: 12px;
     font-style: italic;
 }
+
+.contact-message-notification {
+    padding: 12px;
+}
