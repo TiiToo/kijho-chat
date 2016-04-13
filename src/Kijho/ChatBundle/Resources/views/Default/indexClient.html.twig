@@ -416,9 +416,10 @@
          * Permite hacer scroll down en el historial del chat
          **/
         function scrollDown() {
-            $("#message-list").scrollTop($("#message-list li:last").position().top - 50);
+            var scroll =  Math.abs($('ul#message-list li:first').offset().top);
+            var scrollDown = Math.abs($('ul#message-list li:last').offset().top);
+            $("#message-list").scrollTop(scroll+scrollDown);
         }
-        ;
 
         /**
          * Permite notificar al servidor que el usuario esta escribiendo un mensaje
@@ -471,6 +472,10 @@
          * Permite marcar los mensajes enviados al cliente como leidos
          **/
         function putMessagesReaded() {
+            var displayStatus = $("#chat").css('display');
+            if (displayStatus == 'none') {
+                $("#input-message").focus();
+            }
             if (globalSession) {
                 var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::PUT_MESSAGES_AS_READED')}}"};
                 globalSession.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
