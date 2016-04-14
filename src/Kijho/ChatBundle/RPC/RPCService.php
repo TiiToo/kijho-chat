@@ -25,6 +25,9 @@ class RPCService implements RpcInterface {
         if (isset($params['nickname']) && !empty($params['nickname'])) {
             $nickName = trim(strip_tags($params['nickname']));
             $connection->nickname = $nickName;
+            $connection->status = ChatTopic::STATUS_ONLINE;
+        } else {
+            $connection->status = ChatTopic::STATUS_WAITING_NICKNAME;
         }
 
         $connection->userId = strip_tags($connection->nickname);
@@ -39,13 +42,16 @@ class RPCService implements RpcInterface {
             $connection->userType = $userType;
         }
         
-        $connection->status = ChatTopic::STATUS_ONLINE;
-        
         //esta variable se usa para determinar con que administrador 
         //esta hablando cada usuario (en especial los los clientes)
         $connection->onlineWithClient = '';
         $connection->onlineWithAdmin = '';
         
+        $connection->email = '';
+        if (isset($params['email']) && !empty($params['email'])) {
+            $email = trim(strip_tags($params['email']));
+            $connection->email = $email;
+        }
 
         return array("result" => array_sum($params));
     }

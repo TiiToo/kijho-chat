@@ -100,6 +100,27 @@
                         {% endfor %}
                     </div>
                 </div>
+                <div class="connection-container hidden flt-left">
+                    <form onsubmit="return false;" id="connection-form">
+                        <div class="col-xs-12 flt-left">
+                            <h3>{{'connection_form.title'|trans}}</h3>
+                            <p>{{'connection_form.message'|trans}}</p>
+                        </div>
+
+                        <div class="col-xs-12 margin-top flt-left">
+                            {{ form_label(connectionForm.email) }}
+                            {{ form_widget(connectionForm.email,{'attr':{'class':'form-control'}}) }}
+                        </div>
+                        <div class="col-xs-12 margin-top flt-left">
+                            {{ form_label(connectionForm.nickname) }}
+                            {{ form_widget(connectionForm.nickname,{'attr':{'class':'form-control'}}) }}
+                        </div>
+                        <div class="col-xs-12 margin-top flt-left margin-bottom">
+                            <p class="alert alert-danger hidden"></p>
+                            <button class="btn btn-primary btn-sm pull-right send-connection-form">{{'global.send'|trans}}</button>
+                        </div>
+                    </form>
+                </div>
                 <div class="chat-container">
                     <div class="panel-body ">
                         <ul class="chat" id="message-list">
@@ -202,6 +223,8 @@
         var globalSession = null;
 
         var onlineAdministrators = 0;
+        
+        var connectionSuccesfully = false;
 
         webSocket.on("socket/connect", function (session) {
             bindUI(session);
@@ -286,6 +309,10 @@
                 var newStatus = $(this).attr('status');
                 changeStatus(session, newStatus);
             });
+            
+            $(".send-connection-form").bind("click", function (e) {
+                sendConnectionForm(session);
+            });
         }
 
         /**
@@ -343,7 +370,13 @@
          **/
         function serverEvent(uri, payload) {
             if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SERVER_WELCOME_MESSAGE')}}") {
-                $("#message-list").prepend('<li>' + payload.msg + '</li>');
+                connectionSuccess(payload);
+            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::NICKNAME_REQUIRED')}}"){
+                connectionSuccesfully = false;
+                $(".connection-container").removeClass('hidden');
+                $(".chat-container").addClass('hidden');
+                $(".admin-offline").addClass('hidden');
+                checkExistingConecction();
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_FROM_ADMIN')}}") {
                 destination = payload.user_id;
                 $(".play-sound").trigger('click');
@@ -369,6 +402,10 @@
                 adminTyping(payload);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CLIENT_AUTOMATIC_MESSAGE')}}") {
                 displayAutomaticMessage(payload);
+            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::WRONG_CONNECTION_DATA')}}") {
+                wrongConnectionData(payload);
+            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::NICKNAME_REPEATED')}}") {
+                wrongConnectionData(payload);
             }
         }
 
@@ -528,12 +565,14 @@
          * Permite realizar cambios en pantalla acorde al numero de administradores online
          */
         function checkChatToAdmin() {
-            if (onlineAdministrators > 0) {
-                $(".chat-container").removeClass('hidden');
-                $(".admin-offline").addClass('hidden');
-            } else {
-                $(".chat-container").addClass('hidden');
-                $(".admin-offline").removeClass('hidden');
+            if (connectionSuccesfully) {
+                if (onlineAdministrators > 0) {
+                    $(".chat-container").removeClass('hidden');
+                    $(".admin-offline").addClass('hidden');
+                } else {
+                    $(".chat-container").addClass('hidden');
+                    $(".admin-offline").removeClass('hidden');
+                }
             }
         }
 
@@ -585,6 +624,7 @@
          */
         function notifyServerDown() {
             $(".chat-container").addClass('hidden');
+            $(".connection-container").addClass('hidden');
             $(".admin-offline").removeClass('hidden');
             $(".admin-offline-message").addClass('hidden');
             $(".server-down-message").removeClass('hidden');
@@ -599,38 +639,119 @@
             $(".admin-offline-message").removeClass('hidden');
             $(".server-down-message").addClass('hidden');
         }
+        
+        function sendConnectionForm(session) {
+            var email = $("#chatbundle_connection_form_type_email").val();
+            var nickname = $("#chatbundle_connection_form_type_nickname").val();
 
+            if (email != '') {
+                if (nickname != '') {
+                        $(".send-connection-form").attr('disabled', 'disabled');
+                        $(".send-connection-form").html("{{'global.please_wait'|trans}}");
+
+                        var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CONNECT_TO_CHAT')}}",
+                            email: email,
+                            nickname: nickname,
+                        };
+                        session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
+                } else {
+                    $("#chatbundle_connection_form_type_nickname").focus();
+                }
+            } else {
+                $("#chatbundle_connection_form_type_email").focus();
+            }
+        }
+        
+        /**
+         * Permte realizar cambios en pantalla una vez realizada la conexion de un usuario
+         **/
+        function connectionSuccess(payload) {
+            connectionSuccesfully = true;
+            $(".connection-container p.alert-danger").addClass('hidden');
+            $("#message-list").prepend('<li>' + payload.msg + '</li>');
+            $(".connection-container").addClass('hidden');
+            $(".chat-container").removeClass('hidden');
+            $(".send-connection-form").removeAttr('disabled');
+            $(".send-connection-form").html("{{'global.send'|trans}}");
+            
+            if (payload.nickname != '' && payload.nickname != 'undefined' && payload.email != '' && payload.email != 'undefined') {
+                document.cookie="__nickname="+payload.nickname;
+                document.cookie="__email="+payload.email;
+            }
+        }
+        
+        /**
+         * Permte realizar cambios en pantalla cuando el usuario ingresa datos 
+         * invalidos cuando realiza una conexion
+         **/
+        function wrongConnectionData(payload) {
+            $("#chatbundle_connection_form_type_nickname").focus();
+            $(".send-connection-form").removeAttr('disabled');
+            $(".send-connection-form").html("{{'global.send'|trans}}");
+            $(".connection-container p.alert-success").addClass('hidden');
+            $(".connection-container p.alert-danger").removeClass('hidden');
+            $(".connection-container p.alert-danger").html(payload.msg);
+        }
+        
+        function checkExistingConecction() {
+            var previousEmail = getCookie('__email');
+            var previousNickname = getCookie('__nickname');
+            
+            if (previousEmail != '' && previousEmail != 'undefined' && previousNickname != '' && previousNickname != 'undefined' ) {
+                console.log('ya habia una conexion '+previousNickname);
+                $("#chatbundle_connection_form_type_email").val(previousEmail);
+                $("#chatbundle_connection_form_type_nickname").val(previousNickname);
+                $(".send-connection-form").trigger('click');
+            }
+        }
+        
+        function getCookie(cname) {
+            var name = cname + "=";
+            var ca = document.cookie.split(';');
+            for(var i=0; i<ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0)==' ') c = c.substring(1);
+                if (c.indexOf(name) == 0) return c.substring(name.length,c.length);
+            }
+            return "";
+        } 
+        
+        /**
+        * Ajax que permite consultar los mensajes que el usuario no ha leido
+        **/
+        function getUnreadMessages(nickname, userId) {
+            $.ajax({
+                type: 'POST',
+                url: "{{path('chat_example_client_get_unread_messages')}}",
+                dataType: 'json',
+                data: {nickname: nickname, userId: userId},
+                success: function (resp)
+                {
+                    if (resp.result == '__OK__') {
+                        var messages = JSON.parse(resp.messages)
+                        if (messages.length > 0) {
+                            updateUnreadCounters(messages.length);
+                        }
+
+                        for (var i = 0; i < messages.length; i++) {
+                            appendHtmlMessageAdmin(messages[i]);
+                        }
+                    }
+                },
+                error: function (resp)
+                {
+                    console.log("Error cargando los mensajes sin leer")
+                }
+            });
+        }
     </script>
 {% endblock %}
 
 {% block scripts %}
-    /**
-     * Ajax que permite consultar los mensajes que el usuario no ha leido
-     **/
-    $.ajax({
-        type: 'POST',
-        url: "{{path('chat_example_client_get_unread_messages')}}",
-        dataType: 'json',
-        data: {nickname: "{{nickname}}", userId: "{{userId}}"},
-        success: function (resp)
-        {
-            if (resp.result == '__OK__') {
-                var messages = JSON.parse(resp.messages)
-                if (messages.length > 0) {
-                    updateUnreadCounters(messages.length);
-                }
-
-                for (var i = 0; i < messages.length; i++) {
-                    appendHtmlMessageAdmin(messages[i]);
-                }
-            }
-        },
-        error: function (resp)
-        {
-            console.log("Error cargando los mensajes sin leer")
-        }
-    });
     
+    {% if nickname is defined and nickname is not empty %}
+        getUnreadMessages("{{nickname}}", "{{userId}}")
+    {% endif %}
     
     $(".send-other-message").click(function (e) {
         $(".contact-message-notification").addClass('hidden');

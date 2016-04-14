@@ -66,3 +66,11 @@ server:
     status_updated: "Estado actualizado exitosamente"
     email_send: "Correo enviado exitosamente"
     error_sending_message: "Error enviando el mensaje"
+
+connection_form:
+    title: "Conectarse al Chat"
+    message: "Por favor rellene el siguiente formulario para conectarse al chat:"
+    type_nickname: "Escriba aqui su nickname.."
+    invalid_email_or_nickname: "Correo o Nickname inválido"
+    connection_success: "Conexión Exitosa"
+    nickname_repeated: "Alguien ya esta usando este nickname. Por favor ingrese uno distinto."

@@ -39,6 +39,14 @@ services:
         tags:
             - { name: form.type }
     
+    #servicio para envio de mensaje de contacto desde el cliente a administradores
+    chat.form.type.connection_form:
+        class: Kijho\ChatBundle\Form\ConnectionFormType
+        arguments:
+            - "@service_container"
+        tags:
+            - { name: form.type }
+    
     #servicio para formularo de configuraciones generales del chat
     chat.form.type.settings:
         class: Kijho\ChatBundle\Form\ChatSettingsType

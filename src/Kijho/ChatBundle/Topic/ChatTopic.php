@@ -25,6 +25,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     /**
      * Constantes para los posibles estados de los usuarios del chat
      */
+    const STATUS_WAITING_NICKNAME = 'waiting-nickname';
     const STATUS_ONLINE = 'is-online';
     const STATUS_BUSY = 'is-busy';
     const STATUS_IDLE = 'is-idle';
@@ -43,6 +44,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     /**
      * Constantes para los tipos de mensajes que el servidor envia a los usuarios
      */
+    const NICKNAME_REQUIRED = 'nickname_required';
     const SERVER_ONLINE_USERS = 'online_users_list';
     const SERVER_NEW_CLIENT_CONNECTION = 'new_client_connected';
     const SERVER_CLIENT_LEFT_ROOM = 'client_left_room';
@@ -60,6 +62,8 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     const JOIN_LEFT_ADMIN_TO_ROOM = 'join_left_admin_to_room';
     const CLIENT_AUTOMATIC_MESSAGE = 'client_automatic_message';
     const MESSAGES_FROM_OTHER_CONVERSATION = 'messages_from_other_conversation';
+    const WRONG_CONNECTION_DATA = 'wrong_connection_data';
+    const NICKNAME_REPEATED = 'nickname_repeated';
 
     /**
      * Constantes para los tipos de mensajes que los usuarios envian al servidor
@@ -70,6 +74,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     const CHANGE_ADMIN_STATUS = 'change_admin_status';
     const CHANGE_CLIENT_STATUS = 'change_client_status';
     const STEAL_CONVERSATION_WITH_CLIENT = 'steal_conversation_with_client';
+    const CONNECT_TO_CHAT = 'connect_to_chat';
 
     /**
      * Constante que controla el tiempo en el cual se actualiza el listado de usuarios
@@ -147,16 +152,18 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                 $connection->status = $userSettings->getStatus();
             }
 
-            //notificamos a los administradores que un nuevo cliente se conectó
-            $administrators = $this->getOnlineAdministrators();
-            foreach ($administrators as $adminTopic) {
-                $adminTopic->event($topic->getId(), [
-                    'msg_type' => self::SERVER_NEW_CLIENT_CONNECTION,
-                    'msg' => $connection->nickname . $this->translator->trans('server.has_joined') . $topic->getId(),
-                    'user_id' => $connection->userId,
-                    'nickname' => $connection->nickname,
-                    'status' => $connection->status,
-                ]);
+            if ($connection->status != self::STATUS_WAITING_NICKNAME) {
+                //notificamos a los administradores que un nuevo cliente se conectó
+                $administrators = $this->getOnlineAdministrators();
+                foreach ($administrators as $adminTopic) {
+                    $adminTopic->event($topic->getId(), [
+                        'msg_type' => self::SERVER_NEW_CLIENT_CONNECTION,
+                        'msg' => $connection->nickname . $this->translator->trans('server.has_joined') . $topic->getId(),
+                        'user_id' => $connection->userId,
+                        'nickname' => $connection->nickname,
+                        'status' => $connection->status,
+                    ]);
+                }
             }
 
             $topicTimer = $connection->PeriodicTimer;
@@ -165,13 +172,27 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                     'msg_type' => self::JOIN_LEFT_ADMIN_TO_ROOM,
                     'online_administrators' => count($this->getOnlineAdministrators())]);
             });
+
+            if ($connection->status != self::STATUS_WAITING_NICKNAME) {
+                $connection->event($topic->getId(), ['msg' => $this->translator->trans('server.online_administrators'),
+                    'msg_type' => self::SERVER_WELCOME_MESSAGE,
+                    'online_administrators' => count($this->getOnlineAdministrators())]);
+            }
         }
 
-        //enviamos un mensaje de bienvenida al usuario
-        $connection->event($topic->getId(), [
-            'msg' => $this->translator->trans('server.hi') . $connection->nickname . ', ' . $this->translator->trans('server.welcome_to_chat'),
-            'msg_type' => self::SERVER_WELCOME_MESSAGE,
-        ]);
+        if ($connection->status != self::STATUS_WAITING_NICKNAME) {
+            //enviamos un mensaje de bienvenida al usuario
+            $connection->event($topic->getId(), [
+                'msg' => $this->translator->trans('server.hi') . $connection->nickname . ', ' . $this->translator->trans('server.welcome_to_chat'),
+                'msg_type' => self::SERVER_WELCOME_MESSAGE,
+            ]);
+        } else {
+            // indicamos al usuario que debe asignar un nickname para el chat
+            $connection->event($topic->getId(), [
+                'msg' => 'Nickname required',
+                'msg_type' => self::NICKNAME_REQUIRED,
+            ]);
+        }
     }
 
     /**
@@ -263,6 +284,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                             $clients = $this->getOnlineClients();
                             $foundClient = null;
                             $messageSaved = false;
+                            $adminMessage = null;
                             foreach ($clients as $clientTopic) {
                                 if ($clientTopic->userId == $clientId) {
 
@@ -301,15 +323,16 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                             }
 
 
-
-                            //notificamos al administrador que su mensaje se envio exitosamente
-                            $connection->event($topic->getId(), [
-                                'msg_type' => self::MESSAGE_SEND_SUCCESSFULLY,
-                                'msg' => $message,
-                                'nickname' => $connection->nickname,
-                                'user_id' => $connection->userId,
-                                'msg_date' => $adminMessage->getDate()->format('h:i a'),
-                            ]);
+                            if ($adminMessage) {
+                                //notificamos al administrador que su mensaje se envio exitosamente
+                                $connection->event($topic->getId(), [
+                                    'msg_type' => self::MESSAGE_SEND_SUCCESSFULLY,
+                                    'msg' => $message,
+                                    'nickname' => $connection->nickname,
+                                    'user_id' => $connection->userId,
+                                    'msg_date' => $adminMessage->getDate()->format('h:i a'),
+                                ]);
+                            }
 
                             /**
                              * Verificamos si tenbemos que notificar a los otros administradores
@@ -689,6 +712,37 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 ]);
                             }
                         }
+                    } elseif ($eventType == self::CONNECT_TO_CHAT) {
+                        $email = trim(strip_tags($event['email']));
+                        $nickname = trim(strip_tags($event['nickname']));
+
+                        if (!empty($nickname) && !empty($email)) {
+                            //debemos buscar si el nickname ingresado ya esta online
+                            if (!$this->nicknameIsOnline($nickname)) {
+                                $connection->nickname = $nickname;
+                                $connection->email = $email;
+                                $connection->status = self::STATUS_ONLINE;
+
+                                $connection->event($topic->getId(), [
+                                    'msg_type' => self::SERVER_WELCOME_MESSAGE,
+                                    'msg' => $this->translator->trans('server.hi') . $connection->nickname . ', ' . $this->translator->trans('server.welcome_to_chat'),
+                                    'nickname' => $connection->nickname,
+                                    'email' => $connection->email,
+                                ]);
+                            } else {
+                                $this->serverLog('nickname repetido');
+                                $connection->event($topic->getId(), [
+                                    'msg_type' => self::NICKNAME_REPEATED,
+                                    'msg' => $this->translator->trans('connection_form.nickname_repeated'),
+                                ]);
+                            }
+                        } else {
+                            //notificamos que ha ingresado mal el email o el nickname
+                            $connection->event($topic->getId(), [
+                                'msg_type' => self::WRONG_CONNECTION_DATA,
+                                'msg' => $this->translator->trans('connection_form.invalid_email_or_nickname'),
+                            ]);
+                        }
                     }
                 }
             }
@@ -737,7 +791,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
         $onlineAdministrators = array();
         if ($this->chatTopic) {
             foreach ($this->chatTopic->getIterator() as $subscriber) {
-                if ($subscriber->userType == self::USER_ADMIN) {
+                if ($subscriber->userType == self::USER_ADMIN && $subscriber->status != self::STATUS_OFFLINE) {
                     array_push($onlineAdministrators, $subscriber);
                 }
             }
@@ -754,7 +808,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
         $onlineClients = array();
         if ($this->chatTopic) {
             foreach ($this->chatTopic->getIterator() as $subscriber) {
-                if ($subscriber->userType == self::USER_CLIENT) {
+                if ($subscriber->userType == self::USER_CLIENT && $subscriber->status != self::STATUS_WAITING_NICKNAME) {
                     array_push($onlineClients, $subscriber);
                 }
             }
@@ -770,7 +824,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
         $onlineUsers = array();
         if ($this->chatTopic) {
             foreach ($this->chatTopic->getIterator() as $subscriber) {
-                if ($subscriber->userType == self::USER_CLIENT) {
+                if ($subscriber->userType == self::USER_CLIENT && $subscriber->status != self::STATUS_WAITING_NICKNAME) {
                     $data = array(
                         'nickname' => $subscriber->nickname,
                         'user_id' => $subscriber->userId,
@@ -792,6 +846,24 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
      */
     private function serverLog($msg) {
         echo($msg . PHP_EOL);
+    }
+
+    /**
+     * Permite comprobar si un nickname existe o no
+     * @param string $nickname nickname a comprobar
+     * @return boolean
+     */
+    private function nicknameIsOnline($nickname) {
+        $nicknameExists = false;
+        if ($this->chatTopic) {
+            foreach ($this->chatTopic->getIterator() as $subscriber) {
+                if ($subscriber->nickname == $nickname && $subscriber->status != self::STATUS_WAITING_NICKNAME) {
+                    $nicknameExists = true;
+                    break;
+                }
+            }
+        }
+        return $nicknameExists;
     }
 
 }
