@@ -720,6 +720,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                             //debemos buscar si el nickname ingresado ya esta online
                             if (!$this->nicknameIsOnline($nickname)) {
                                 $connection->nickname = $nickname;
+                                $connection->userId = $nickname;
                                 $connection->email = $email;
                                 $connection->status = self::STATUS_ONLINE;
 
