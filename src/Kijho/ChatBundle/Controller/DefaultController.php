@@ -159,12 +159,19 @@ class DefaultController extends Controller {
         );
 
         try {
-            $process = new Process('./start-gos.sh &');
+            /*$process = new Process('./start-gos.sh &');
             //$process = new Process('php ../app/console gos:websocket:server');
             //$process->mustRun();
             $process->start();
             //$process->run();
-            //$this->runProcess($process);
+            //$this->runProcess($process);*/
+            
+            
+            //shell_exec( $your_command . "> /dev/null 2>/dev/null &" );
+            $output = shell_exec("php ../app/console gos:websocket:server". "> /dev/null 2>/dev/null &");
+            //$output = shell_exec('ls -al');
+            //$response['msg'] = "<pre>$output</pre>";
+            
         } catch (\Exception $exc) {
             $response = array(
                 'result' => '__KO__',

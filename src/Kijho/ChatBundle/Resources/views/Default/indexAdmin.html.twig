@@ -210,7 +210,9 @@
                 timeout: 5000,
                 success: function (r)
                 {
-                    window.location.reload();
+                    window.setTimeout(function(){
+                        window.location.reload();
+                    }, 3000);
                 },
                 error: function (r)
                 {
