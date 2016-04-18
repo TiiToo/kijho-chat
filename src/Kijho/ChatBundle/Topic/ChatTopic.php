@@ -174,7 +174,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
             });
 
             if ($connection->status != self::STATUS_WAITING_NICKNAME) {
-                $connection->event($topic->getId(), ['msg' => $this->translator->trans('server.online_administrators'),
+                $connection->event($topic->getId(), ['msg' => '',
                     'msg_type' => self::SERVER_WELCOME_MESSAGE,
                     'online_administrators' => count($this->getOnlineAdministrators())]);
             }

@@ -668,7 +668,9 @@
         function connectionSuccess(payload) {
             connectionSuccesfully = true;
             $(".connection-container p.alert-danger").addClass('hidden');
-            $("#message-list").prepend('<li>' + payload.msg + '</li>');
+            if (payload.msg != '') {
+                $("#message-list").prepend('<li>' + payload.msg + '</li>');
+            }
             $(".connection-container").addClass('hidden');
             $(".chat-container").removeClass('hidden');
             $(".send-connection-form").removeAttr('disabled');
