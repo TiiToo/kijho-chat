@@ -21,7 +21,7 @@ class DefaultController extends Controller {
         $em = $this->getDoctrine()->getManager();
 
         //buscamos las configuraciones del usuario, sino tiene se las creamos
-        $searchUserSettings = array('userId'=>$userId, 'userType' => $userType);
+        $searchUserSettings = array('userId' => $userId, 'userType' => $userType);
         $userSettings = $em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
         if (!$userSettings) {
             $userSettings = new UserChatSettings();
@@ -30,13 +30,13 @@ class DefaultController extends Controller {
             $em->persist($userSettings);
             $em->flush();
         }
-        
+
         $userSettingsForm = $this->createForm(UserChatSettingsType::class, $userSettings);
         $contactForm = $this->createForm(ContactFormType::class);
         $connectionForm = $this->createForm(ConnectionFormType::class);
-        
+
         $todayMessages = $em->getRepository('ChatBundle:Message')->findClientMessagesFromDate($userId, Util::getCurrentStartDate());
-        
+
         return $this->render('ChatBundle:Default:indexClient.html.twig', array(
                     'local' => $local,
                     'nickname' => $nickname,
@@ -57,10 +57,10 @@ class DefaultController extends Controller {
     public function adminPanelAction($nickname = null, $userId = '', $userType = '', $local = false) {
 
         $em = $this->getDoctrine()->getManager();
-        
+
         //listado de usuarios que han chateado con el admin, ordenado descendentemente por la fecha del ultimo mensaje
         $lastConversations = $em->getRepository('ChatBundle:Message')->findClientChatNickNames($userId);
-        
+
         //buscamos las conversaciones completas entre el admin y los clientes
         $allConversations = array();
         $i = 0;
@@ -70,9 +70,9 @@ class DefaultController extends Controller {
             $allConversations[$i]['messages'] = $conversation;
             $i++;
         }
-        
+
         //buscamos las configuraciones del usuario, sino tiene se las creamos
-        $searchUserSettings = array('userId'=>$userId, 'userType' => $userType);
+        $searchUserSettings = array('userId' => $userId, 'userType' => $userType);
         $userSettings = $em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
         if (!$userSettings) {
             $userSettings = new UserChatSettings();
@@ -81,7 +81,7 @@ class DefaultController extends Controller {
             $em->persist($userSettings);
             $em->flush();
         }
-        
+
         $userSettingsForm = $this->createForm(UserChatSettingsType::class, $userSettings);
 
         $chatSettings = $em->getRepository('ChatBundle:ChatSettings')->findOneBy(array(), array());
@@ -90,11 +90,11 @@ class DefaultController extends Controller {
             $em->persist($chatSettings);
             $em->flush();
         }
-        
+
         $customMessages = json_decode($chatSettings->getCustomMessages());
-        
+
         $settingsForm = $this->createForm(ChatSettingsType::class, $chatSettings);
-        
+
         return $this->render('ChatBundle:Default:indexAdmin.html.twig', array(
                     'local' => $local,
                     'nickname' => $nickname,
@@ -121,10 +121,10 @@ class DefaultController extends Controller {
         $em = $this->getDoctrine()->getManager();
 
         $unreadMessages = $em->getRepository('ChatBundle:Message')->findClientUnreadMessages($nickname, $userId);
-        
+
         $arrayUnread = array();
 
-        for($i = 0; $i < count($unreadMessages); $i++) {
+        for ($i = 0; $i < count($unreadMessages); $i++) {
             $message = array(
                 'msg_date' => $unreadMessages[$i]->getDate()->format('m/d/Y h:i a'),
                 'msg' => $unreadMessages[$i]->getMessage(),
@@ -159,19 +159,10 @@ class DefaultController extends Controller {
         );
 
         try {
-            /*$process = new Process('./start-gos.sh &');
-            //$process = new Process('php ../app/console gos:websocket:server');
-            //$process->mustRun();
-            $process->start();
-            //$process->run();
-            //$this->runProcess($process);*/
-            
-            
             //shell_exec( $your_command . "> /dev/null 2>/dev/null &" );
-            $output = shell_exec("php ../app/console gos:websocket:server". "> /dev/null 2>/dev/null &");
-            //$output = shell_exec('ls -al');
-            //$response['msg'] = "<pre>$output</pre>";
-            
+            $output = shell_exec("php ../app/console gos:websocket:server" . "> /dev/null 2>/dev/null &");
+            $response['msg'] = "<pre>$output</pre>";
+
         } catch (\Exception $exc) {
             $response = array(
                 'result' => '__KO__',
@@ -179,18 +170,6 @@ class DefaultController extends Controller {
             );
         }
         return new JsonResponse($response);
-    }
-
-    private function runProcess($process) {
-        $process->run(function ($type, $buffer) {
-            if (Process::ERR === $type) {
-                echo 'OUT > ' . $buffer;
-                //return 'OUT > ' . $buffer;
-            } else {
-                echo 'OUT > ' . $buffer;
-                //return 'OUT > ' . $buffer;
-            }
-        });
     }
 
 }
