@@ -664,6 +664,8 @@
                 userIdentifier = payload.nickname;
                 userNickname = payload.nickname;
                 $(".panel-heading span.main-status").addClass(payload.status);
+                $(".panel-heading span.main-status").removeClass('is-offline');
+                $("#chatbundle_user_chat_settings_type_notificationSound").val(payload.sound);
                 getClientMessages(userNickname, userIdentifier);
             }
         }

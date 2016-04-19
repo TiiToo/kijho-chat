@@ -725,6 +725,8 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 $userSettings = new Entity\UserChatSettings();
                                 $userSettings->setUserId($nickname);
                                 $userSettings->setUserType($connection->userType);
+                                $userSettings->setStatus(self::STATUS_ONLINE);
+                                $userSettings->setNotificationSound(Entity\UserChatSettings::DEFAULT_SOUND);
                                 $this->em->persist($userSettings);
                                 $this->em->flush();
                             }
@@ -742,6 +744,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                     'nickname' => $connection->nickname,
                                     'email' => $connection->email,
                                     'status' => $userSettings->getStatus(),
+                                    'sound' => $userSettings->getNotificationSound(),
                                 ]);
                             } else {
                                 $connection->event($topic->getId(), [
