@@ -425,6 +425,8 @@
          */
         function serverEvent(uri, payload) {
 
+            console.log(payload.msg_type);
+
             if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SERVER_WELCOME_MESSAGE')}}") {
                 displayNotification(payload.msg);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_FROM_CLIENT')}}") {
@@ -437,6 +439,7 @@
                 clientLeftRoom(payload);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_SEND_SUCCESSFULLY')}}") {
                 displayNotification('Message send successfully');
+                $(".chat-conversation i.waiting-response").remove();
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CLIENT_TYPING')}}") {
                 clientTyping(payload);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SETTINGS_UPDATED')}}") {
@@ -572,6 +575,8 @@
          **/
         function messageFromClient(payload) {
 
+            console.log(payload);
+
             displayNotification("{{'admin.new_message_from'|trans}}" + payload.nickname);
 
             $(".play-sound").trigger('click');
@@ -587,7 +592,7 @@
                 var htmlMessage = '<li class="opponent unread">';
 
                 if (payload.admin_destination == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_ALL_ADMINISTRATORS')}}") {
-                    htmlMessage += '<span class="user pull-left">' + payload.nickname + ' <i class="pull-right">({{'admin.waiting_admin_response'|trans}})</i></span>';
+                    htmlMessage += '<span class="user pull-left">' + payload.nickname + ' <i class="pull-right waiting-response">({{'admin.waiting_admin_response'|trans}})</i></span>';
                 } else {
                     //htmlMessage += '<span class="user">' + payload.nickname + '</span>';
                 }
@@ -598,7 +603,7 @@
                 //buscamos el panel de mensajes del usuario
                 var chatContainer = $("#client-" + payload.user_id);
                 if (!$.isEmptyObject(chatContainer.html())) {
-                    chatContainer.append(htmlMessage);
+                    chatContainer.html(htmlMessage);
                 } else {
                     //si no habia un panel de mensajes para el usuario, le creamos uno
                     var html = '<ul class="chat-history" id="client-' + payload.user_id + '">'
@@ -618,7 +623,7 @@
                         if (globalSession) {
                             //ocultar el icono de unread
                             putMessagesReaded(globalSession, payload.user_id);
-                            neonChat.prefetchMessages();
+                            //neonChat.prefetchMessages();
 
                             neonChat.resetUnreads(element.attr('id'));
                             neonChat.puffUnreadsAll();

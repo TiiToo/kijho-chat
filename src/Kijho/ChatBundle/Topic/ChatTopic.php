@@ -661,22 +661,24 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                         $searchUserSettings = array('userId' => $connection->userId, 'userType' => $connection->userType);
                         $userSettings = $this->em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
 
-                        if (!$userSettings) {
+                        if (!$userSettings && $connection->userId != '') {
                             $userSettings = new Entity\UserChatSettings();
                             $userSettings->setStatus($connection->status);
                             $userSettings->setUserId($connection->userId);
                             $userSettings->setUserType($connection->userType);
                         }
 
-                        $userSettings->setNotificationSound($notificationSound);
-                        $this->em->persist($userSettings);
-                        $this->em->flush();
+                        if ($userSettings) {
+                            $userSettings->setNotificationSound($notificationSound);
+                            $this->em->persist($userSettings);
+                            $this->em->flush();
 
-                        //notificamos al usuario que sus configuraciones se actualizaron
-                        $connection->event($topic->getId(), [
-                            'msg_type' => self::SETTINGS_UPDATED,
-                            'msg' => $this->translator->trans('server.settings_updated')
-                        ]);
+                            //notificamos al usuario que sus configuraciones se actualizaron
+                            $connection->event($topic->getId(), [
+                                'msg_type' => self::SETTINGS_UPDATED,
+                                'msg' => $this->translator->trans('server.settings_updated')
+                            ]);
+                        }
                     } else if ($eventType == self::CHANGE_CLIENT_STATUS) {
 
                         $newStatus = trim(strip_tags($event['newStatus']));
@@ -721,7 +723,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                             //buscamos las configuraciones dle usuario, sino tiene se las creamos
                             $searchUserSettings = array('userId' => $nickname, 'userType' => $connection->userType);
                             $userSettings = $this->em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
-                            if (!$userSettings instanceof Entity\UserChatSettings) {
+                            if (!$userSettings) {
                                 $userSettings = new Entity\UserChatSettings();
                                 $userSettings->setUserId($nickname);
                                 $userSettings->setUserType($connection->userType);

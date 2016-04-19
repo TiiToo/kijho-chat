@@ -24,11 +24,15 @@ class DefaultController extends Controller {
         $searchUserSettings = array('userId' => $userId, 'userType' => $userType);
         $userSettings = $em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
         if (!$userSettings) {
-            $userSettings = new UserChatSettings();
-            $userSettings->setUserId($userId);
-            $userSettings->setUserType($userType);
-            $em->persist($userSettings);
-            $em->flush();
+            if ($userId != '') {
+                $userSettings = new UserChatSettings();
+                $userSettings->setUserId($userId);
+                $userSettings->setUserType($userType);
+                $em->persist($userSettings);
+                $em->flush();
+            } else {
+                $userSettings = new UserChatSettings();
+            }
         }
 
         $userSettingsForm = $this->createForm(UserChatSettingsType::class, $userSettings);
@@ -120,7 +124,7 @@ class DefaultController extends Controller {
 
         $unreadMessages = $em->getRepository('ChatBundle:Message')->findClientUnreadMessages($nickname, $userId);
         $todayMessages = $em->getRepository('ChatBundle:Message')->findClientMessagesFromDate($userId, Util::getCurrentStartDate());
-        
+
         $arrayMessages = array();
 
         for ($i = 0; $i < count($todayMessages); $i++) {
@@ -163,7 +167,6 @@ class DefaultController extends Controller {
             //shell_exec( $your_command . "> /dev/null 2>/dev/null &" );
             $output = shell_exec("php ../app/console gos:websocket:server" . "> /dev/null 2>/dev/null &");
             $response['msg'] = "<pre>$output</pre>";
-
         } catch (\Exception $exc) {
             $response = array(
                 'result' => '__KO__',

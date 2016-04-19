@@ -435,9 +435,12 @@
          * Permite hacer scroll down en el historial del chat
          **/
         function scrollDown() {
-            var scroll =  Math.abs($('ul#message-list li:first').offset().top);
-            var scrollDown = Math.abs($('ul#message-list li:last').offset().top);
-            $("#message-list").scrollTop(scroll+scrollDown);
+            var countLi = $('ul#message-list li').length;
+            if (countLi > 0) {
+                var scroll =  Math.abs($('ul#message-list li:first').offset().top);
+                var scrollDown = Math.abs($('ul#message-list li:last').offset().top);
+                $("#message-list").scrollTop(scroll+scrollDown);
+            }
         }
 
         /**
@@ -665,7 +668,9 @@
                 userNickname = payload.nickname;
                 $(".panel-heading span.main-status").addClass(payload.status);
                 $(".panel-heading span.main-status").removeClass('is-offline');
-                $("#chatbundle_user_chat_settings_type_notificationSound").val(payload.sound);
+                if (payload.sound != '') {
+                    $("#chatbundle_user_chat_settings_type_notificationSound").val(payload.sound);
+                }
                 getClientMessages(userNickname, userIdentifier);
             }
         }
@@ -688,7 +693,6 @@
             var previousNickname = getCookie('__nickname');
             
             if (previousEmail != '' && previousEmail != 'undefined' && previousNickname != '' && previousNickname != 'undefined' ) {
-                console.log('ya habia una conexion '+previousNickname);
                 $("#chatbundle_connection_form_type_email").val(previousEmail);
                 $("#chatbundle_connection_form_type_nickname").val(previousNickname);
                 $(".send-connection-form").trigger('click');
