@@ -279,8 +279,15 @@
             });
 
             $(".play-sound").bind("click", function (e) {
-                var sound = $("#chatbundle_user_chat_settings_type_notificationSound").val();
-                document.getElementById(sound).play();
+                var soundF = $("#chatbundle_user_chat_settings_type_notificationSound").val();
+                if (soundF == null) {
+                    soundF = "{{constant('Kijho\\ChatBundle\\Entity\\UserChatSettings::DEFAULT_SOUND')}}";
+                    $("#chatbundle_user_chat_settings_type_notificationSound").val(soundF);
+                }
+                console.log(soundF);
+                if (soundF != null && soundF != '' && soundF != "sound") {
+                    document.getElementById(soundF).play();
+                }
             });
 
             $(".save-settings").bind("click", function (e) {
