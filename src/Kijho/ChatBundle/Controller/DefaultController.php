@@ -35,14 +35,12 @@ class DefaultController extends Controller {
         $contactForm = $this->createForm(ContactFormType::class);
         $connectionForm = $this->createForm(ConnectionFormType::class);
 
-        $todayMessages = $em->getRepository('ChatBundle:Message')->findClientMessagesFromDate($userId, Util::getCurrentStartDate());
 
         return $this->render('ChatBundle:Default:indexClient.html.twig', array(
                     'local' => $local,
                     'nickname' => $nickname,
                     'userId' => $userId,
                     'userType' => $userType,
-                    'todayMessages' => $todayMessages,
                     'userSettings' => $userSettings,
                     'userSettingsForm' => $userSettingsForm->createView(),
                     'contactForm' => $contactForm->createView(),
@@ -111,33 +109,36 @@ class DefaultController extends Controller {
     }
 
     /**
-     * Permite obtener el listado de mensajes que no ha leido un cliente
+     * Permite obtener el listado de mensajes de un cliente
      * @param Request $request
      */
-    public function getClientUnreadMessagesAction(Request $request) {
+    public function getClientMessagesAction(Request $request) {
         $nickname = $request->request->get('nickname');
         $userId = $request->request->get('userId');
 
         $em = $this->getDoctrine()->getManager();
 
         $unreadMessages = $em->getRepository('ChatBundle:Message')->findClientUnreadMessages($nickname, $userId);
+        $todayMessages = $em->getRepository('ChatBundle:Message')->findClientMessagesFromDate($userId, Util::getCurrentStartDate());
+        
+        $arrayMessages = array();
 
-        $arrayUnread = array();
-
-        for ($i = 0; $i < count($unreadMessages); $i++) {
+        for ($i = 0; $i < count($todayMessages); $i++) {
             $message = array(
-                'msg_date' => $unreadMessages[$i]->getDate()->format('m/d/Y h:i a'),
-                'msg' => $unreadMessages[$i]->getMessage(),
-                'nickname' => $unreadMessages[$i]->getSenderNickname(),
+                'msg_date' => $todayMessages[$i]['date']->format('m/d/Y h:i a'),
+                'msg' => $todayMessages[$i]['message'],
+                'nickname' => $todayMessages[$i]['senderNickname'],
+                'type' => $todayMessages[$i]['type']
             );
-            array_push($arrayUnread, $message);
+            array_push($arrayMessages, $message);
         }
 
-        $unreadMessages = json_encode($arrayUnread, true);
+        $todayMessages = json_encode($arrayMessages, true);
 
         $response = array(
             'result' => '__OK__',
-            'messages' => $unreadMessages
+            'messages' => $todayMessages,
+            'unreadCounter' => count($unreadMessages),
         );
         return new JsonResponse($response);
     }

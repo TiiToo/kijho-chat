@@ -717,6 +717,18 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                         $nickname = trim(strip_tags($event['nickname']));
 
                         if (!empty($nickname) && !empty($email)) {
+                            
+                            //buscamos las configuraciones dle usuario, sino tiene se las creamos
+                            $searchUserSettings = array('userId' => $nickname, 'userType' => $connection->userType);
+                            $userSettings = $this->em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
+                            if (!$userSettings instanceof Entity\UserChatSettings) {
+                                $userSettings = new Entity\UserChatSettings();
+                                $userSettings->setUserId($nickname);
+                                $userSettings->setUserType($connection->userType);
+                                $this->em->persist($userSettings);
+                                $this->em->flush();
+                            }
+                            
                             //debemos buscar si el nickname ingresado ya esta online
                             if (!$this->nicknameIsOnline($nickname)) {
                                 $connection->nickname = $nickname;
@@ -729,9 +741,9 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                     'msg' => $this->translator->trans('server.hi') . $connection->nickname . ', ' . $this->translator->trans('server.welcome_to_chat'),
                                     'nickname' => $connection->nickname,
                                     'email' => $connection->email,
+                                    'status' => $userSettings->getStatus(),
                                 ]);
                             } else {
-                                $this->serverLog('nickname repetido');
                                 $connection->event($topic->getId(), [
                                     'msg_type' => self::NICKNAME_REPEATED,
                                     'msg' => $this->translator->trans('connection_form.nickname_repeated'),

@@ -124,35 +124,6 @@
                 <div class="chat-container">
                     <div class="panel-body ">
                         <ul class="chat" id="message-list">
-                            {% for message in todayMessages %}
-                                {% if message.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_CLIENT_TO_ADMIN') %}
-                                    <li class="right clearfix">
-                                        <span class="chat-img pull-right">
-                                            <img src="http://placehold.it/50/FA6F57/fff&amp;text=ME" alt="User Avatar" class="img-circle">
-                                        </span>
-                                        <div class="chat-body clearfix">
-                                            <div class="header">
-                                                <small class=" text-muted"><span class="glyphicon glyphicon-time"></span>{{ message.date|date('h:i a')}} </small>
-                                                <strong class="pull-right primary-font">{{message.senderNickname}}</strong>
-                                            </div>
-                                            <p>{{message.message}}</p>
-                                        </div>
-                                    </li>
-                                {% elseif message.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_ADMIN_TO_CLIENT') %}
-                                    <li class="left clearfix">
-                                        <span class="chat-img pull-left">
-                                            <img src="http://placehold.it/50/55C1E7/fff&amp;text=U" alt="User Avatar" class="img-circle">
-                                        </span>
-                                        <div class="chat-body clearfix">
-                                            <div class="header">
-                                                <strong class="primary-font">{{message.senderNickname}} </strong> <small class="pull-right text-muted">
-                                                <span class="glyphicon glyphicon-time"></span>{{ message.date|date('h:i a')}} </small>
-                                            </div>
-                                            <p>{{message.message}} </p>
-                                        </div>
-                                    </li>
-                                {% endif %}
-                            {% endfor %}
                         </ul>
                     </div>
                     <div class="panel-footer">
@@ -225,7 +196,18 @@
         var onlineAdministrators = 0;
         
         var connectionSuccesfully = false;
-
+        
+        var userIdentifier = '';
+        var userNickname = '';
+        
+        {% if nickname is defined and nickname is not empty %}
+            userNickname = "{{nickname}}";
+        {% endif %}
+            
+        {% if userId is defined and userId is not empty %}
+            userIdentifier = "{{userId}}";
+        {% endif %}
+            
         webSocket.on("socket/connect", function (session) {
             bindUI(session);
             console.log("Successfully Connected!");
@@ -248,7 +230,7 @@
          */
         function updateConnectionData(session)
         {
-            session.call("rpc/update_connection_data", {"nickname": "{{nickname}}", "user_id": "{{userId}}", "user_type": "{{userType}}"}).then(
+            session.call("rpc/update_connection_data", {"nickname": userNickname, "user_id": userIdentifier, "user_type": "{{userType}}"}).then(
                     function (result)
                     {
                         console.log("RPC Valid!", result);
@@ -679,6 +661,10 @@
             if (payload.nickname != '' && payload.nickname != 'undefined' && payload.email != '' && payload.email != 'undefined') {
                 document.cookie="__nickname="+payload.nickname;
                 document.cookie="__email="+payload.email;
+                userIdentifier = payload.nickname;
+                userNickname = payload.nickname;
+                $(".panel-heading span.main-status").addClass(payload.status);
+                getClientMessages(userNickname, userIdentifier);
             }
         }
         
@@ -719,30 +705,35 @@
         } 
         
         /**
-        * Ajax que permite consultar los mensajes que el usuario no ha leido
+        * Ajax que permite consultar los mensajes del usuario
         **/
-        function getUnreadMessages(nickname, userId) {
+        function getClientMessages(nickname, userId) {
             $.ajax({
                 type: 'POST',
-                url: "{{path('chat_example_client_get_unread_messages')}}",
+                url: "{{path('chat_example_client_get_messages')}}",
                 dataType: 'json',
                 data: {nickname: nickname, userId: userId},
                 success: function (resp)
                 {
                     if (resp.result == '__OK__') {
-                        var messages = JSON.parse(resp.messages)
-                        if (messages.length > 0) {
-                            updateUnreadCounters(messages.length);
+                        if (resp.unreadCounter > 0) {
+                            updateUnreadCounters(resp.unreadCounter);
                         }
 
+                        var messages = JSON.parse(resp.messages)
                         for (var i = 0; i < messages.length; i++) {
-                            appendHtmlMessageAdmin(messages[i]);
+                            if (messages[i].type == "{{constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_CLIENT_TO_ADMIN')}}") {
+                                appendHtmlMessageClient(messages[i]);
+                            } else if (messages[i].type == "{{constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_ADMIN_TO_CLIENT')}}") {
+                                appendHtmlMessageAdmin(messages[i]);
+                            }
                         }
+                        scrollDown();
                     }
                 },
                 error: function (resp)
                 {
-                    console.log("Error cargando los mensajes sin leer")
+                    console.log("Error cargando los mensajes del cliente")
                 }
             });
         }
@@ -752,7 +743,7 @@
 {% block scripts %}
     
     {% if nickname is defined and nickname is not empty %}
-        getUnreadMessages("{{nickname}}", "{{userId}}")
+        getClientMessages("{{nickname}}", "{{userId}}")
     {% endif %}
     
     $(".send-other-message").click(function (e) {
@@ -785,8 +776,8 @@
                         email: email,
                         subject: subject,
                         message: message,
-                        userId: "{{userId}}",
-                        nickname: "{{nickname}}"
+                        userId: userIdentifier,
+                        nickname: userNickname
                     };
                     
                     $.ajax({
