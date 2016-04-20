@@ -14,12 +14,17 @@ use Kijho\ChatBundle\Form\ChatSettingsType;
 use Kijho\ChatBundle\Form\ContactFormType;
 use Kijho\ChatBundle\Form\ConnectionFormType;
 use Kijho\ChatBundle\Util\Util;
+use Kijho\ChatBundle\Topic\ChatTopic;
 
 class DefaultController extends Controller {
 
     public function clientPanelAction($nickname = null, $userId = '', $userType = '', $local = false) {
         $em = $this->getDoctrine()->getManager();
 
+        if ($nickname != '' && $userId == '') {
+            $userId = $nickname;
+        }
+        
         //buscamos las configuraciones del usuario, sino tiene se las creamos
         $searchUserSettings = array('userId' => $userId, 'userType' => $userType);
         $userSettings = $em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
@@ -28,6 +33,7 @@ class DefaultController extends Controller {
                 $userSettings = new UserChatSettings();
                 $userSettings->setUserId($userId);
                 $userSettings->setUserType($userType);
+                $userSettings->setStatus(ChatTopic::STATUS_ONLINE);
                 $em->persist($userSettings);
                 $em->flush();
             } else {
@@ -58,6 +64,10 @@ class DefaultController extends Controller {
 
     public function adminPanelAction($nickname = null, $userId = '', $userType = '', $local = false) {
 
+        if ($nickname != '' && $userId == '') {
+            $userId = $nickname;
+        }
+        
         $em = $this->getDoctrine()->getManager();
 
         //listado de usuarios que han chateado con el admin, ordenado descendentemente por la fecha del ultimo mensaje
@@ -80,6 +90,7 @@ class DefaultController extends Controller {
             $userSettings = new UserChatSettings();
             $userSettings->setUserId($userId);
             $userSettings->setUserType($userType);
+            $userSettings->setStatus(ChatTopic::STATUS_ONLINE);
             $em->persist($userSettings);
             $em->flush();
         }
@@ -132,7 +143,9 @@ class DefaultController extends Controller {
                 'msg_date' => $todayMessages[$i]['date']->format('m/d/Y h:i a'),
                 'msg' => $todayMessages[$i]['message'],
                 'nickname' => $todayMessages[$i]['senderNickname'],
-                'type' => $todayMessages[$i]['type']
+                'type' => $todayMessages[$i]['type'],
+                'sender_id' => $todayMessages[$i]['senderId'],
+                'destination_id' => $todayMessages[$i]['destinationId']
             );
             array_push($arrayMessages, $message);
         }

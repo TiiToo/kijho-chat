@@ -193,12 +193,22 @@
 
         var globalSession = null;
 
-        var onlineAdministrators = 0;
+        var onlineAdministrators = [];
         
         var connectionSuccesfully = false;
         
         var userIdentifier = '';
         var userNickname = '';
+        
+        var lastAdminId = '';
+        
+        /**
+         * Cuando el cliente entra al chat, los primeros mensajes que envia (antes de que un administrador le responda)
+         * son enviados a todos los administradores, cuando un admin responde, los mensajes seran solo 
+         * enviados a dicho administrador
+         * @type String
+         */
+        var destination = "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_ALL_ADMINISTRATORS')}}";
         
         {% if nickname is defined and nickname is not empty %}
             userNickname = "{{nickname}}";
@@ -219,7 +229,7 @@
         webSocket.on("socket/disconnect", function (error) {
             console.log("Disconnected for " + error.reason + " with code " + error.code);
             unbindUI();
-            onlineAdministrators = 0;
+            onlineAdministrators = [];
             notifyServerDown();
         });
 
@@ -280,11 +290,10 @@
 
             $(".play-sound").bind("click", function (e) {
                 var soundF = $("#chatbundle_user_chat_settings_type_notificationSound").val();
-                if (soundF == null) {
+                if (soundF == null || soundF == '') {
                     soundF = "{{constant('Kijho\\ChatBundle\\Entity\\UserChatSettings::DEFAULT_SOUND')}}";
                     $("#chatbundle_user_chat_settings_type_notificationSound").val(soundF);
                 }
-                console.log(soundF);
                 if (soundF != null && soundF != '' && soundF != "sound") {
                     document.getElementById(soundF).play();
                 }
@@ -328,14 +337,6 @@
         }
 
         /**
-         * Cuando el cliente entra al chat, los primeros mensajes que envia (antes de que un administrador le responda)
-         * son enviados a todos los administradores, cuando un admin responde, los mensajes seran solo 
-         * enviados a dicho administrador
-         * @type String
-         */
-        var destination = "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_ALL_ADMINISTRATORS')}}";
-
-        /**
          * Permite el envio de un mensaje a un usuario en especifico
          * @param {type} session
          */
@@ -358,6 +359,7 @@
          * @param {type} payload
          **/
         function serverEvent(uri, payload) {
+            
             if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SERVER_WELCOME_MESSAGE')}}") {
                 connectionSuccess(payload);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::NICKNAME_REQUIRED')}}"){
@@ -368,6 +370,7 @@
                 checkExistingConecction();
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_FROM_ADMIN')}}") {
                 destination = payload.user_id;
+                lastAdminId = payload.user_id;
                 $(".play-sound").trigger('click');
                 appendHtmlMessageAdmin(payload);
                 //displayChatPanel();
@@ -385,7 +388,7 @@
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SELF_STATUS_UPDATED')}}") {
                 selfStatusUpdated(payload);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::JOIN_LEFT_ADMIN_TO_ROOM')}}") {
-                onlineAdministrators = parseInt(payload.online_administrators);
+                onlineAdministrators = payload.online_administrators;
                 checkChatToAdmin();
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::ADMIN_TYPING')}}") {
                 adminTyping(payload);
@@ -558,14 +561,25 @@
          */
         function checkChatToAdmin() {
             if (connectionSuccesfully) {
-                if (onlineAdministrators > 0) {
+                if (onlineAdministrators.length > 0) {
                     $(".chat-container").removeClass('hidden');
                     $(".admin-offline").addClass('hidden');
+                    
+                    //hacemos esta logica para que el cliente siga la conversacion con
+                    //el ultimo administrador con quin ha conversado
+                    for (var i = 0; i < onlineAdministrators.length; i++) {
+                        if (onlineAdministrators[i].user_id == lastAdminId
+                                && lastAdminId != destination) {
+                            destination = lastAdminId;
+                            break;
+                        }
+                    }
                 } else {
                     $(".chat-container").addClass('hidden');
                     $(".admin-offline").removeClass('hidden');
                 }
             }
+            
         }
 
         /**
@@ -678,7 +692,9 @@
                 if (payload.sound != '') {
                     $("#chatbundle_user_chat_settings_type_notificationSound").val(payload.sound);
                 }
-                getClientMessages(userNickname, userIdentifier);
+                {% if nickname == '' %}
+                    getClientMessages(userNickname, userIdentifier);
+                {% endif %}
             }
         }
         
@@ -737,8 +753,10 @@
                         for (var i = 0; i < messages.length; i++) {
                             if (messages[i].type == "{{constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_CLIENT_TO_ADMIN')}}") {
                                 appendHtmlMessageClient(messages[i]);
+                                lastAdminId = messages[i].destination_id;
                             } else if (messages[i].type == "{{constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_ADMIN_TO_CLIENT')}}") {
                                 appendHtmlMessageAdmin(messages[i]);
+                                lastAdminId = messages[i].sender_id;
                             }
                         }
                         scrollDown();
@@ -756,7 +774,7 @@
 {% block scripts %}
     
     {% if nickname is defined and nickname is not empty %}
-        getClientMessages("{{nickname}}", "{{userId}}")
+        getClientMessages("{{nickname}}", "{{userId}}");
     {% endif %}
     
     $(".send-other-message").click(function (e) {

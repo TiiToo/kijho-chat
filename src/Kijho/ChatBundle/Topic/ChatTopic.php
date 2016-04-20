@@ -170,7 +170,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
             $topicTimer->addPeriodicTimer('online_administrators', self::TIME_REFRESH_ONLINE_ADMINISTRATORS, function() use ($topic, $connection) {
                 $connection->event($topic->getId(), ['msg' => $this->translator->trans('server.online_administrators'),
                     'msg_type' => self::JOIN_LEFT_ADMIN_TO_ROOM,
-                    'online_administrators' => count($this->getOnlineAdministrators())]);
+                    'online_administrators' => $this->getOnlineAdministratorsData()]);
             });
 
             if ($connection->status != self::STATUS_WAITING_NICKNAME) {
@@ -812,6 +812,32 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
             foreach ($this->chatTopic->getIterator() as $subscriber) {
                 if ($subscriber->userType == self::USER_ADMIN && $subscriber->status != self::STATUS_OFFLINE) {
                     array_push($onlineAdministrators, $subscriber);
+                }
+            }
+        }
+        return $onlineAdministrators;
+    }
+    
+    /**
+     * Permite obtener un arreglo con los datos de los administradores online
+     * @author Cesar Giraldo <cnaranjo@kijho.com> 02/03/2016
+     * @return array
+     */
+    private function getOnlineAdministratorsData() {
+        $onlineAdministrators = array();
+        if ($this->chatTopic) {
+            foreach ($this->chatTopic->getIterator() as $subscriber) {
+                if ($subscriber->userType == self::USER_ADMIN && $subscriber->status != self::STATUS_OFFLINE) {
+                    $data = array(
+                        'nickname' => $subscriber->nickname,
+                        'user_id' => $subscriber->userId,
+                        'status' => $subscriber->status,
+                        'onlineWithClient' => $subscriber->onlineWithClient
+                    );
+                    
+                    if (!in_array($data, $onlineAdministrators)) {
+                        array_push($onlineAdministrators, $data);
+                    }
                 }
             }
         }

@@ -425,8 +425,6 @@
          */
         function serverEvent(uri, payload) {
 
-            console.log(payload.msg_type);
-
             if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SERVER_WELCOME_MESSAGE')}}") {
                 displayNotification(payload.msg);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_FROM_CLIENT')}}") {
@@ -574,8 +572,6 @@
          * @param {type} payload
          **/
         function messageFromClient(payload) {
-
-            console.log(payload);
 
             displayNotification("{{'admin.new_message_from'|trans}}" + payload.nickname);
 

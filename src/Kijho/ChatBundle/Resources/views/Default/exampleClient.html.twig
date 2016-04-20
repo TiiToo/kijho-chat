@@ -2,6 +2,6 @@
 {% set userId = '' %}
 {% if app.request.get('nickname') is defined and app.request.get('nickname') is not empty %}
     {% set nickname = app.request.get('nickname') %}
-    {% set userId   = app.request.get('nickname') %}
+    {% set userId   = app.request.get('userId') %}
 {% endif %}
 {{ render(controller('ChatBundle:Default:clientPanel', {'nickname':nickname, 'userId':userId,'userType': constant('Kijho\\ChatBundle\\Topic\\ChatTopic::USER_CLIENT'), 'local':true})) }}        
