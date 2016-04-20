@@ -285,6 +285,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                             $foundClient = null;
                             $messageSaved = false;
                             $adminMessage = null;
+                            $notifyOtherAdmins = false;
                             foreach ($clients as $clientTopic) {
                                 if ($clientTopic->userId == $clientId) {
 
@@ -310,6 +311,9 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                     }
 
                                     //indicamos que el cliente esta hablando con el admin
+                                    if ($clientTopic->onlineWithAdmin != $connection->nickname) {
+                                        $notifyOtherAdmins = true;
+                                    }
                                     $clientTopic->onlineWithAdmin = $connection->nickname;
 
                                     $clientTopic->event($topic->getId(), [
@@ -338,7 +342,6 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                              * Verificamos si tenbemos que notificar a los otros administradores
                              * que el administrador actual ya se hizo cargo de la conversacion
                              */
-                            $notifyOtherAdmins = (boolean) $event['notifyOtherAdmins'];
                             if ($notifyOtherAdmins && $foundClient) {
                                 $message = $this->translator->trans('server.automatic_message') . $connection->nickname . $this->translator->trans('server.will_continue_conversation');
 

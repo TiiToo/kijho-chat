@@ -397,20 +397,11 @@
             var textarea = $('.chat-textarea textarea');
             var clientId = textarea.attr('destination-id') + "";
 
-            var nofityOtherAdmins = false;
-            if (typeof adminDestinations[clientId] != 'undefined') {
-                if (adminDestinations[clientId] == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_ALL_ADMINISTRATORS')}}") {
-                    nofityOtherAdmins = true;
-                }
-            }
-
             if (clientId != '' && clientId != 'undefined' && messageToClient != '') {
-                
                 
                 var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_TO_CLIENT')}}",
                     clientId: clientId,
                     message: messageToClient,
-                    notifyOtherAdmins: nofityOtherAdmins
                 };
                 session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
                 messageToClient = '';
@@ -469,7 +460,7 @@
                     if (onlineUsers[i]['onlineWithAdmin'] != '' 
                         && onlineUsers[i]['onlineWithAdmin'] != "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_ALL_ADMINISTRATORS')}}"
                             && onlineUsers[i]['onlineWithAdmin'] != "{{nickname}}") {
-                            console.log(onlineUsers[i]['onlineWithAdmin']);
+                            console.log('online with '+onlineUsers[i]['onlineWithAdmin']);
                             stealElement.removeClass('hidden');
                     } else {
                         stealElement.addClass('hidden');
@@ -559,15 +550,6 @@
         }
 
         /**
-         * En este arreglo se guardan bajo los ids de los clientes, el destino
-         * que tenia el mensaje, puede estar dirigido al admin actual o a todos los admins
-         * este arreglo es necesario para notificar a los demas admins cuando un admin
-         * toma la conersacion con un cliente
-         * @type Array         
-         **/
-        var adminDestinations = [];
-
-        /**
          * Permite realizar acciones en pantalla cuando llega un mensaje de un cliente
          * @param {type} payload
          **/
@@ -576,8 +558,6 @@
             displayNotification("{{'admin.new_message_from'|trans}}" + payload.nickname);
 
             $(".play-sound").trigger('click');
-
-            adminDestinations[payload.user_id] = payload.admin_destination;
 
             //buscamos el tab de conversacion del usuario en el listado de conversaciones
             var element = $(".open-client-conversation[client-id='" + payload.user_id + "']");
@@ -628,7 +608,12 @@
                         neonChat.renderMessages(neonChat.$current_user.attr('id'));
                     }
                 }
-
+                
+                //validamos si otro administrador ya atendio al cliente, para quitar la alerta
+                if (payload.admin_destination != "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_ALL_ADMINISTRATORS')}}" 
+                        && "{{userId}}" != payload.admin_destination) {
+                    $(".chat-conversation i.waiting-response").remove();
+                }
 
             }
 
