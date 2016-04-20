@@ -12,7 +12,7 @@
                             <a class="display-chat" href="#" data-toggle="chat" data-animate="1" data-collapse-sidebar="1">
                                 <i class="entypo-chat"></i>
                                 {{'global.chat'|trans}}
-                                <span class="badge badge-success chat-notifications-badge is-hidden">0</span>
+                                <span class="badge badge-success chat-notifications-badge hidden">0</span>
                             </a>
                         </li>
                     </ul>
@@ -481,20 +481,20 @@
             var secondSpanNotification = $(".panel-heading-chat span.badge-success");
             secondSpanNotification.html(currentNumber);
 
-            if (spanNotification.hasClass('is-hidden')) {
-                spanNotification.removeClass('is-hidden');
-                secondSpanNotification.removeClass('is-hidden');
+            if (spanNotification.hasClass('hidden')) {
+                spanNotification.removeClass('hidden');
+                secondSpanNotification.removeClass('hidden');
             }
         }
 
         function resetUnreadCounters() {
             var spanNotification = $(".display-chat span.chat-notifications-badge");
             spanNotification.html('0');
-            spanNotification.addClass('is-hidden');
+            spanNotification.addClass('hidden');
 
             var secondSpanNotification = $(".panel-heading-chat span.badge-success");
             secondSpanNotification.html('0');
-            secondSpanNotification.addClass('is-hidden');
+            secondSpanNotification.addClass('hidden');
         }
 
         /**
