@@ -173,7 +173,7 @@
                                 <a class="btn btn-primary btn-sm send-other-message">{{'client_email.send_other_message'|trans}}</a>
                             </div>
                             <div class="col-xs-6 flt-left">
-                                <a class="btn btn-danger btn-sm pull-right close-email-notification">{{'global.close'|trans}}</a>
+                                <a class="btn btn-danger btn-sm pull-right display-chat" data-toggle="chat" data-animate="1" data-collapse-sidebar="1">{{'global.close'|trans}}</a>
                             </div>
                         </div>
                     </div>
@@ -785,10 +785,6 @@
         $("#contact-form").removeClass('hidden');
     });
 
-    $(".close-email-notification").click(function (e) {
-        $(".display-chat").trigger('click');
-    });
-    
     /**
     * Permite enviar al servidor el formulario de contacto para enviar
     * un correo al administrador cuando no hay ninguno online
