@@ -128,8 +128,9 @@
             <div class="chat-group" id="group-2">
                 <strong>{{'admin.clients'|trans}}</strong>
                 {% for conversation in lastConversations %}
-                    <a href="#" class="open-client-conversation" client-id="{{conversation.senderId}}" online-with="" data-conversation-history="#client-{{conversation.senderId}}"><span class="user-status is-offline"></span> <em>{{conversation.senderNickname}}</em> <span class="typing hidden pull-right"><i>{{'global.typing'|trans}}</i></span></a>
+                    <a href="#" class="open-client-conversation" client-id="{{conversation.senderId}}" online-with="" data-conversation-history="#client-{{conversation.senderId}}"><span class="user-status is-offline"></span> <em>{{conversation.senderNickname}}</em> <span class="typing hidden pull-right"><i>{{'global.typing'|trans}}</i></span>
                     <button class="hidden pull-right steal-chat" client-id="{{conversation.senderId}}" title="{{'admin.steal_conversation'|trans}}"><i class="entypo-eye"></i></button>
+                    </a>
                 {% else %}
                     <a class="disabled" href="return false;">{{'admin.no_chat_history'|trans}}</a>
                 {% endfor %}
@@ -503,8 +504,8 @@
                 var spanStatus = $("#group-2 a[client-id='" + payload.user_id + "'] span").first();
                 spanStatus.attr("class", "user-status "+payload.status);
             } else {
-                var htmlUser = '<a href="#" class="open-client-conversation" client-id="' + payload.user_id + '" online-with="" data-conversation-history="#client-' + payload.user_id + '"><span class="user-status '+payload.status+'"></span> <em>' + payload.nickname + '</em> <span class="badge badge-info is-hidden">0</span> <span class="typing hidden pull-right"><i>{{'global.typing'|trans}}</i></span></a>';
-                htmlUser += '<button class="hidden pull-right steal-chat" client-id="' + payload.user_id + '" title="{{'admin.steal_conversation'|trans}}"><i class="entypo-eye"></i></button>';
+                var htmlUser = '<a href="#" class="open-client-conversation" client-id="' + payload.user_id + '" online-with="" data-conversation-history="#client-' + payload.user_id + '"><span class="user-status '+payload.status+'"></span> <em>' + payload.nickname + '</em> <span class="badge badge-info is-hidden">0</span> <span class="typing hidden pull-right"><i>{{'global.typing'|trans}}</i></span>';
+                htmlUser += '<button class="hidden pull-right steal-chat" client-id="' + payload.user_id + '" title="{{'admin.steal_conversation'|trans}}"><i class="entypo-eye"></i></button></a>';
                 
                 var firstUser = $('#group-2 a').first();
                 if (firstUser.hasClass('disabled')) {
@@ -554,7 +555,8 @@
          * @param {type} payload
          **/
         function messageFromClient(payload) {
-
+            
+            console.log(payload.nickname+ ' envia ' +payload.msg);
             displayNotification("{{'admin.new_message_from'|trans}}" + payload.nickname);
 
             $(".play-sound").trigger('click');
@@ -579,7 +581,8 @@
                 //buscamos el panel de mensajes del usuario
                 var chatContainer = $("#client-" + payload.user_id);
                 if (!$.isEmptyObject(chatContainer.html())) {
-                    chatContainer.html(htmlMessage);
+                    chatContainer.append(htmlMessage);
+                    //chatContainer.html(htmlMessage);
                 } else {
                     //si no habia un panel de mensajes para el usuario, le creamos uno
                     var html = '<ul class="chat-history" id="client-' + payload.user_id + '">'
@@ -599,14 +602,17 @@
                         if (globalSession) {
                             //ocultar el icono de unread
                             putMessagesReaded(globalSession, payload.user_id);
-                            //neonChat.prefetchMessages();
+                            neonChat.prefetchMessages();
 
                             neonChat.resetUnreads(element.attr('id'));
                             neonChat.puffUnreadsAll();
 
                         }
-                        neonChat.renderMessages(neonChat.$current_user.attr('id'));
                     }
+                }
+                
+                if (typeof $current_user != 'undefined') {
+                    neonChat.renderMessages(neonChat.$current_user.attr('id'));
                 }
                 
                 //validamos si otro administrador ya atendio al cliente, para quitar la alerta

@@ -82,7 +82,7 @@ class DefaultController extends Controller {
             $allConversations[$i]['messages'] = $conversation;
             $i++;
         }
-
+        
         //buscamos las configuraciones del usuario, sino tiene se las creamos
         $searchUserSettings = array('userId' => $userId, 'userType' => $userType);
         $userSettings = $em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);

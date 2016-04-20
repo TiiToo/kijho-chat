@@ -20,7 +20,7 @@ global:
 admin:
     administrator: "Administrator"
     clients: "Clients"
-    steal_conversation: "Steal Conversation"
+    steal_conversation: "Transfer me this chat"
     stealed_conversation: "Conversation stealed successfully"
     no_chat_history: "No chat history"
     new_message_from: "New message from "

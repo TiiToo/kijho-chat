@@ -127,6 +127,10 @@ and open the template in the editor.
     text-align: left;
 }
 
-.steal-chat {
-    margin: 4px;
+.chat-group a {
+    padding-right: 8px !important;
+}
+
+.chat-group a button.steal-chat {
+    margin: 0px !important;
 }

@@ -40,6 +40,7 @@ class MessageRepository extends EntityRepository {
         WHERE m.destinationId = :adminId
         AND m.type = :clientAdmin 
         AND m.date IN (" . $dqlQuery . ")
+        GROUP BY m.senderNickname
         ORDER BY m.date DESC");
             $consult->setParameter('adminId', $adminId);
             $consult->setParameter('clientAdmin', Message::TYPE_CLIENT_TO_ADMIN);
