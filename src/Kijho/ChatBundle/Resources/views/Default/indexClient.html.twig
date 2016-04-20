@@ -121,7 +121,7 @@
                         </div>
                     </form>
                 </div>
-                <div class="chat-container">
+                <div class="chat-container hidden">
                     <div class="panel-body ">
                         <ul class="chat" id="message-list">
                         </ul>
@@ -137,16 +137,16 @@
                     </div>
                 </div>
    
-                <div class="admin-offline hidden">
+                <div class="admin-offline ">
                     <div class="panel-body">
                         <form onsubmit="return false;" id="contact-form">
                             
-                            <div class="col-xs-12 admin-offline-message">
+                            <div class="col-xs-12 admin-offline-message hidden">
                                 <h3>{{'client_email.support_offline'|trans}}</h3>
                                 <p>{{'client_email.no_admin_online'|trans}}</p>
                             </div>
                             
-                            <div class="col-xs-12 server-down-message hidden">
+                            <div class="col-xs-12 server-down-message ">
                                 <h3>{{'client_email.server_offline'|trans}}</h3>
                                 <p>{{'client_email.server_offline_message'|trans}}</p>
                             </div>
@@ -173,7 +173,7 @@
                                 <a class="btn btn-primary btn-sm send-other-message">{{'client_email.send_other_message'|trans}}</a>
                             </div>
                             <div class="col-xs-6 flt-left">
-                                <a class="btn btn-danger btn-sm pull-right close-message-notification">{{'global.close'|trans}}</a>
+                                <a class="btn btn-danger btn-sm pull-right close-email-notification">{{'global.close'|trans}}</a>
                             </div>
                         </div>
                     </div>
@@ -212,12 +212,14 @@
         
         {% if nickname is defined and nickname is not empty %}
             userNickname = "{{nickname}}";
+        {% else %}
+            userNickname = getCookie('__nickname');
         {% endif %}
             
         {% if userId is defined and userId is not empty %}
             userIdentifier = "{{userId}}";
         {% endif %}
-            
+        
         webSocket.on("socket/connect", function (session) {
             bindUI(session);
             console.log("Successfully Connected!");
@@ -682,7 +684,8 @@
             $(".send-connection-form").removeAttr('disabled');
             $(".send-connection-form").html("{{'global.send'|trans}}");
             
-            if (payload.nickname != '' && payload.nickname != 'undefined' && payload.email != '' && payload.email != 'undefined') {
+            if (payload.anonymous != '' && payload.anonymous != 'undefined' && payload.anonymous == true) {
+                console.log('entra aca');
                 document.cookie="__nickname="+payload.nickname;
                 document.cookie="__email="+payload.email;
                 userIdentifier = payload.nickname;
@@ -782,7 +785,7 @@
         $("#contact-form").removeClass('hidden');
     });
 
-    $(".close-message-notification").click(function (e) {
+    $(".close-email-notification").click(function (e) {
         $(".display-chat").trigger('click');
     });
     

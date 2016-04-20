@@ -13,10 +13,12 @@
                 <td><strong>{{'global.date'|trans}}:</strong></td>
                 <td>{{offlineMessage.date|date('d/m/Y h:i a')}}</td>
             </tr>
+            {% if offlineMessage.senderNickname is not empty %}
             <tr>
                 <td><strong>{{'global.nickname'|trans}}:</strong></td>
                 <td>{{offlineMessage.senderNickname}}</td>
             </tr>
+            {% endif %}
             <tr>
                 <td><strong>{{'client_email.email'|trans}}:</strong></td>
                 <td>{{offlineMessage.email}}</td>

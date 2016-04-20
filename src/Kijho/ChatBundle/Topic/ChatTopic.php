@@ -176,7 +176,9 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
             if ($connection->status != self::STATUS_WAITING_NICKNAME) {
                 $connection->event($topic->getId(), ['msg' => '',
                     'msg_type' => self::SERVER_WELCOME_MESSAGE,
-                    'online_administrators' => count($this->getOnlineAdministrators())]);
+                    'online_administrators' => count($this->getOnlineAdministrators()),
+                    'anonymous' => false,
+                    ]);
             }
         }
 
@@ -185,6 +187,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
             $connection->event($topic->getId(), [
                 'msg' => $this->translator->trans('server.hi') . $connection->nickname . ', ' . $this->translator->trans('server.welcome_to_chat'),
                 'msg_type' => self::SERVER_WELCOME_MESSAGE,
+                'anonymous' => false,
             ]);
         } else {
             // indicamos al usuario que debe asignar un nickname para el chat
@@ -747,6 +750,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 $connection->event($topic->getId(), [
                                     'msg_type' => self::SERVER_WELCOME_MESSAGE,
                                     'msg' => $this->translator->trans('server.hi') . $connection->nickname . ', ' . $this->translator->trans('server.welcome_to_chat'),
+                                    'anonymous' => true,
                                     'nickname' => $connection->nickname,
                                     'email' => $connection->email,
                                     'status' => $userSettings->getStatus(),
