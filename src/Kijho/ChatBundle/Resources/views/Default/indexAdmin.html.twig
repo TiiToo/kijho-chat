@@ -468,9 +468,6 @@
             if (!$.isEmptyObject(chatContainer.html())) {
                 chatContainer.append(htmlMessage);
             }
-            
-            var lastLi = $(".chat-conversation .conversation-body li:last");
-            lastLi.find('span.user').remove();
         }
 
         /**
@@ -623,9 +620,14 @@
                     var html = '<ul class="chat-history" id="client-' + payload.user_id + '">'
                             + htmlMessage + '</ul>';
                     $(".container-chats").append(html);
+                    var chatContainer = $("#client-" + payload.user_id);
+                    if (!$.isEmptyObject(chatContainer.html())) {
+                        chatContainer.append(htmlMessage);
+                    }
                 }
 
-                neonChat.prefetchMessages();
+
+                neonChat.pushMessage(element.attr('id'), payload.msg, payload.nickname, payload.msg_date, true, true);
 
                 //verificamos si la ventana de chat esta abierta
                 var display = $('.chat-conversation').css('display');
@@ -637,29 +639,19 @@
                         if (globalSession) {
                             //ocultar el icono de unread
                             putMessagesReaded(globalSession, payload.user_id);
-                            neonChat.prefetchMessages();
-
                             neonChat.resetUnreads(element.attr('id'));
                             neonChat.puffUnreadsAll();
-
+                            neonChat.renderMessages(element.attr('id'));
                         }
                     }
                 }
-                
-                var currentUserType = typeof neonChat.$current_user;
-                
-                if (currentUserType == 'object') {
-                    try {
-                        neonChat.renderMessages(neonChat.$current_user.attr('id'));
-                    } catch(err) {
-                        console.log('err.message');
-                    }
-                }
+
                 
                 //validamos si otro administrador ya atendio al cliente, para quitar la alerta
                 if (payload.admin_destination != "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_ALL_ADMINISTRATORS')}}" 
                         && "{{userId}}" != payload.admin_destination) {
-                    $(".chat-conversation i.waiting-response").remove();
+                    console.log('por acaca '+ payload.admin_destination);
+                    //$(".chat-conversation i.waiting-response").remove();
                 }
 
             }
