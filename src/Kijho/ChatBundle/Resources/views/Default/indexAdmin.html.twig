@@ -171,7 +171,7 @@
             <ul class="chat-history" id="client-{{clientConversation.data.senderId}}">
                 {% for message in clientConversation.messages %}
                     {% set userClass = 'opponent' %}
-                    {% if message.senderId == userId %}
+                    {% if message.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_ADMIN_TO_CLIENT') %}
                         {% set userClass = 'user' %}
                     {% endif %}
                     {% set readClass = '' %}
@@ -179,7 +179,9 @@
                         {% set readClass = 'unread' %}
                     {% endif %}
                     <li class="{{userClass~' '~readClass}}">
-                        {#<span class="user">{{message.senderNickname}}</span>#}
+                        {% if userClass == 'user' and message.senderNickname != nickname %}
+                            <span class="user">{{message.senderNickname}}</span>
+                        {% endif %}
                         <p>{{message.message}}</p>
                         <span class="time">
                             {% if message.date|date('d/m/Y') != lastDate %}
@@ -466,6 +468,9 @@
             if (!$.isEmptyObject(chatContainer.html())) {
                 chatContainer.append(htmlMessage);
             }
+            
+            var lastLi = $(".chat-conversation .conversation-body li:last");
+            lastLi.find('span.user').remove();
         }
 
         /**
@@ -644,9 +649,11 @@
                 var currentUserType = typeof neonChat.$current_user;
                 
                 if (currentUserType == 'object') {
-                    neonChat.renderMessages(neonChat.$current_user.attr('id'));
-                } else {
-                    console.log('no se renderizaron');
+                    try {
+                        neonChat.renderMessages(neonChat.$current_user.attr('id'));
+                    } catch(err) {
+                        console.log('err.message');
+                    }
                 }
                 
                 //validamos si otro administrador ya atendio al cliente, para quitar la alerta
