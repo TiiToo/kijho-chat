@@ -56,7 +56,7 @@ class OfflineMessageController extends Controller {
         } else {
             $response = array(
                 'result' => '__KO__',
-                'msg' => $this->container->get('translator')->trans('client_email.error_sending_message'),
+                'msg' => $this->container->get('translator')->trans('server.error_sending_message'),
             );
         }
         return new JsonResponse($response);

@@ -164,6 +164,7 @@
                                 {{ form_widget(contactForm.message,{'attr':{'class':'form-control'}}) }}
                             </div>
                             <div class="col-xs-12 margin-top flt-left margin-bottom">
+                                <p class="offline-message-alert"></p>
                                 <button class="btn btn-primary btn-sm pull-right send-contact-form">{{'global.send'|trans}}</button>
                             </div>
                         </form>
@@ -596,6 +597,7 @@
             $("#contact-form").addClass('hidden');
             $(".contact-message-notification").removeClass('hidden');
             $(".contact-message-notification div.alert-success").html(payload.msg);
+            $(".offline-message-alert").html('');
         }
         
         /**
@@ -824,6 +826,10 @@
                         {
                             if (resp.result == '__OK__') {
                                 clearContactForm(resp);
+                            } else {
+                                $(".send-contact-form").removeAttr('disabled');
+                                $(".send-contact-form").html("{{'global.send'|trans}}");
+                                $(".offline-message-alert").html(resp.msg);
                             }
                         },
                         error: function (resp)
