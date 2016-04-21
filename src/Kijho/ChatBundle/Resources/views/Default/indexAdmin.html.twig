@@ -128,8 +128,12 @@
             <div class="chat-group" id="group-2">
                 <strong>{{'admin.clients'|trans}}</strong>
                 {% for conversation in lastConversations %}
-                    <a href="#" class="open-client-conversation" client-id="{{conversation.senderId}}" online-with="" data-conversation-history="#client-{{conversation.senderId}}"><span class="user-status is-offline"></span> <em>{{conversation.senderNickname}}</em> <span class="typing hidden pull-right"><i>{{'global.typing'|trans}}</i></span>
+                    <a href="#" class="open-client-conversation" client-id="{{conversation.senderId}}" online-with="" data-conversation-history="#client-{{conversation.senderId}}">
+                        <span class="user-status is-offline"></span> 
+                        <em>{{conversation.senderNickname}}</em> 
+                        <span class="online-with hidden"></span>
                     <button class="hidden pull-right steal-chat" client-id="{{conversation.senderId}}" title="{{'admin.steal_conversation'|trans}}"><i class="entypo-eye"></i></button>
+                    <span class="typing hidden pull-right"><i>{{'global.typing'|trans}}</i></span>
                     </a>
                 {% else %}
                     <a class="disabled" href="return false;">{{'admin.no_chat_history'|trans}}</a>
@@ -460,14 +464,18 @@
                     element.attr('online-with', onlineUsers[i]['onlineWithAdmin']);
                     
                     var stealElement = $("#group-2 button.steal-chat[client-id='" + onlineUsers[i]['user_id'] + "']");
+                    var onlineWithElement = element.find('span.online-with');
                     
                     if (onlineUsers[i]['onlineWithAdmin'] != '' 
                         && onlineUsers[i]['onlineWithAdmin'] != "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_ALL_ADMINISTRATORS')}}"
                             && onlineUsers[i]['onlineWithAdmin'] != "{{nickname}}") {
-                            console.log('online with '+onlineUsers[i]['onlineWithAdmin']);
+                            onlineWithElement.removeClass('hidden');
+                            onlineWithElement.html('('+onlineUsers[i]['onlineWithAdmin']+')');
+                            onlineWithElement.attr('title', "{{'global.online_with'|trans}}"+onlineUsers[i]['onlineWithAdmin']);
                             stealElement.removeClass('hidden');
                     } else {
                         stealElement.addClass('hidden');
+                        onlineWithElement.addClass('hidden');
                     }
                     
                     var spanStatus = $("#group-2 a[client-id='" + onlineUsers[i]['user_id'] + "'] span").first();
@@ -507,9 +515,11 @@
                 var spanStatus = $("#group-2 a[client-id='" + payload.user_id + "'] span").first();
                 spanStatus.attr("class", "user-status "+payload.status);
             } else {
-                var htmlUser = '<a href="#" class="open-client-conversation" client-id="' + payload.user_id + '" online-with="" data-conversation-history="#client-' + payload.user_id + '"><span class="user-status '+payload.status+'"></span> <em>' + payload.nickname + '</em> <span class="badge badge-info is-hidden">0</span> <span class="typing hidden pull-right"><i>{{'global.typing'|trans}}</i></span>';
+                var htmlUser = '<a href="#" class="open-client-conversation" client-id="' + payload.user_id + '" online-with="" data-conversation-history="#client-' + payload.user_id + '"><span class="user-status '+payload.status+'"></span> <em>' + payload.nickname + '</em>'; 
+                htmlUser += '<span class="badge badge-info is-hidden">0</span> ';
+                htmlUser += '<span class="online-with hidden"></span>';
                 htmlUser += '<button class="hidden pull-right steal-chat" client-id="' + payload.user_id + '" title="{{'admin.steal_conversation'|trans}}"><i class="entypo-eye"></i></button></a>';
-                
+                htmlUser += '<span class="typing hidden pull-right"><i>{{'global.typing'|trans}}</i></span>';
                 var firstUser = $('#group-2 a').first();
                 if (firstUser.hasClass('disabled')) {
                     firstUser.remove();
@@ -559,7 +569,6 @@
          **/
         function messageFromClient(payload) {
             
-            console.log(payload.nickname+ ' envia ' +payload.msg);
             displayNotification("{{'admin.new_message_from'|trans}}" + payload.nickname);
 
             $(".play-sound").trigger('click');
@@ -656,9 +665,14 @@
          * Permite desplegar el mensaje que indica que un cliente esta escribiendo
          **/
         function clientTyping(payload) {
-            var tabConversation = $(".open-client-conversation[client-id='" + payload.user_id + "']");
-            tabConversation.find("span.typing").removeClass('hidden');
-            window.setTimeout(hideTyping, 2000);
+            if (payload.online_with == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_ALL_ADMINISTRATORS')}}"
+                    || payload.online_with == "{{nickname}}") {
+                
+                var tabConversation = $(".open-client-conversation[client-id='" + payload.user_id + "']");
+                tabConversation.find("span.typing").removeClass('hidden');
+                window.setTimeout(hideTyping, 2000);
+            } 
+            
         }
 
         /**

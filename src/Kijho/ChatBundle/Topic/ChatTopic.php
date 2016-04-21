@@ -641,6 +641,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 'msg_type' => self::CLIENT_TYPING,
                                 'nickname' => $connection->nickname,
                                 'user_id' => $connection->userId,
+                                'online_with' => $connection->onlineWithAdmin,
                             ]);
                         }
                     } elseif ($eventType == self::PUT_MESSAGES_AS_READED) {

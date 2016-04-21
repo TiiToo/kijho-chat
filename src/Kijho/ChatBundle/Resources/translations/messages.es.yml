@@ -16,6 +16,7 @@ global:
     close: "Cerrar"
     nickname: "Nickname"
     date: "Fecha"
+    online_with: "En linea con "
 
 admin:
     administrator: "Administrador"

@@ -16,6 +16,7 @@ global:
     close: "Close"
     nickname: "Nickname"
     date: "Date"
+    online_with: "Online with "
 
 admin:
     administrator: "Administrator"
