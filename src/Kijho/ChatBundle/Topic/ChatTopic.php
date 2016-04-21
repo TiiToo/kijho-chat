@@ -335,8 +335,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 $connection->event($topic->getId(), [
                                     'msg_type' => self::MESSAGE_SEND_SUCCESSFULLY,
                                     'msg' => $message,
-                                    'nickname' => $connection->nickname,
-                                    'user_id' => $connection->userId,
+                                    'client_id' => $clientId,
                                     'msg_date' => $adminMessage->getDate()->format('h:i a'),
                                 ]);
                             }

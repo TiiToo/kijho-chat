@@ -435,8 +435,7 @@
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SERVER_CLIENT_LEFT_ROOM')}}") {
                 clientLeftRoom(payload);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_SEND_SUCCESSFULLY')}}") {
-                displayNotification('Message send successfully');
-                $(".chat-conversation i.waiting-response").remove();
+                messageSendSuccessfully(payload);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CLIENT_TYPING')}}") {
                 clientTyping(payload);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SETTINGS_UPDATED')}}") {
@@ -447,6 +446,25 @@
                 clientStatusUpdated(payload);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGES_FROM_OTHER_CONVERSATION')}}") {
                 messagesFromOtherConversation(payload);
+            }
+        }
+        
+        function messageSendSuccessfully(payload) {
+            displayNotification('Message send successfully');
+            $(".chat-conversation i.waiting-response").remove();
+
+            //armamos el html con el mensaje del usuario
+            var htmlMessage = '<li class="user">';
+
+            htmlMessage += '<p>' + payload.msg + '</p>'
+                    + '<span class="time">' + payload.msg_date + '</span>'
+                    + '</li>';
+
+            //buscamos el panel de mensajes del usuario
+            var chatContainer = $("#client-" + payload.client_id);
+
+            if (!$.isEmptyObject(chatContainer.html())) {
+                chatContainer.append(htmlMessage);
             }
         }
 
@@ -500,7 +518,7 @@
             }
             neonChat.refreshUserIds();
             neonChat.orderGroups();
-            displayNotification(payload.msg);
+            //displayNotification(payload.msg);
         }
 
         /**
@@ -531,7 +549,7 @@
             neonChat.refreshUserIds();
             neonChat.orderGroups();
             if (payload.msg) {
-                displayNotification(payload.msg);
+                //displayNotification(payload.msg);
             }
         }
 
@@ -623,8 +641,12 @@
                     }
                 }
                 
-                if (typeof $current_user != 'undefined') {
+                var currentUserType = typeof neonChat.$current_user;
+                
+                if (currentUserType == 'object') {
                     neonChat.renderMessages(neonChat.$current_user.attr('id'));
+                } else {
+                    console.log('no se renderizaron');
                 }
                 
                 //validamos si otro administrador ya atendio al cliente, para quitar la alerta
