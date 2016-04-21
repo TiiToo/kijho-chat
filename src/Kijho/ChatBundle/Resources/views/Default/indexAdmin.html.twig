@@ -204,6 +204,7 @@
 
         $(".start-gos-server").click(function () {
             $(this).html("{{'global.please_wait'|trans}}");
+            $(this).attr('disabled','disabled');
             $.ajax({
                 type: 'POST',
                 url: "{{path('chat_start_gos_server')}}",
@@ -212,11 +213,13 @@
                 success: function (r)
                 {
                     window.setTimeout(function(){
+                        $(this).removeAttr('disabled');
                         window.location.reload();
                     }, 3000);
                 },
                 error: function (r)
                 {
+                    $(this).removeAttr('disabled');
                     window.location.reload();
                 }
             });
