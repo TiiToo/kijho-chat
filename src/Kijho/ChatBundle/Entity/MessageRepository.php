@@ -166,6 +166,7 @@ class MessageRepository extends EntityRepository {
         ))
         AND m.date >= :startDate
         AND m.isStealMessage = FALSE
+        GROUP BY m.date, m.message, m.senderId
         ORDER BY m.date ASC");
         $consult->setParameter('client', $clientId);
         $consult->setParameter('startDate', $startDate);
