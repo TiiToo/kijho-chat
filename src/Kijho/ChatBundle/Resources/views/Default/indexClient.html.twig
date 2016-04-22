@@ -213,8 +213,6 @@
         
         {% if nickname is defined and nickname is not empty %}
             userNickname = "{{nickname}}";
-        {% else %}
-            userNickname = getCookie('__nickname');
         {% endif %}
             
         {% if userId is defined and userId is not empty %}
@@ -687,7 +685,7 @@
             $(".send-connection-form").html("{{'global.send'|trans}}");
             
             if (payload.anonymous != '' && payload.anonymous != 'undefined' && payload.anonymous == true) {
-                console.log('entra aca');
+                console.log(payload);
                 document.cookie="__nickname="+payload.nickname;
                 document.cookie="__email="+payload.email;
                 userIdentifier = payload.nickname;
@@ -697,9 +695,9 @@
                 if (payload.sound != '') {
                     $("#chatbundle_user_chat_settings_type_notificationSound").val(payload.sound);
                 }
-                {% if nickname == '' %}
+                if (userIdentifier != '') {
                     getClientMessages(userNickname, userIdentifier);
-                {% endif %}
+                }
             }
         }
         
