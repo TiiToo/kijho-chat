@@ -496,7 +496,7 @@
             if (typeof chatContainer == "object") {
                 chatContainer.append(htmlMessage);
                 var element = $(".open-client-conversation[client-id='" + payload.client_id + "']");
-                neonChat.pushMessage(element.attr('id'), payload.msg, payload.client_nickname, payload.msg_date, false, false);
+                neonChat.pushMessage(element.attr('id'), payload.msg, "{{nickname}}", payload.msg_date, false, false);
                 neonChat.renderMessages(element.attr('id'));
                 $(".chat-textarea textarea").val('');
             }
