@@ -18,7 +18,7 @@ use Kijho\ChatBundle\Topic\ChatTopic;
 
 class DefaultController extends Controller {
 
-    public function clientPanelAction($nickname = null, $userId = '', $userType = '', $local = false) {
+    public function clientPanelAction($nickname = null, $userId = '', $userType = '', $email = '',$local = false) {
         $em = $this->getDoctrine()->getManager();
 
         if ($nickname != '' && $userId == '') {
@@ -50,6 +50,7 @@ class DefaultController extends Controller {
                     'local' => $local,
                     'nickname' => $nickname,
                     'userId' => $userId,
+                    'email' => $email,
                     'userType' => $userType,
                     'userSettings' => $userSettings,
                     'userSettingsForm' => $userSettingsForm->createView(),
@@ -62,7 +63,7 @@ class DefaultController extends Controller {
         return $this->render('ChatBundle:Default:exampleClient.html.twig');
     }
 
-    public function adminPanelAction($nickname = null, $userId = '', $userType = '', $local = false) {
+    public function adminPanelAction($nickname = null, $userId = '', $userType = '', $email = '', $local = false) {
 
         if ($nickname != '' && $userId == '') {
             $userId = $nickname;
@@ -73,8 +74,6 @@ class DefaultController extends Controller {
         //listado de usuarios que han chateado con el admin, ordenado descendentemente por la fecha del ultimo mensaje
         $lastConversations = $em->getRepository('ChatBundle:Message')->findClientChatNickNames($userId);
 
-        //\Symfony\Component\VarDumper\VarDumper::dump($lastConversations);die();
-        
         //buscamos las conversaciones completas entre el admin y los clientes
         $allConversations = array();
         $i = 0;
@@ -119,6 +118,7 @@ class DefaultController extends Controller {
                     'local' => $local,
                     'nickname' => $nickname,
                     'userId' => $userId,
+                    'email' => $email,
                     'userType' => $userType,
                     'lastConversations' => $lastConversations,
                     'allConversations' => $allConversations,
@@ -184,7 +184,6 @@ class DefaultController extends Controller {
         );
 
         try {
-            //shell_exec( $your_command . "> /dev/null 2>/dev/null &" );
             $output = shell_exec("php ../app/console gos:websocket:server" . "> /dev/null 2>/dev/null &");
             $response['msg'] = "<pre>$output</pre>";
         } catch (\Exception $exc) {

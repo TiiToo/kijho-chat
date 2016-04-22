@@ -20,25 +20,27 @@ class RPCService implements RpcInterface {
      * @return int
      */
     public function updateConnectionData(ConnectionInterface $connection, WampRequest $request, $params) {
-        $connection->nickname = 'Guest-' . strip_tags($connection->resourceId);
+        $connection->nickname = 'guest_' . strip_tags($connection->resourceId);
 
         if (isset($params['nickname']) && !empty($params['nickname'])) {
-            $nickName = trim(strip_tags($params['nickname']));
-            $connection->nickname = $nickName;
+            $nickname = strtolower(trim(strip_tags($params['nickname'])));
+            $nickname = str_replace(' ', '', $nickname);
+            $connection->nickname = $nickname;
             $connection->status = ChatTopic::STATUS_ONLINE;
         } else {
             $connection->status = ChatTopic::STATUS_WAITING_NICKNAME;
         }
 
-        $connection->userId = strip_tags($connection->nickname);
+        $connection->userId = $connection->nickname;
         if (isset($params['user_id']) && !empty($params['user_id'])) {
-            $userId = trim(strip_tags($params['user_id']));
+            $userId = strtolower(trim(strip_tags($params['user_id'])));
+            $userId = str_replace(' ', '', $userId);
             $connection->userId = $userId;
         }
 
         $connection->userType = ChatTopic::USER_CLIENT;
         if (isset($params['user_type']) && !empty($params['user_type'])) {
-            $userType = trim(strip_tags($params['user_type']));
+            $userType = strtolower(trim(strip_tags($params['user_type'])));
             $connection->userType = $userType;
         }
         

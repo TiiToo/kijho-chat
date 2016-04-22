@@ -4,4 +4,4 @@
     {% set nickname = app.request.get('nickname') %}
     {% set userId   = app.request.get('userId') %}
 {% endif %}
-{{ render(controller('ChatBundle:Default:clientPanel', {'nickname':nickname, 'userId':userId,'userType': constant('Kijho\\ChatBundle\\Topic\\ChatTopic::USER_CLIENT'), 'local':true})) }}        
+{{ render(controller('ChatBundle:Default:clientPanel', {'nickname':nickname, 'userId':userId,'userType': constant('Kijho\\ChatBundle\\Topic\\ChatTopic::USER_CLIENT'), 'email' : '', 'local':true})) }}        

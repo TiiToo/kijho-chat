@@ -297,7 +297,7 @@
         /*Permite cambiar el nickname del usuario*/
         function updateConnectionData(session)
         {
-            session.call("rpc/update_connection_data", {"nickname": "{{nickname}}", "user_id": "{{userId}}", "user_type": "{{userType}}"}).then(
+            session.call("rpc/update_connection_data", {"nickname": "{{nickname}}", "user_id": "{{userId}}", "user_type": "{{userType}}", "email":"{{email}}"}).then(
                     function (result) {
                         console.log("RPC Valid!", result);
                     },
@@ -496,7 +496,7 @@
             if (typeof chatContainer == "object") {
                 chatContainer.append(htmlMessage);
                 var element = $(".open-client-conversation[client-id='" + payload.client_id + "']");
-                neonChat.pushMessage(element.attr('id'), payload.msg, "{{nickname}}", payload.msg_date, false, false);
+                neonChat.pushMessage(element.attr('id'), payload.msg, '', payload.msg_date, false, false);
                 neonChat.renderMessages(element.attr('id'));
                 $(".chat-textarea textarea").val('');
             }

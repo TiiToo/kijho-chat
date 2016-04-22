@@ -113,7 +113,7 @@
                         </div>
                         <div class="col-xs-12 margin-top flt-left">
                             {{ form_label(connectionForm.nickname) }}
-                            {{ form_widget(connectionForm.nickname,{'attr':{'class':'form-control'}}) }}
+                            {{ form_widget(connectionForm.nickname,{'attr':{'class':'form-control lower-case'}}) }}
                         </div>
                         <div class="col-xs-12 margin-top flt-left margin-bottom">
                             <p class="alert alert-danger hidden"></p>
@@ -200,6 +200,7 @@
         
         var userIdentifier = '';
         var userNickname = '';
+        var userEmail = '';
         
         var lastAdminId = '';
         
@@ -217,6 +218,10 @@
             
         {% if userId is defined and userId is not empty %}
             userIdentifier = "{{userId}}";
+        {% endif %}
+            
+        {% if email is defined and email is not empty %}
+            userEmail = "{{email}}";
         {% endif %}
         
         webSocket.on("socket/connect", function (session) {
@@ -241,7 +246,7 @@
          */
         function updateConnectionData(session)
         {
-            session.call("rpc/update_connection_data", {"nickname": userNickname, "user_id": userIdentifier, "user_type": "{{userType}}"}).then(
+            session.call("rpc/update_connection_data", {"nickname": userNickname, "user_id": userIdentifier, "user_type": "{{userType}}", "email": userEmail }).then(
                     function (result)
                     {
                         console.log("RPC Valid!", result);
@@ -653,7 +658,7 @@
             var nickname = $("#chatbundle_connection_form_type_nickname").val();
 
             if (email != '' && validateEmail(email)) {
-                if (nickname != '') {
+                if (nickname != '' && validateNickname(nickname)) {
                         $(".send-connection-form").attr('disabled', 'disabled');
                         $(".send-connection-form").html("{{'global.please_wait'|trans}}");
 
@@ -663,10 +668,14 @@
                         };
                         session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
                 } else {
-                    $("#chatbundle_connection_form_type_nickname").focus();
+                    $(".connection-container p.alert-danger").removeClass('hidden');
+                    $(".connection-container p.alert-danger").html("{{'connection_form.insert_valid_nickname'|trans}}");
+                    $("#chatbundle_connection_form_type_nickname").select();
                 }
             } else {
-                $("#chatbundle_connection_form_type_email").focus();
+                $(".connection-container p.alert-danger").removeClass('hidden');
+                $(".connection-container p.alert-danger").html("{{'connection_form.insert_valid_email'|trans}}");
+                $("#chatbundle_connection_form_type_email").select();
             }
         }
         
@@ -690,6 +699,7 @@
                 document.cookie="__email="+payload.email;
                 userIdentifier = payload.nickname;
                 userNickname = payload.nickname;
+                userEmail = payload.email;
                 $(".panel-heading span.main-status").addClass(payload.status);
                 $(".panel-heading span.main-status").removeClass('is-offline');
                 if (payload.sound != '') {
@@ -776,6 +786,11 @@
             var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
             return re.test(email);
         }
+        
+        function validateNickname(nickname) {
+            var re = /^[a-z0-9_-]{3,15}$/;
+            return re.test(nickname);
+        }
     </script>
 {% endblock %}
 
@@ -790,6 +805,12 @@
         $("#contact-form").removeClass('hidden');
     });
 
+    $('.lower-case').keyup(function () {
+        var text = $(this).val();
+        text = text.toLowerCase();
+        $(this).val(text);
+    });
+    
     /**
     * Permite enviar al servidor el formulario de contacto para enviar
     * un correo al administrador cuando no hay ninguno online

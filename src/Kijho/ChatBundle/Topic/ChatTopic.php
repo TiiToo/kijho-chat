@@ -726,8 +726,9 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                             }
                         }
                     } elseif ($eventType == self::CONNECT_TO_CHAT) {
-                        $email = trim(strip_tags($event['email']));
-                        $nickname = trim(strip_tags($event['nickname']));
+                        $email = strtolower(trim(strip_tags($event['email'])));
+                        $nickname = strtolower(trim(strip_tags($event['nickname'])));
+                        $nickname = str_replace(' ', '', $nickname);
 
                         if (!empty($nickname) && !empty($email)) {
                             

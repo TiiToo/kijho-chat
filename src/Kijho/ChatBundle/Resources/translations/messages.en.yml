@@ -75,3 +75,5 @@ connection_form:
     invalid_email_or_nickname: "Invalid email or nickname"
     connection_success: "Connection Success"
     nickname_repeated: "Someone is using this nickname. Please type another one"
+    insert_valid_nickname: "Insert a valid nickname"
+    insert_valid_email: "Insert a valid email"

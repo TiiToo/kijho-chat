@@ -37,6 +37,7 @@ class ConnectionFormType extends AbstractType {
                     'mapped' => false,
                     'attr' => array(
                         'placeholder' => $this->translator->trans('connection_form.type_nickname'),
+                        'maxlength' => 14
                     )
                 ))
         ;
