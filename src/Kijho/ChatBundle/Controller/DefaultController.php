@@ -73,11 +73,18 @@ class DefaultController extends Controller {
         //listado de usuarios que han chateado con el admin, ordenado descendentemente por la fecha del ultimo mensaje
         $lastConversations = $em->getRepository('ChatBundle:Message')->findClientChatNickNames($userId);
 
+        //\Symfony\Component\VarDumper\VarDumper::dump($lastConversations);die();
+        
         //buscamos las conversaciones completas entre el admin y los clientes
         $allConversations = array();
         $i = 0;
         foreach ($lastConversations as $conversationData) {
-            $conversation = $em->getRepository('ChatBundle:Message')->findConversationClientAdmin($conversationData['senderId'], $userId);
+            $clientId = $conversationData['senderId'];
+            if ($conversationData['type'] == Message::TYPE_ADMIN_TO_CLIENT) {
+                $clientId = $conversationData['destinationId'];
+            }
+            
+            $conversation = $em->getRepository('ChatBundle:Message')->findConversationClientAdmin($clientId, $userId);
             $allConversations[$i]['data'] = $conversationData;
             $allConversations[$i]['messages'] = $conversation;
             $i++;

@@ -127,14 +127,31 @@
 
             <div class="chat-group" id="group-2">
                 <strong>{{'admin.clients'|trans}}</strong>
+                {% set listedConversations = [] %}
                 {% for conversation in lastConversations %}
-                    <a href="#" class="open-client-conversation" client-id="{{conversation.senderId}}" online-with="" data-conversation-history="#client-{{conversation.senderId}}">
-                        <span class="user-status is-offline"></span> 
-                        <em>{{conversation.senderNickname}}</em> 
-                        <span class="online-with hidden"></span>
-                    <button class="hidden pull-right steal-chat" client-id="{{conversation.senderId}}" title="{{'admin.steal_conversation'|trans}}"><i class="entypo-eye"></i></button>
-                    <span class="typing hidden pull-right"><i>{{'global.typing'|trans}}</i></span>
-                    </a>
+                    {% if conversation.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_CLIENT_TO_ADMIN') %}
+                        {% if conversation.senderId not in listedConversations %}
+                            {% set listedConversations = listedConversations|merge([conversation.senderId]) %}
+                            <a href="#" class="open-client-conversation" client-id="{{conversation.senderId}}" online-with="" data-conversation-history="#client-{{conversation.senderId}}">
+                                <span class="user-status is-offline"></span> 
+                                <em>{{conversation.senderNickname}}</em> 
+                                <span class="online-with hidden"></span>
+                                <button class="hidden pull-right steal-chat" client-id="{{conversation.senderId}}" title="{{'admin.steal_conversation'|trans}}"><i class="entypo-eye"></i></button>
+                                <span class="typing hidden pull-right"><i>{{'global.typing'|trans}}</i></span>
+                            </a>
+                        {% endif %}
+                    {% elseif conversation.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_ADMIN_TO_CLIENT') %}
+                        {% if conversation.destinationId not in listedConversations %}
+                            {% set listedConversations = listedConversations|merge([conversation.destinationId]) %}
+                            <a href="#" class="open-client-conversation" client-id="{{conversation.destinationId}}" online-with="" data-conversation-history="#client-{{conversation.destinationId}}">
+                                <span class="user-status is-offline"></span> 
+                                <em>{{conversation.destinationNickname}}</em> 
+                                <span class="online-with hidden"></span>
+                                <button class="hidden pull-right steal-chat" client-id="{{conversation.destinationId}}" title="{{'admin.steal_conversation'|trans}}"><i class="entypo-eye"></i></button>
+                                <span class="typing hidden pull-right"><i>{{'global.typing'|trans}}</i></span>
+                            </a>
+                        {% endif %}
+                    {% endif %}
                 {% else %}
                     <a class="disabled" href="return false;">{{'admin.no_chat_history'|trans}}</a>
                 {% endfor %}
@@ -167,35 +184,45 @@
     <div class="container-chats">
         {% set lastDate = '' %}
         {% set lastHour = '' %}
+        {% set listedConversations = [] %}
         {% for clientConversation in allConversations %}
-            <ul class="chat-history" id="client-{{clientConversation.data.senderId}}">
-                {% for message in clientConversation.messages %}
-                    {% set userClass = 'opponent' %}
-                    {% if message.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_ADMIN_TO_CLIENT') %}
-                        {% set userClass = 'user' %}
-                    {% endif %}
-                    {% set readClass = '' %}
-                    {% if message.readed == false and message.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_CLIENT_TO_ADMIN') %}
-                        {% set readClass = 'unread' %}
-                    {% endif %}
-                    <li class="{{userClass~' '~readClass}}">
-                        {% if userClass == 'user' and message.senderNickname != nickname %}
-                            <span class="user">{{message.senderNickname}}</span>
+            {% set clientId = clientConversation.data.senderId %}
+            {% if clientConversation.data.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_ADMIN_TO_CLIENT') %}
+                {% set clientId = clientConversation.data.destinationId %}
+            {% endif %}
+            
+            {% if clientId not in listedConversations %}
+                {% set listedConversations = listedConversations|merge([clientId]) %}
+
+                <ul class="chat-history" id="client-{{clientId}}">
+                    {% for message in clientConversation.messages %}
+                        {% set userClass = 'opponent' %}
+                        {% if message.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_ADMIN_TO_CLIENT') %}
+                            {% set userClass = 'user' %}
                         {% endif %}
-                        <p>{{message.message}}</p>
-                        <span class="time">
-                            {% if message.date|date('d/m/Y') != lastDate %}
-                                {% set lastDate = message.date|date('d/m/Y') %}
-                                {{ lastDate }}
+                        {% set readClass = '' %}
+                        {% if message.readed == false and message.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_CLIENT_TO_ADMIN') %}
+                            {% set readClass = 'unread' %}
+                        {% endif %}
+                        <li class="{{userClass~' '~readClass}}">
+                            {% if userClass == 'user' and message.senderNickname != nickname %}
+                                <span class="user">{{message.senderNickname}}</span>
                             {% endif %}
-                            {% if message.date|date('h:i a') != lastHour %}
-                                {% set lastHour = message.date|date('h:i a') %}
-                                {{ lastHour }}
-                            {% endif %}
-                        </span>
-                    </li>
-                {% endfor %}
-            </ul>
+                            <p>{{message.message}}</p>
+                            <span class="time">
+                                {% if message.date|date('d/m/Y') != lastDate %}
+                                    {% set lastDate = message.date|date('d/m/Y') %}
+                                    {{ lastDate }}
+                                {% endif %}
+                                {% if message.date|date('h:i a') != lastHour %}
+                                    {% set lastHour = message.date|date('h:i a') %}
+                                    {{ lastHour }}
+                                {% endif %}
+                            </span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
         {% endfor %}
     </div>
 
@@ -333,7 +360,7 @@
                 addCustomMessage();
             });
             
-            $(".send-custom-message").bind("click", function(e) {
+            $(".send-custom-message a").bind("click", function(e) {
                 sendCustomMessage();
             });
             
@@ -345,10 +372,7 @@
             });
             
             $(".hide-custom-messages").bind("click", function(e) {
-                $("#container-custom-messages-to-send div.messages").addClass('hidden');
-                $(".show-custom-messages").removeClass('hidden');
-                $(".send-custom-message").addClass('hidden');
-                $(this).addClass('hidden');
+                hideCustomMessages();
             });
             
             $("#chatbundle_chat_settings_type_enableCustomResponses").bind("change", function(e) {
@@ -377,7 +401,7 @@
             $(".change-status").unbind();
             $(".add-custom-message").unbind();
             $(".remove-custom-message").unbind();
-            $(".send-custom-message").unbind();
+            $(".send-custom-message a").unbind();
             $(".show-custom-messages").unbind();
             $(".hide-custom-messages").unbind();
             $("#chatbundle_chat_settings_type_enableCustomResponses").unbind();
@@ -450,10 +474,14 @@
                 messagesFromOtherConversation(payload);
             }
         }
-        
+
+        /**
+         * Permite realizar cambios en pantalla una vez enviado un mensaje
+         **/
         function messageSendSuccessfully(payload) {
+        
             displayNotification('Message send successfully');
-            $(".chat-conversation i.waiting-response").remove();
+            //$(".chat-conversation i.waiting-response").remove();
 
             //armamos el html con el mensaje del usuario
             var htmlMessage = '<li class="user">';
@@ -465,8 +493,12 @@
             //buscamos el panel de mensajes del usuario
             var chatContainer = $("#client-" + payload.client_id);
 
-            if (!$.isEmptyObject(chatContainer.html())) {
+            if (typeof chatContainer == "object") {
                 chatContainer.append(htmlMessage);
+                var element = $(".open-client-conversation[client-id='" + payload.client_id + "']");
+                neonChat.pushMessage(element.attr('id'), payload.msg, payload.client_nickname, payload.msg_date, false, false);
+                neonChat.renderMessages(element.attr('id'));
+                $(".chat-textarea textarea").val('');
             }
         }
 
@@ -520,7 +552,6 @@
             }
             neonChat.refreshUserIds();
             neonChat.orderGroups();
-            //displayNotification(payload.msg);
         }
 
         /**
@@ -550,9 +581,13 @@
             }
             neonChat.refreshUserIds();
             neonChat.orderGroups();
-            if (payload.msg) {
-                //displayNotification(payload.msg);
-            }
+            
+            //buscamos el panel de mensajes del usuario
+            var chatContainer = $("#client-" + payload.user_id);
+            if ($.isEmptyObject(chatContainer.html())) {
+                var html = '<ul class="chat-history" id="client-' + payload.user_id + '"></ul>';
+                $(".container-chats").append(html);
+            } 
         }
 
         /**
@@ -612,7 +647,7 @@
 
                 //buscamos el panel de mensajes del usuario
                 var chatContainer = $("#client-" + payload.user_id);
-                if (!$.isEmptyObject(chatContainer.html())) {
+                if (typeof chatContainer == "object") {
                     chatContainer.append(htmlMessage);
                     //chatContainer.html(htmlMessage);
                 } else {
@@ -626,8 +661,7 @@
                     }
                 }
 
-
-                neonChat.pushMessage(element.attr('id'), payload.msg, payload.nickname, payload.msg_date, true, true);
+                neonChat.pushMessage(element.attr('id'), payload.msg, '', payload.msg_date, true, true);
 
                 //verificamos si la ventana de chat esta abierta
                 var display = $('.chat-conversation').css('display');
@@ -835,6 +869,16 @@
         }
         
         /**
+         * Permite ocultar el panel de mensajes personalizados
+         */
+        function hideCustomMessages() {
+            $("#container-custom-messages-to-send div.messages").addClass('hidden');
+            $(".show-custom-messages").removeClass('hidden');
+            $(".send-custom-message").addClass('hidden');
+            $(".hide-custom-messages").addClass('hidden');
+        }
+        
+        /**
          * Permite enviar mensajes predefinidos a los clientes
          * @returns {undefined}
          */
@@ -844,13 +888,13 @@
                 if ( input.is(':checked') ) {
                     messageToClient = $(".custom-message-to-send label[for='"+input.attr('id')+"']").html();
                     if (messageToClient != '') {
-                        $(".chat-textarea textarea").val(messageToClient);
-                        sendMessage(globalSession);
-                        var e = jQuery.Event("keydown");
-                        e.which = 13;
-                        e.keyCode = 13;
-                        $(".chat-textarea textarea").trigger(e);
-                        $(".hide-custom-messages").trigger('click');
+                        var clientId = $(".chat-textarea textarea").attr('destination-id') + "";
+                        var element = $(".open-client-conversation[client-id='" + clientId + "']");
+                        if (!$.isEmptyObject(element.html())) {
+                            $(".chat-textarea textarea").val(messageToClient);
+                            sendMessage(globalSession);
+                            hideCustomMessages();
+                        }
                     }
                 }
             });
@@ -922,7 +966,7 @@
                     //buscamos el panel de mensajes del usuario
                     var chatContainer = $("#client-" + userIdentifier);
 
-                    if (!$.isEmptyObject(chatContainer.html())) {
+                    if (typeof chatContainer == "object") {
                         chatContainer.append(htmlMessage);
                     } else {
                         //si no habia un panel de mensajes para el usuario, le creamos uno

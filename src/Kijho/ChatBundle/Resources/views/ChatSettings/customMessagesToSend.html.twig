@@ -9,7 +9,7 @@
     <label>{{'admin.custom_messages'|trans}}</label>
     <a class="btn btn-default btn-sm no-padding pull-right show-custom-messages"><i class="entypo-down"></i></a>
     <a class="btn btn-default btn-sm no-padding pull-right hide-custom-messages hidden"><i class="entypo-up"></i></a>
-    <div class="messages hidden">
+    <div class="messages hidden col-xs-12 no-padding flt-left">
         {% for message in customMessages %}
             <div class="col-xs-12 no-padding custom-message-to-send">
                 <input type="radio" id="custom-message-{{loop.index}}" class="flt-left" name="custom_message"/>
@@ -17,5 +17,7 @@
             </div>
         {% endfor %}
     </div>
-    <a class="btn btn-default btn-sm pull-right send-custom-message hidden">{{'global.send'|trans}}</a>
+    <div class="col-xs-2 no-padding flt-left container-send-custom send-custom-message hidden">
+        <a class="btn btn-default btn-sm send-custom-message hidden">{{'global.send'|trans}}</a>
+    </div>
 {% endif %}

@@ -261,8 +261,8 @@ var previousAction = 'hideChat';
 			{
 				var id = this.$current_user.uniqueId().attr('id');
 				
-				this.pushMessage(id, msg.replace( /<.*?>/g, '' ), $chat.data('current-user'), new Date());
-				this.renderMessages(id);
+				/*this.pushMessage(id, msg.replace( /<.*?>/g, '' ), $chat.data('current-user'), new Date());
+				this.renderMessages(id);*/
 			}
 		},
 		

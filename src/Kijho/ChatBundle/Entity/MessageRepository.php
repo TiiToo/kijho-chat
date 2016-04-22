@@ -20,30 +20,38 @@ class MessageRepository extends EntityRepository {
 
         $innerQuery = $em->createQuery("SELECT MAX(mes.date)
             FROM ChatBundle:Message mes
-            WHERE mes.destinationId = :adminId
-            AND mes.type = :clientAdmin 
+            WHERE (mes.destinationId = :adminId
+            AND mes.type = :clientAdmin ) 
+            OR (mes.senderId = :adminId
+            AND mes.type = :adminClient ) 
             GROUP BY mes.senderNickname")
                 ->setMaxResults(1)
                 ->setParameter('adminId', $adminId)
-                ->setParameter('clientAdmin', Message::TYPE_CLIENT_TO_ADMIN);
+                ->setParameter('clientAdmin', Message::TYPE_CLIENT_TO_ADMIN)
+                ->setParameter('adminClient', Message::TYPE_ADMIN_TO_CLIENT);
 
         $result = $innerQuery->getArrayResult();
 
+        //var_dump($result);die();
 
         if (!empty($result)) {
 
             $dqlQuery = $innerQuery->getDQL();
 
             $consult = $em->createQuery("
-        SELECT m.senderId, m.senderNickname, m.date
+        SELECT m
         FROM ChatBundle:Message m
-        WHERE m.destinationId = :adminId
-        AND m.type = :clientAdmin 
+        WHERE ((m.destinationId = :adminId
+        AND m.type = :clientAdmin ) OR (
+            m.senderId = :adminId
+            AND m.type = :adminClient)
+        )
         AND m.date IN (" . $dqlQuery . ")
         GROUP BY m.senderNickname
         ORDER BY m.date DESC");
             $consult->setParameter('adminId', $adminId);
             $consult->setParameter('clientAdmin', Message::TYPE_CLIENT_TO_ADMIN);
+            $consult->setParameter('adminClient', Message::TYPE_ADMIN_TO_CLIENT);
 
             return $consult->getArrayResult();
         } else {

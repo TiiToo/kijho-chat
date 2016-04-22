@@ -6535,15 +6535,15 @@ textareatable .replace-inputs input {
   font-size: 11px;
 }
 #chat .chat-conversation .chat-textarea {
-  padding: 20px 24px;
+  padding: 10px 14px;
   position: relative;
 }
 #chat .chat-conversation .chat-textarea:after {
   content: '\e83c';
   font-family: 'Entypo';
   color: #bec0c2;
-  right: 35px;
-  top: 25px;
+  right: 28px;
+  top: 16px;
   font-size: 15px;
   position: absolute;
 }
