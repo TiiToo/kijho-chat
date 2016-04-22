@@ -22,7 +22,7 @@ admin:
     administrator: "Administrador"
     clients: "Clientes"
     steal_conversation: "Transferirme esta conversación"
-    stealed_conversation: "Conversación robada exitosamente"
+    stealed_conversation: "Conversación transferida exitosamente"
     no_chat_history: "No hay historial de chats"
     new_message_from: "Nuevo mensage de "
     waiting_admin_response: "Esperando respuesta de Administrador"

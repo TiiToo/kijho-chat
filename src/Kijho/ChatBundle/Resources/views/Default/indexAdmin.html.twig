@@ -538,8 +538,8 @@
                 var htmlUser = '<a href="#" class="open-client-conversation" client-id="' + payload.user_id + '" online-with="" data-conversation-history="#client-' + payload.user_id + '"><span class="user-status '+payload.status+'"></span> <em>' + payload.nickname + '</em>'; 
                 htmlUser += '<span class="badge badge-info is-hidden">0</span> ';
                 htmlUser += '<span class="online-with hidden"></span>';
-                htmlUser += '<button class="hidden pull-right steal-chat" client-id="' + payload.user_id + '" title="{{'admin.steal_conversation'|trans}}"><i class="entypo-eye"></i></button></a>';
-                htmlUser += '<span class="typing hidden pull-right"><i>{{'global.typing'|trans}}</i></span>';
+                htmlUser += '<button class="hidden pull-right steal-chat" client-id="' + payload.user_id + '" title="{{'admin.steal_conversation'|trans}}"><i class="entypo-eye"></i></button>';
+                htmlUser += '<span class="typing hidden pull-right"><i>{{'global.typing'|trans}}</i></span></a>';
                 var firstUser = $('#group-2 a').first();
                 if (firstUser.hasClass('disabled')) {
                     firstUser.remove();
@@ -686,13 +686,17 @@
          * Permite desplegar el mensaje que indica que un cliente esta escribiendo
          **/
         function clientTyping(payload) {
-            if (payload.online_with == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_ALL_ADMINISTRATORS')}}"
+            
+            if (!payload.online_with 
+                    || payload.online_with == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_ALL_ADMINISTRATORS')}}" 
                     || payload.online_with == "{{nickname}}") {
                 
                 var tabConversation = $(".open-client-conversation[client-id='" + payload.user_id + "']");
                 tabConversation.find("span.typing").removeClass('hidden');
                 window.setTimeout(hideTyping, 2000);
-            } 
+            } else {
+                console.log(payload.online_with);
+            }
             
         }
 
@@ -883,6 +887,9 @@
             }
         }
         
+        /**
+         * Permite mostrar en pantalla los mensajes que han sido transferidos de otra conversacion
+         **/
         function messagesFromOtherConversation(payload) {
             displayNotification("{{'admin.stealed_conversation'|trans}}");
 
@@ -897,9 +904,11 @@
                 for (var i = 0; i < messages.length; i++) {
                     increaseUnreadCounters(element);
                     
+                    var fromOpponent = false;
                     //armamos el html con el mensaje del usuario
                     if (messages[i].type == "{{constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_CLIENT_TO_ADMIN')}}") {
                         var htmlMessage = '<li class="opponent unread">';
+                        fromOpponent = true;
                     } else if (messages[i].type == "{{constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_ADMIN_TO_CLIENT')}}") {
                         var htmlMessage = '<li class="user unread">';
                     }
@@ -920,10 +929,14 @@
                         var html = '<ul class="chat-history" id="client-' + userIdentifier + '">'
                                 + htmlMessage + '</ul>';
                         $(".container-chats").append(html);
-                    }      
+                        
+                        var chatContainer = $("#client-" + userIdentifier);
+                        if (!$.isEmptyObject(chatContainer.html())) {
+                            chatContainer.append(htmlMessage);
+                        }
+                    }
+                    neonChat.pushMessage(element.attr('id'), messages[i].message, messages[i].sender_nickname, messages[i].hour, fromOpponent, true);
                 }
-                
-                neonChat.prefetchMessages();
 
                 //verificamos si la ventana de chat esta abierta
                 var display = $('.chat-conversation').css('display');
@@ -934,11 +947,10 @@
                     if (userId == userIdentifier) {
                         //debemos marcar los mensajes como leidos
                         if (globalSession) {
-
                             neonChat.resetUnreads(element.attr('id'));
                             neonChat.puffUnreadsAll();
                         }
-                        neonChat.renderMessages(neonChat.$current_user.attr('id'));
+                        neonChat.renderMessages(element.attr('id'));
                     }
                 }
             }

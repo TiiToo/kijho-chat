@@ -58,7 +58,7 @@ class MessageRepository extends EntityRepository {
      * @param string $adminId identificador del segundo usuario involucrado en la conversacion
      * @return type
      */
-    public function findConversationClientAdmin($clientId, $adminId, $steal = null, $startDate = null, $endDate = null) {
+    public function findConversationClientAdmin($clientId, $adminId, $steal = null, $allAdmin = null, $startDate = null, $endDate = null) {
 
         $em = $this->getEntityManager();
 
@@ -76,6 +76,14 @@ class MessageRepository extends EntityRepository {
                 $extraQuery .= ' AND m.isStealMessage = TRUE ';
             } elseif ($steal === false) {
                 $extraQuery .= ' AND m.isStealMessage = FALSE ';
+            }
+        }
+        
+        if ($allAdmin !== null) {
+            if ($allAdmin === true) {
+                $extraQuery .= ' AND m.isSendToAllAdmin = TRUE ';
+            } elseif ($allAdmin === false) {
+                $extraQuery .= ' AND m.isSendToAllAdmin = FALSE ';
             }
         }
 

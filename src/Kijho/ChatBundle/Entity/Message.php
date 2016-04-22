@@ -89,6 +89,12 @@ class Message {
      */
     protected $isStealMessage;
     
+    /**
+     * Boolean que permite saber si un mensaje fue enviado desde un cliente a todos los administradores
+     * @ORM\Column(name="mess_is_send_all_admin", type="boolean", nullable=true)
+     */
+    protected $isSendToAllAdmin;
+    
     function getId() {
         return $this->id;
     }
@@ -172,6 +178,14 @@ class Message {
     function setIsStealMessage($isStealMessage) {
         $this->isStealMessage = $isStealMessage;
     }
+    
+    function getIsSendToAllAdmin() {
+        return $this->isSendToAllAdmin;
+    }
+
+    function setIsSendToAllAdmin($isSendToAllAdmin) {
+        $this->isSendToAllAdmin = $isSendToAllAdmin;
+    }
 
     /**
      * Set Page initial status before persisting
@@ -186,6 +200,9 @@ class Message {
         }
         if (null === $this->getIsStealMessage()) {
             $this->setIsStealMessage(false);
+        }
+        if (null === $this->getIsSendToAllAdmin()) {
+            $this->setIsSendToAllAdmin(false);
         }
     }
     

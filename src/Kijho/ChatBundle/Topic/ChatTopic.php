@@ -479,7 +479,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                     $this->serverLog($endDate->format('d/m/Y H:i'));
 
                                     //consultamos y duplicamos los mensajes en base de datos, pero guardandolos con el identificador del admin (senderId, destinationId)
-                                    $conversation = $this->em->getRepository('ChatBundle:Message')->findConversationClientAdmin($clientId, $adminId, false, $startDate, $endDate);
+                                    $conversation = $this->em->getRepository('ChatBundle:Message')->findConversationClientAdmin($clientId, $adminId, false, false, $startDate, $endDate);
                                     $stealMessages = array();
                                     foreach ($conversation as $message) {
                                         $stealMessage = clone $message;
@@ -587,6 +587,10 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                     $cliMessage->setDestinationNickname($adminTopic->nickname);
                                     $cliMessage->setType(Entity\Message::TYPE_CLIENT_TO_ADMIN);
 
+                                    if($adminId == self::MESSAGE_ALL_ADMINISTRATORS) {
+                                        $cliMessage->setIsSendToAllAdmin(true);
+                                    }
+                                    
                                     $this->em->persist($cliMessage);
                                     $this->em->flush();
                                     $messageSaved = true;
