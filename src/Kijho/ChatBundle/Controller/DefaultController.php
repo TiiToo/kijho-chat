@@ -21,8 +21,14 @@ class DefaultController extends Controller {
     public function clientPanelAction($nickname = null, $userId = '', $userType = '', $email = '',$local = false) {
         $em = $this->getDoctrine()->getManager();
 
+        $nickname = strtolower(trim(strip_tags($nickname)));
+        $nickname = str_replace(' ', '_', $nickname);
+        
         if ($nickname != '' && $userId == '') {
             $userId = $nickname;
+        } else {
+            $userId = strtolower(trim(strip_tags($userId)));
+            $userId = str_replace(' ', '_', $userId);
         }
         
         //buscamos las configuraciones del usuario, sino tiene se las creamos
@@ -65,8 +71,14 @@ class DefaultController extends Controller {
 
     public function adminPanelAction($nickname = null, $userId = '', $userType = '', $email = '', $local = false) {
 
+        $nickname = strtolower(trim(strip_tags($nickname)));
+        $nickname = str_replace(' ', '_', $nickname);
+        
         if ($nickname != '' && $userId == '') {
             $userId = $nickname;
+        } else {
+            $userId = strtolower(trim(strip_tags($userId)));
+            $userId = str_replace(' ', '_', $userId);
         }
         
         $em = $this->getDoctrine()->getManager();

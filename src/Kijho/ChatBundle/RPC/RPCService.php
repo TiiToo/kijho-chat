@@ -24,7 +24,7 @@ class RPCService implements RpcInterface {
 
         if (isset($params['nickname']) && !empty($params['nickname'])) {
             $nickname = strtolower(trim(strip_tags($params['nickname'])));
-            $nickname = str_replace(' ', '', $nickname);
+            $nickname = str_replace(' ', '_', $nickname);
             $connection->nickname = $nickname;
             $connection->status = ChatTopic::STATUS_ONLINE;
         } else {
@@ -34,7 +34,7 @@ class RPCService implements RpcInterface {
         $connection->userId = $connection->nickname;
         if (isset($params['user_id']) && !empty($params['user_id'])) {
             $userId = strtolower(trim(strip_tags($params['user_id'])));
-            $userId = str_replace(' ', '', $userId);
+            $userId = str_replace(' ', '_', $userId);
             $connection->userId = $userId;
         }
 
