@@ -558,6 +558,7 @@
          * Permite modificar visualmente el cambio de estado realizado por el admin
          */
         function selfStatusUpdated(payload) {
+            console.log('se cambio el estado');
             $(".panel-heading span.main-status").removeClass(payload.previous_status);
             $(".panel-heading span.main-status").addClass(payload.new_status);
         }
@@ -686,7 +687,9 @@
             connectionSuccesfully = true;
             $(".connection-container p.alert-danger").addClass('hidden');
             if (payload.msg != '') {
-                $("#message-list").prepend('<li>' + payload.msg + '</li>');
+                if (!$("#message-list li:first").hasClass('welcome')) {
+                    $("#message-list").prepend('<li class="welcome">' + payload.msg + '</li>');
+                }
             }
             $(".connection-container").addClass('hidden');
             $(".chat-container").removeClass('hidden');
