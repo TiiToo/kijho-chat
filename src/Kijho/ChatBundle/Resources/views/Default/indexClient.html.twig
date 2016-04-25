@@ -757,6 +757,7 @@
                 type: 'POST',
                 url: "{{path('chat_example_client_get_messages')}}",
                 dataType: 'json',
+                async: false,
                 data: {nickname: nickname, userId: userId},
                 success: function (resp)
                 {
@@ -801,6 +802,7 @@
     
     {% if nickname is defined and nickname is not empty %}
         getClientMessages("{{nickname}}", "{{userId}}");
+        scrollDown();
     {% endif %}
     
     $(".send-other-message").click(function (e) {
