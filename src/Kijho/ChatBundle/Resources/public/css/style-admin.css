@@ -151,3 +151,9 @@ span.online-with {
 .container-send-custom a {
     margin-top: 51px;
 }
+
+.chat-settings legend {
+    color: #fff;
+    font-size: 13px;
+    margin-bottom: 10px;
+}

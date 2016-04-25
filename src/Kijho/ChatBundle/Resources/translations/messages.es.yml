@@ -17,6 +17,8 @@ global:
     nickname: "Nickname"
     date: "Fecha"
     online_with: "En linea con "
+    authenticated_user: "Usuario Autenticado"
+    anonymous_user: "Usuario Anónimo"
 
 admin:
     administrator: "Administrador"
@@ -36,6 +38,8 @@ admin_settings:
     automatic_welcome_message: "Mensaje automatico de bienvenida"
     enable_custom_messages: "Habilitar mensajes personalizados"
     notification_sound: "Sonido de Notificación"
+    user_settings: "Configuración de Usuario"
+    general_settings: "Configuración General"
     
 client_email:
     support_offline: "Equipo de Soporte fuera de linea"

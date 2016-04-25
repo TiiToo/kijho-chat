@@ -27,8 +27,10 @@ class RPCService implements RpcInterface {
             $nickname = str_replace(' ', '_', $nickname);
             $connection->nickname = $nickname;
             $connection->status = ChatTopic::STATUS_ONLINE;
+            $connection->isAnonymous = false;
         } else {
             $connection->status = ChatTopic::STATUS_WAITING_NICKNAME;
+            $connection->isAnonymous = true;
         }
 
         $connection->userId = $connection->nickname;
@@ -54,6 +56,8 @@ class RPCService implements RpcInterface {
             $email = trim(strip_tags($params['email']));
             $connection->email = $email;
         }
+        
+        
 
         return array("result" => array_sum($params));
     }

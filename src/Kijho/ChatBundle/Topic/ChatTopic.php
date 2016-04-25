@@ -752,6 +752,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 $connection->userId = $nickname;
                                 $connection->email = $email;
                                 $connection->status = self::STATUS_ONLINE;
+                                $connection->isAnonymous = true;
 
                                 $connection->event($topic->getId(), [
                                     'msg_type' => self::SERVER_WELCOME_MESSAGE,
@@ -887,7 +888,8 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                         'nickname' => $subscriber->nickname,
                         'user_id' => $subscriber->userId,
                         'status' => $subscriber->status,
-                        'onlineWithAdmin' => $subscriber->onlineWithAdmin
+                        'onlineWithAdmin' => $subscriber->onlineWithAdmin,
+                        'isAnonymous' => $subscriber->isAnonymous,
                     );
                     if (!in_array($data, $onlineUsers)) {
                         array_push($onlineUsers, $data);

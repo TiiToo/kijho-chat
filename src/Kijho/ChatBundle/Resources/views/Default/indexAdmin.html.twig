@@ -56,13 +56,14 @@
                     </ul>
                 </div>
                 
-                <span class="main-status user-status {{userSettings.status}}"></span><i class="entypo-users"></i>{{'global.chat'|trans}}<span class="badge badge-success is-hidden">0</span>
+                <span class="main-status user-status {{userSettings.status}}"></span><i class="entypo-users"></i>{{nickname}}<span class="badge badge-success is-hidden">0</span>
             </h2>
                 
             <div class="row chat-settings col-lg-12 hidden">
                 <a><i class="entypo-cog"></i> {{'admin_settings.settings'|trans}}</a>
                 <i class="entypo-cancel display-settings pull-right"></i><br>
                 <div class="form-group margin-top">
+                    <legend>{{'admin_settings.user_settings'|trans}}</legend>
                     <div class="col-xs-9 no-padding-left">
                         {{ form_label(userSettingsForm.notificationSound)}}
                         {{ form_widget(userSettingsForm.notificationSound,{'attr':{'class':'form-control'}})}}
@@ -72,6 +73,7 @@
                     </div>
                 </div>
                 <div class="form-group col-xs-12 flt-left margin-top no-padding">
+                    <legend>{{'admin_settings.general_settings'|trans}}</legend>
                     {{ form_label(settingsForm.emailOfflineMessages)}}
                     {{ form_widget(settingsForm.emailOfflineMessages,{'attr':{'class':'form-control'}})}}
                 </div>
@@ -134,6 +136,7 @@
                             {% set listedConversations = listedConversations|merge([conversation.senderId]) %}
                             <a href="#" class="open-client-conversation" client-id="{{conversation.senderId}}" online-with="" data-conversation-history="#client-{{conversation.senderId}}">
                                 <span class="user-status is-offline"></span> 
+                                <i class="user-connection fa fa-user" title="{{'global.authenticated_user'|trans}}"></i>
                                 <em>{{conversation.senderNickname}}</em> 
                                 <span class="online-with hidden"></span>
                                 <button class="hidden pull-right steal-chat" client-id="{{conversation.senderId}}" title="{{'admin.steal_conversation'|trans}}"><i class="entypo-eye"></i></button>
@@ -145,6 +148,7 @@
                             {% set listedConversations = listedConversations|merge([conversation.destinationId]) %}
                             <a href="#" class="open-client-conversation" client-id="{{conversation.destinationId}}" online-with="" data-conversation-history="#client-{{conversation.destinationId}}">
                                 <span class="user-status is-offline"></span> 
+                                <i class="user-connection fa fa-user"></i>
                                 <em>{{conversation.destinationNickname}}</em> 
                                 <span class="online-with hidden"></span>
                                 <button class="hidden pull-right steal-chat" client-id="{{conversation.destinationId}}" title="{{'admin.steal_conversation'|trans}}"><i class="entypo-eye"></i></button>
@@ -532,6 +536,18 @@
                     
                     var spanStatus = $("#group-2 a[client-id='" + onlineUsers[i]['user_id'] + "'] span").first();
                     spanStatus.attr('class', 'user-status '+ onlineUsers[i]['status']);
+                
+                    var iconConnection = $("#group-2 a[client-id='" + onlineUsers[i]['user_id'] + "'] i.user-connection");
+                    if (onlineUsers[i]['isAnonymous'] && iconConnection.hasClass('fa-user')) {
+                        iconConnection.removeClass('fa-user');
+                        iconConnection.addClass('fa-user-secret');
+                        iconConnection.attr('title',"{{'global.anonymous_user'|trans}}");
+                    } else if (!onlineUsers[i]['isAnonymous'] && iconConnection.hasClass('fa-user-secret')) {
+                        iconConnection.removeClass('fa-user-secret');
+                        iconConnection.addClass('fa-user');
+                        iconConnection.attr('title',"{{'global.authenticated_user'|trans}}");
+                    }
+                    
                 } else {
                     clientJoinRoom(onlineUsers[i]);
                 }
@@ -564,9 +580,15 @@
             var element = $("#group-2 a[client-id='" + payload.user_id + "']");
             if (!$.isEmptyObject(element.html())) {
                 var spanStatus = $("#group-2 a[client-id='" + payload.user_id + "'] span").first();
-                spanStatus.attr("class", "user-status "+payload.status);
+                spanStatus.attr("class", "user-status "+payload.status); 
             } else {
-                var htmlUser = '<a href="#" class="open-client-conversation" client-id="' + payload.user_id + '" online-with="" data-conversation-history="#client-' + payload.user_id + '"><span class="user-status '+payload.status+'"></span> <em>' + payload.nickname + '</em>'; 
+                var htmlUser = '<a href="#" class="open-client-conversation" client-id="' + payload.user_id + '" online-with="" data-conversation-history="#client-' + payload.user_id + '"><span class="user-status '+payload.status+'"></span> ';
+                if (payload.isAnonymous) {
+                    htmlUser += '<i class="user-connection fa fa-user-secret"></i> '; 
+                } else{
+                    htmlUser += '<i class="user-connection fa fa-user"></i> '; 
+                }
+                htmlUser += '<em>' + payload.nickname + '</em>'; 
                 htmlUser += '<span class="badge badge-info is-hidden">0</span> ';
                 htmlUser += '<span class="online-with hidden"></span>';
                 htmlUser += '<button class="hidden pull-right steal-chat" client-id="' + payload.user_id + '" title="{{'admin.steal_conversation'|trans}}"><i class="entypo-eye"></i></button>';

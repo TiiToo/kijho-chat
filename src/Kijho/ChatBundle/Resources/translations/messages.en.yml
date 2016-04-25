@@ -17,6 +17,8 @@ global:
     nickname: "Nickname"
     date: "Date"
     online_with: "Online with "
+    authenticated_user: "Authenticated User"
+    anonymous_user: "Anonymous User"
 
 admin:
     administrator: "Administrator"
@@ -36,6 +38,8 @@ admin_settings:
     automatic_welcome_message: "Automatic welcome message"
     enable_custom_messages: "Enable custom messages"
     notification_sound: "Notification Sound"
+    user_settings: "User Settings"
+    general_settings: "General Settings"
     
 client_email:
     support_offline: "Support Team Offline"
