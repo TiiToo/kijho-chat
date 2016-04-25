@@ -47,7 +47,19 @@ class UserChatSettings {
      * @ORM\Column(name="uset_user_type", type="string", nullable=true)
      */
     protected $userType;
-
+    
+    /**
+     * Boolean para indicar si es una conexion anonima o no
+     * @ORM\Column(name="uset_is_anonymous_connection", type="boolean", nullable=true)
+     */
+    protected $isAnonymousConnection;
+    
+    /**
+     * Correo del usuario
+     * @ORM\Column(name="uset_user_email", type="string", nullable=true)
+     */
+    protected $userEmail;
+    
     function getId() {
         return $this->id;
     }
@@ -84,6 +96,22 @@ class UserChatSettings {
         $this->status = $status;
     }
 
+    function getIsAnonymousConnection() {
+        return $this->isAnonymousConnection;
+    }
+
+    function setIsAnonymousConnection($isAnonymousConnection) {
+        $this->isAnonymousConnection = $isAnonymousConnection;
+    }
+    
+    function getUserEmail() {
+        return $this->userEmail;
+    }
+
+    function setUserEmail($userEmail) {
+        $this->userEmail = $userEmail;
+    }
+
     /**
      * Set Page initial status before persisting
      * @ORM\PrePersist
@@ -91,6 +119,9 @@ class UserChatSettings {
     public function setDefaults() {
         if (null === $this->getNotificationSound()) {
             $this->setNotificationSound(self::DEFAULT_SOUND);
+        }
+        if (null === $this->getIsAnonymousConnection()) {
+            $this->setIsAnonymousConnection(false);
         }
     }
 

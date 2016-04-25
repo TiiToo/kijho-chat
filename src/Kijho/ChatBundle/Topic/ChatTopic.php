@@ -143,6 +143,19 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                     'msg_type' => self::SERVER_ONLINE_USERS,
                     'online_users' => $this->getOnlineClientsData()]);
             });
+
+            //buscamos las configuraciones del cliente para setear su status
+            $searchUserSettings = array('userId' => $connection->userId, 'userType' => $connection->userType);
+            $userSettings = $this->em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
+            if ($userSettings instanceof Entity\UserChatSettings) {
+                //$connection->status = $userSettings->getStatus();
+                if (!empty($connection->email)) {
+                    $userSettings->setUserEmail($connection->email);
+                }
+                $userSettings->setIsAnonymousConnection($connection->isAnonymous);
+                $this->em->persist($userSettings);
+                $this->em->flush();
+            }
         } elseif ($connection->userType == self::USER_CLIENT) {
 
             //buscamos las configuraciones del cliente para setear su status
@@ -151,7 +164,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
             if ($userSettings instanceof Entity\UserChatSettings) {
                 $connection->status = $userSettings->getStatus();
             }
-
+            
             if ($connection->status != self::STATUS_WAITING_NICKNAME) {
                 //notificamos a los administradores que un nuevo cliente se conectó
                 $administrators = $this->getOnlineAdministrators();
@@ -163,6 +176,15 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                         'nickname' => $connection->nickname,
                         'status' => $connection->status,
                     ]);
+                }
+
+                if ($userSettings instanceof Entity\UserChatSettings) {
+                    if (!empty($connection->email)) {
+                        $userSettings->setUserEmail($connection->email);
+                    }
+                    $userSettings->setIsAnonymousConnection($connection->isAnonymous);
+                    $this->em->persist($userSettings);
+                    $this->em->flush();
                 }
             }
 
@@ -178,7 +200,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                     'msg_type' => self::SERVER_WELCOME_MESSAGE,
                     'online_administrators' => count($this->getOnlineAdministrators()),
                     'anonymous' => false,
-                    ]);
+                ]);
             }
         }
 
@@ -588,10 +610,10 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                     $cliMessage->setDestinationNickname($adminTopic->nickname);
                                     $cliMessage->setType(Entity\Message::TYPE_CLIENT_TO_ADMIN);
 
-                                    if($adminId == self::MESSAGE_ALL_ADMINISTRATORS) {
+                                    if ($adminId == self::MESSAGE_ALL_ADMINISTRATORS) {
                                         $cliMessage->setIsSendToAllAdmin(true);
                                     }
-                                    
+
                                     $this->em->persist($cliMessage);
                                     $this->em->flush();
                                     $messageSaved = true;
@@ -695,7 +717,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                         $newStatus = trim(strip_tags($event['newStatus']));
                         $searchUserSettings = array('userId' => $connection->userId, 'userType' => Entity\UserChatSettings::TYPE_CLIENT);
                         $userSettings = $this->em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
-                        
+
                         if ($userSettings instanceof Entity\UserChatSettings) {
                             $previousStatus = $userSettings->getStatus();
                             $userSettings->setStatus($newStatus);
@@ -731,11 +753,11 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                         $nickname = str_replace(' ', '_', $nickname);
 
                         if (!empty($nickname) && !empty($email)) {
-                            
+
                             //buscamos las configuraciones dle usuario, sino tiene se las creamos
                             $searchUserSettings = array('userId' => $nickname, 'userType' => $connection->userType);
                             $userSettings = $this->em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
-                            
+
                             if (!$userSettings) {
                                 $userSettings = new Entity\UserChatSettings();
                                 $userSettings->setUserId($nickname);
@@ -745,7 +767,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 $this->em->persist($userSettings);
                                 $this->em->flush();
                             }
-                            
+
                             //debemos buscar si el nickname ingresado ya esta online
                             if (!$this->nicknameIsOnline($nickname)) {
                                 $connection->nickname = $nickname;
@@ -753,6 +775,13 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 $connection->email = $email;
                                 $connection->status = self::STATUS_ONLINE;
                                 $connection->isAnonymous = true;
+
+                                if ($userSettings instanceof Entity\UserChatSettings) {
+                                    $userSettings->setUserEmail($connection->email);
+                                    $userSettings->setIsAnonymousConnection($connection->isAnonymous);
+                                    $this->em->persist($userSettings);
+                                    $this->em->flush();
+                                }
 
                                 $connection->event($topic->getId(), [
                                     'msg_type' => self::SERVER_WELCOME_MESSAGE,
@@ -831,7 +860,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
         }
         return $onlineAdministrators;
     }
-    
+
     /**
      * Permite obtener un arreglo con los datos de los administradores online
      * @author Cesar Giraldo <cnaranjo@kijho.com> 02/03/2016
@@ -848,7 +877,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                         'status' => $subscriber->status,
                         'onlineWithClient' => $subscriber->onlineWithClient
                     );
-                    
+
                     if (!in_array($data, $onlineAdministrators)) {
                         array_push($onlineAdministrators, $data);
                     }

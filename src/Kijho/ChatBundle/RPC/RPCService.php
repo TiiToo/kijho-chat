@@ -22,6 +22,7 @@ class RPCService implements RpcInterface {
     public function updateConnectionData(ConnectionInterface $connection, WampRequest $request, $params) {
         $connection->nickname = 'guest_' . strip_tags($connection->resourceId);
 
+        
         if (isset($params['nickname']) && !empty($params['nickname'])) {
             $nickname = strtolower(trim(strip_tags($params['nickname'])));
             $nickname = str_replace(' ', '_', $nickname);
