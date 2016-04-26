@@ -690,8 +690,17 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                             'msg_type' => self::CLIENT_MESSAGES_PUT_AS_READED,
                         ]);
                     } elseif ($eventType == self::UPDATE_CLIENT_DESTINATION) {
-                        $destination = trim(strip_tags($event['destination']));
-                        $connection->onlineWithAdmin = $destination;
+                        $destinationId = trim(strip_tags($event['destination']));
+
+                        $administrators = $this->getOnlineAdministrators();
+
+                        //buscamos al administrador con el id para setear el destino
+                        foreach ($administrators as $adminTopic) {
+                            if ($adminTopic->userId == $destinationId) {
+                                $connection->onlineWithAdmin = $adminTopic->nickname;
+                                break;
+                            }
+                        }
                     } elseif ($eventType == self::UPDATE_SETTINGS) {
 
                         $notificationSound = trim(strip_tags($event['notificationSound']));
