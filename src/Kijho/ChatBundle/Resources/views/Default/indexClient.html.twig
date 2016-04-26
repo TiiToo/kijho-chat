@@ -579,7 +579,8 @@
                         if (onlineAdministrators[i].user_id == lastAdminId
                                 && lastAdminId != destination) {
                             destination = lastAdminId;
-                            console.log(destination);
+                            //debemos mandar al servidor para setear el destino de los mensajes
+                            updateClientDestination(destination);
                             break;
                         }
                     }
@@ -588,7 +589,13 @@
                     $(".admin-offline").removeClass('hidden');
                 }
             }
-            
+        }
+        
+        function updateClientDestination(destination) {
+            var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::UPDATE_CLIENT_DESTINATION')}}",
+                            destination: destination,
+                        };
+            globalSession.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
         }
 
         /**

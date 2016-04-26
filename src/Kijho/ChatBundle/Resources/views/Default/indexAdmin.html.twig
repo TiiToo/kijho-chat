@@ -517,6 +517,7 @@
                 var element = $("#group-2 a[client-id='" + onlineUsers[i]['user_id'] + "']");
                 
                 if (!$.isEmptyObject(element.html())) {
+                    
                     element.attr('online-with', onlineUsers[i]['onlineWithAdmin']);
                     
                     var stealElement = $("#group-2 button.steal-chat[client-id='" + onlineUsers[i]['user_id'] + "']");

@@ -75,6 +75,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     const CHANGE_CLIENT_STATUS = 'change_client_status';
     const STEAL_CONVERSATION_WITH_CLIENT = 'steal_conversation_with_client';
     const CONNECT_TO_CHAT = 'connect_to_chat';
+    const UPDATE_CLIENT_DESTINATION = 'update_client_destination';
 
     /**
      * Constante que controla el tiempo en el cual se actualiza el listado de usuarios
@@ -164,7 +165,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
             if ($userSettings instanceof Entity\UserChatSettings) {
                 $connection->status = $userSettings->getStatus();
             }
-            
+
             if ($connection->status != self::STATUS_WAITING_NICKNAME) {
                 //notificamos a los administradores que un nuevo cliente se conectó
                 $administrators = $this->getOnlineAdministrators();
@@ -687,6 +688,9 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                         $connection->event($topic->getId(), [
                             'msg_type' => self::CLIENT_MESSAGES_PUT_AS_READED,
                         ]);
+                    } elseif ($eventType == self::UPDATE_CLIENT_DESTINATION) {
+                        $destination = trim(strip_tags($event['destination']));
+                        $connection->onlineWithAdmin = $destination;
                     } elseif ($eventType == self::UPDATE_SETTINGS) {
 
                         $notificationSound = trim(strip_tags($event['notificationSound']));
