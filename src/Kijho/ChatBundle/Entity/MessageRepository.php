@@ -86,7 +86,7 @@ class MessageRepository extends EntityRepository {
                 $extraQuery .= ' AND m.isStealMessage = FALSE ';
             }
         }
-        
+
         if ($allAdmin !== null) {
             if ($allAdmin === true) {
                 $extraQuery .= ' AND m.isSendToAllAdmin = TRUE ';
@@ -152,8 +152,18 @@ class MessageRepository extends EntityRepository {
      * @param type $startDate
      * @return type
      */
-    public function findClientMessagesFromDate($clientId, $startDate) {
+    public function findClientMessagesFromDate($clientId, $startDate, $automaticMessages = null) {
         $em = $this->getEntityManager();
+
+        $extraQuery = '';
+
+        if ($automaticMessages !== null) {
+            if ($automaticMessages === true) {
+                $extraQuery .= ' AND m.isAutomaticMessage = TRUE ';
+            } else {
+                $extraQuery .= ' AND m.isAutomaticMessage = FALSE ';
+            }
+        }
 
         $consult = $em->createQuery("
         SELECT m
@@ -165,8 +175,8 @@ class MessageRepository extends EntityRepository {
         AND m.type = :adminToClient
         ))
         AND m.date >= :startDate
-        AND m.isStealMessage = FALSE
-        GROUP BY m.date, m.message, m.senderId
+        AND m.isStealMessage = FALSE " . $extraQuery .
+                "GROUP BY m.date, m.message, m.senderId
         ORDER BY m.date ASC");
         $consult->setParameter('client', $clientId);
         $consult->setParameter('startDate', $startDate);

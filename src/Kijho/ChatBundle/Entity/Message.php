@@ -95,6 +95,12 @@ class Message {
      */
     protected $isSendToAllAdmin;
     
+    /**
+     * Boolean que permite saber si un mensaje fue enviado automaticamente por el servidor
+     * @ORM\Column(name="mess_is_automatic_message", type="boolean", nullable=true)
+     */
+    protected $isAutomaticMessage;
+    
     function getId() {
         return $this->id;
     }
@@ -186,6 +192,14 @@ class Message {
     function setIsSendToAllAdmin($isSendToAllAdmin) {
         $this->isSendToAllAdmin = $isSendToAllAdmin;
     }
+    
+    function getIsAutomaticMessage() {
+        return $this->isAutomaticMessage;
+    }
+
+    function setIsAutomaticMessage($isAutomaticMessage) {
+        $this->isAutomaticMessage = $isAutomaticMessage;
+    }
 
     /**
      * Set Page initial status before persisting
@@ -203,6 +217,9 @@ class Message {
         }
         if (null === $this->getIsSendToAllAdmin()) {
             $this->setIsSendToAllAdmin(false);
+        }
+        if (null === $this->getIsAutomaticMessage()) {
+            $this->setIsAutomaticMessage(false);
         }
     }
     

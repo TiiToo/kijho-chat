@@ -153,7 +153,7 @@ class DefaultController extends Controller {
         $em = $this->getDoctrine()->getManager();
 
         $unreadMessages = $em->getRepository('ChatBundle:Message')->findClientUnreadMessages($nickname, $userId);
-        $todayMessages = $em->getRepository('ChatBundle:Message')->findClientMessagesFromDate($userId, Util::getCurrentStartDate());
+        $todayMessages = $em->getRepository('ChatBundle:Message')->findClientMessagesFromDate($userId, Util::getCurrentStartDate(), false);
 
         $arrayMessages = array();
 

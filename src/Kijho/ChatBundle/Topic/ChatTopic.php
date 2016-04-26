@@ -381,6 +381,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                         $cliMessage->setDestinationId($adminTopic->userId);
                                         $cliMessage->setDestinationNickname($adminTopic->nickname);
                                         $cliMessage->setType(Entity\Message::TYPE_CLIENT_TO_ADMIN);
+                                        $cliMessage->setIsAutomaticMessage(true);
                                         $this->em->persist($cliMessage);
                                         $this->em->flush();
 
@@ -428,7 +429,6 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 'fromServer' => true
                             ));
 
-                            //$this->translator->trans('server.automatic_message')
                             //notificamos al administrador que sus configuraciones se actualizaron
                             $connection->event($topic->getId(), [
                                 'msg_type' => self::SETTINGS_UPDATED,
@@ -521,7 +521,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
 
                                     //debemos guardar y enviar una notificacion al anterior administrador, para que sepa quien llevara a cabo la conversacion.
                                     if ($previousAdmin && $clientConnection) {
-                                        $message = 'Automatic Message: ' . $connection->nickname . $this->translator->trans('server.will_continue_conversation');
+                                        $message = $this->translator->trans('server.automatic_message') . $connection->nickname . $this->translator->trans('server.will_continue_conversation');
                                         $cliMessage = new Entity\Message();
                                         $cliMessage->setMessage($message);
                                         $cliMessage->setSenderId($clientConnection->userId);
@@ -530,6 +530,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                         $cliMessage->setDestinationNickname($previousAdmin->nickname);
                                         $cliMessage->setType(Entity\Message::TYPE_CLIENT_TO_ADMIN);
                                         $cliMessage->setDate(Util::getCurrentDate());
+                                        $cliMessage->setIsAutomaticMessage(true);
                                         $this->em->persist($cliMessage);
                                         $this->em->flush();
 
@@ -549,7 +550,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                     if ($clientConnection) {
                                         $clientConnection->event($topic->getId(), [
                                             'msg_type' => self::MESSAGE_FROM_ADMIN,
-                                            'msg' => "Automatic Message: " . $connection->nickname . $this->translator->trans('server.will_continue_conversation_short'),
+                                            'msg' => $this->translator->trans('server.automatic_message') . $connection->nickname . $this->translator->trans('server.will_continue_conversation_short'),
                                             'nickname' => $connection->nickname,
                                             'user_id' => $connection->userId,
                                             'msg_date' => Util::getCurrentDate()->format('h:i a'),
