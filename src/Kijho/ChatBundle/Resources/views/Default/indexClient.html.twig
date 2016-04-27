@@ -34,7 +34,7 @@
                     {{'global.chat'|trans}} <span class="badge badge-success hidden">0</span>
 
                     <span class="typing-text hidden"></span>
-                    <div class="btn-group pull-right">
+                    <div class="btn-group pull-right group-settings hidden">
                         <button data-toggle="dropdown" class="btn btn-default btn-xs dropdown-toggle" type="button">
                             <span class="glyphicon glyphicon-chevron-down"></span>
                         </button>
@@ -204,6 +204,8 @@
         
         var lastAdminId = '';
         
+        var settingsVisible = false;
+        
         /**
          * Cuando el cliente entra al chat, los primeros mensajes que envia (antes de que un administrador le responda)
          * son enviados a todos los administradores, cuando un admin responde, los mensajes seran solo 
@@ -285,10 +287,24 @@
             $(".display-chat").bind("click", function (e) {
                 scrollDown();
                 putMessagesReaded();
+                
+                var isChatOpen = parseInt(getCookie('__chat_opened'));
+                if (isChatOpen == 0) {
+                    document.cookie="__chat_opened=1";
+                } else {
+                    document.cookie="__chat_opened=0";
+                }
             });
 
             $(".display-settings").bind("click", function (e) {
                 $(".chat-settings").toggleClass('hidden');
+                $(".chat-container").toggleClass('hidden');
+                
+                if (settingsVisible) {
+                    settingsVisible =  false;
+                } else {
+                    settingsVisible = true;
+                }
             });
 
             $("#chatbundle_user_chat_settings_type_notificationSound").bind("change", function (e) {
@@ -373,6 +389,7 @@
                 connectionSuccesfully = false;
                 $(".connection-container").removeClass('hidden');
                 $(".chat-container").addClass('hidden');
+                $(".group-settings").addClass('hidden');
                 $(".admin-offline").addClass('hidden');
                 checkExistingConecction();
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_FROM_ADMIN')}}") {
@@ -498,13 +515,11 @@
         }
 
         function resetUnreadCounters() {
-            var spanNotification = $(".display-chat span.chat-notifications-badge");
-            spanNotification.html('0');
-            spanNotification.addClass('hidden');
+            $(".display-chat span.chat-notifications-badge").html('0');
+            $(".display-chat span.chat-notifications-badge").addClass('hidden');
 
-            var secondSpanNotification = $(".panel-heading-chat span.badge-success");
-            secondSpanNotification.html('0');
-            secondSpanNotification.addClass('hidden');
+            $(".panel-heading-chat span.badge-success").html('0');
+            $(".panel-heading-chat span.badge-success").addClass('hidden');
         }
 
         /**
@@ -543,6 +558,7 @@
             $(".save-settings").html("{{'global.save_changes'|trans}}");
             $(".save-settings").removeAttr('disabled');
             $(".chat-settings").toggleClass('hidden');
+            settingsVisible = false;
         }
 
         /**
@@ -559,7 +575,6 @@
          * Permite modificar visualmente el cambio de estado realizado por el admin
          */
         function selfStatusUpdated(payload) {
-            console.log('se cambio el estado');
             $(".panel-heading span.main-status").removeClass(payload.previous_status);
             $(".panel-heading span.main-status").addClass(payload.new_status);
         }
@@ -570,9 +585,11 @@
         function checkChatToAdmin() {
             if (connectionSuccesfully) {
                 if (onlineAdministrators.length > 0) {
-                    $(".chat-container").removeClass('hidden');
-                    $(".admin-offline").addClass('hidden');
-                    
+                    if (!settingsVisible) {
+                        $(".chat-container").removeClass('hidden');
+                        $(".group-settings").removeClass('hidden');
+                        $(".admin-offline").addClass('hidden');
+                    }
                     //hacemos esta logica para que el cliente siga la conversacion con
                     //el ultimo administrador con quin ha conversado
                     for (var i = 0; i < onlineAdministrators.length; i++) {
@@ -585,8 +602,11 @@
                         }
                     }
                 } else {
-                    $(".chat-container").addClass('hidden');
-                    $(".admin-offline").removeClass('hidden');
+                    if (!settingsVisible) {
+                        $(".chat-container").addClass('hidden');
+                        $(".group-settings").addClass('hidden');
+                        $(".admin-offline").removeClass('hidden');
+                    }
                 }
             }
         }
@@ -647,6 +667,7 @@
          */
         function notifyServerDown() {
             $(".chat-container").addClass('hidden');
+            $(".group-settings").addClass('hidden');
             $(".connection-container").addClass('hidden');
             $(".admin-offline").removeClass('hidden');
             $(".admin-offline-message").addClass('hidden');
@@ -658,6 +679,7 @@
          */
         function notifyServerUp() {
             $(".chat-container").removeClass('hidden');
+            $(".group-settings").removeClass('hidden');
             $(".admin-offline").addClass('hidden');
             $(".admin-offline-message").removeClass('hidden');
             $(".server-down-message").addClass('hidden');
@@ -702,6 +724,7 @@
             }
             $(".connection-container").addClass('hidden');
             $(".chat-container").removeClass('hidden');
+            $(".group-settings").removeClass('hidden');
             $(".send-connection-form").removeAttr('disabled');
             $(".send-connection-form").html("{{'global.send'|trans}}");
             
@@ -795,6 +818,16 @@
             });
         }
         
+        function verifyChatOpen() {
+            var displayStatus = $("#chat").css('display');
+            if (displayStatus == 'none') {
+                var isChatOpen = parseInt(getCookie('__chat_opened'));
+                if (isChatOpen == 1) {
+                    $(".display-chat").trigger('click');
+                } 
+            }
+        }
+        
         function validateEmail(email) {
             var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
             return re.test(email);
@@ -813,6 +846,8 @@
         getClientMessages("{{nickname}}", "{{userId}}");
         scrollDown();
     {% endif %}
+    
+    verifyChatOpen();
     
     $(".send-other-message").click(function (e) {
         $(".contact-message-notification").addClass('hidden');

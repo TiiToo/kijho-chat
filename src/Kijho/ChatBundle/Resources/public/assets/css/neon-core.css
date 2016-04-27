@@ -6277,7 +6277,7 @@ textareatable .replace-inputs input {
 #chat .chat-header {
   font-size: 16px;
   color: #7f8186;
-  padding: 30px 35px;
+  padding: 30px 20px;
   line-height: 1;
   margin: 0;
   border-bottom: 1px solid #343a45;
@@ -6341,7 +6341,7 @@ textareatable .replace-inputs input {
 #chat .chat-group > strong,
 #chat .chat-group > a {
   display: block;
-  padding: 6px 35px;
+  padding: 6px 20px;
 }
 #chat .chat-group > strong {
   text-transform: uppercase;

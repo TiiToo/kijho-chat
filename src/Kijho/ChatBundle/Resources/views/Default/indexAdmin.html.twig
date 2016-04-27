@@ -553,7 +553,7 @@
                     clientJoinRoom(onlineUsers[i]);
                 }
             }
-            neonChat.orderGroups();
+            //neonChat.orderGroups();
         }
 
         /**
@@ -568,7 +568,7 @@
                 spanStatus.attr('class', 'user-status is-offline');
             }
             neonChat.refreshUserIds();
-            neonChat.orderGroups();
+            //neonChat.orderGroups();
         }
 
         /**
@@ -603,7 +603,7 @@
                 }
             }
             neonChat.refreshUserIds();
-            neonChat.orderGroups();
+            //neonChat.orderGroups();
             
             //buscamos el panel de mensajes del usuario
             var chatContainer = $("#client-" + payload.user_id);
