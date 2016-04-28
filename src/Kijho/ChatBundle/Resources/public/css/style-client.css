@@ -104,8 +104,9 @@ and open the template in the editor.
     border: 1px solid #e1e1e8 !important;
     height: 435px;
     /*margin: auto;*/
-    top: auto !important;
+    top: 100px !important;
     bottom: 80px !important;
+    position: fixed !important;
 }
 
 .chat-inner {

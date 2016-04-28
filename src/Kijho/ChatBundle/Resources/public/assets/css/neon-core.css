@@ -9,6 +9,11 @@ html {
   font-size: 62.5%;
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
+html, body {
+    display: table;
+    height: 100%;
+    width: 100%;
+}
 body {
   font-family: "Helvetica Neue", Helvetica, "Noto Sans", sans-serif, Arial, sans-serif;
   font-size: 12px;
@@ -6259,7 +6264,6 @@ textareatable .replace-inputs input {
 #chat {
   position: absolute;
   right: 0;
-  top: 0;
   bottom: 0;
   width: 280px;
   background: #303641;
@@ -6268,10 +6272,11 @@ textareatable .replace-inputs input {
 }
 #chat.fixed {
   position: fixed;
-  min-height: 0 !important;
+  min-height: 0!important;
+  bottom: 80px!important;
 }
 #chat .chat-inner {
-  overflow: auto;
+  overflow: auto !important;
   height: 100%;
 }
 #chat .chat-header {
