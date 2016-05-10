@@ -412,7 +412,7 @@
                 onlineAdministrators = payload.online_administrators;
                 checkChatToAdmin();
                 if (typeof kijhoChatCountOnlineHelp == 'function') {
-                    kijhoChatCountOnlineHelp(onlineAdministrators);
+                    kijhoChatCountOnlineHelp(onlineAdministrators.length);
                 }
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::ADMIN_TYPING')}}") {
                 adminTyping(payload);
