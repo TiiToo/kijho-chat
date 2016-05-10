@@ -206,6 +206,8 @@
         
         var settingsVisible = false;
         
+        var chatVisibilityChecked = false;
+        
         /**
          * Cuando el cliente entra al chat, los primeros mensajes que envia (antes de que un administrador le responda)
          * son enviados a todos los administradores, cuando un admin responde, los mensajes seran solo 
@@ -394,7 +396,6 @@
                 lastAdminId = payload.user_id;
                 $(".play-sound").trigger('click');
                 appendHtmlMessageAdmin(payload);
-                //displayChatPanel();
                 updateUnreadCounters(1);
                 var displayStatus = $("#chat").css('display');
                 if (displayStatus == 'block') {
@@ -484,16 +485,6 @@
         function notifyTyping(session) {
             var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CLIENT_TYPING')}}"};
             session.publish("chat/channel", data);
-        }
-
-        /**
-         * Permite verificar si el panel de chat esta oculto, para desplegarlo
-         */
-        function displayChatPanel() {
-            var displayStatus = $("#chat").css('display');
-            if (displayStatus == 'none') {
-                $(".display-chat").trigger('click');
-            }
         }
 
         /**
@@ -729,7 +720,6 @@
             $(".send-connection-form").html("{{'global.send'|trans}}");
             
             if (payload.anonymous != '' && payload.anonymous != 'undefined' && payload.anonymous == true) {
-                console.log(payload);
                 document.cookie="__nickname="+payload.nickname;
                 document.cookie="__email="+payload.email;
                 userIdentifier = payload.nickname;
@@ -826,6 +816,7 @@
                     $(".display-chat").trigger('click');
                 } 
             }
+            chatVisibilityChecked = true;
         }
         
         function validateEmail(email) {
@@ -843,12 +834,14 @@
 {% block scripts %}
     
     $(".display-chat").click(function (e) {
-                
-        var isChatOpen = parseInt(getCookie('__chat_opened'));
-        if (isChatOpen == 0) {
-            document.cookie="__chat_opened=1";
-        } else {
-            document.cookie="__chat_opened=0";
+        
+        if (chatVisibilityChecked == true) {
+            var displayStatus = $("#chat").css('display');
+            if (displayStatus == 'none') {
+                document.cookie="__chat_opened=1";
+            } else {
+                document.cookie="__chat_opened=0";
+            }
         }
 
         scrollDown();
