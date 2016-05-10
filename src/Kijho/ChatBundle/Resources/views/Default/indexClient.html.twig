@@ -9,7 +9,7 @@
                 <div class="col-md-6 pull-right">
                     <ul class="list-inline links-list ">
                         <li>
-                            <a class="display-chat" href="#" data-toggle="chat" data-animate="1" data-collapse-sidebar="1">
+                            <a class="display-chat" href="javascript:void(0);" data-toggle="chat" data-animate="1" data-collapse-sidebar="1">
                                 <i class="entypo-chat"></i>
                                 {{'global.chat'|trans}}
                                 <span class="badge badge-success chat-notifications-badge hidden">0</span>
@@ -284,17 +284,7 @@
                 sendMessage(session);
             });
 
-            $(".display-chat").bind("click", function (e) {
-                scrollDown();
-                putMessagesReaded();
-                
-                var isChatOpen = parseInt(getCookie('__chat_opened'));
-                if (isChatOpen == 0) {
-                    document.cookie="__chat_opened=1";
-                } else {
-                    document.cookie="__chat_opened=0";
-                }
-            });
+            
 
             $(".display-settings").bind("click", function (e) {
                 $(".chat-settings").toggleClass('hidden');
@@ -841,6 +831,21 @@
 {% endblock %}
 
 {% block scripts %}
+    
+    $(".display-chat").click(function (e) {
+                
+        var isChatOpen = parseInt(getCookie('__chat_opened'));
+        if (isChatOpen == 0) {
+            document.cookie="__chat_opened=1";
+        } else {
+            document.cookie="__chat_opened=0";
+        }
+
+        scrollDown();
+        putMessagesReaded();
+
+    });
+    
     
     {% if nickname is defined and nickname is not empty %}
         getClientMessages("{{nickname}}", "{{userId}}");
