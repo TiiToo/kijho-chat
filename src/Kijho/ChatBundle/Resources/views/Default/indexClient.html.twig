@@ -232,6 +232,10 @@
             updateConnectionData(session)
             joinChatRoom(session);
             notifyServerUp();
+            
+            if (typeof kijhoChatOnline == 'function') {
+                kijhoChatOnline();
+            }
         });
 
         webSocket.on("socket/disconnect", function (error) {
@@ -239,6 +243,9 @@
             unbindUI();
             onlineAdministrators = [];
             notifyServerDown();
+            if (typeof kijhoChatOffline == 'function') {
+                kijhoChatOffline();
+            }
         });
 
 
@@ -404,6 +411,9 @@
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::JOIN_LEFT_ADMIN_TO_ROOM')}}") {
                 onlineAdministrators = payload.online_administrators;
                 checkChatToAdmin();
+                if (typeof kijhoChatCountOnlineHelp == 'function') {
+                    kijhoChatCountOnlineHelp(onlineAdministrators);
+                }
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::ADMIN_TYPING')}}") {
                 adminTyping(payload);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CLIENT_AUTOMATIC_MESSAGE')}}") {
