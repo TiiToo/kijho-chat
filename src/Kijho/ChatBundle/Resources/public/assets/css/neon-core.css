@@ -6273,7 +6273,7 @@ textareatable .replace-inputs input {
 #chat.fixed {
   position: fixed;
   min-height: 0!important;
-  bottom: 80px!important;
+  /*bottom: 80px!important;*/
 }
 #chat .chat-inner {
   overflow: auto !important;

@@ -20,7 +20,7 @@
                 </div>
             </div>
             <hr />
-            <div class="col-lg-12" style="height: 400px; min-height: 400px;">    
+            <div class="col-lg-12" style="height: 500px; min-height: 500px;">    
             </div>
         </div>
     {% endif %}
@@ -278,23 +278,23 @@
         <script type = "text/javascript" >
                 var _WS_URI = "ws://{{ gos_web_socket_server_host }}:{{ gos_web_socket_server_port }}";
 
-        var webSocket = WS.connect(_WS_URI);
+        var kijho_chat_web_socket = WS.connect(_WS_URI);
 
-        var successConnect = false;
+        var kijho_chat_is_success_connect = false;
 
-        var globalSession = null;
+        var kijho_chat_global_session_admin = null;
 
-        webSocket.on("socket/connect", function (session) {
+        kijho_chat_web_socket.on("socket/connect", function (session) {
             bindUI(session);
             console.log("Successfully Connected!");
-            successConnect = true;
+            kijho_chat_is_success_connect = true;
             updateConnectionData(session)
             joinChatRoom(session);
         });
 
-        webSocket.on("socket/disconnect", function (error) {
+        kijho_chat_web_socket.on("socket/disconnect", function (error) {
             console.log("Disconnected for " + error.reason + " with code " + error.code);
-            successConnect = false;
+            kijho_chat_is_success_connect = false;
             unbindUI();
         });
 
@@ -311,10 +311,10 @@
             );
         }
 
-        var messageToClient = '';
+        var kijho_chat_messaget_to_client = '';
         // Permite habilitar los eventos sobre los botones de la ventana, cuando hay conexion
         function bindUI(session) {
-            globalSession = session;
+            kijho_chat_global_session_admin = session;
             $(".chat-textarea textarea").bind("keyup", function (e) {
                 var key;
                 if (window.event) {
@@ -323,7 +323,7 @@
                     key = e.which;                /*firefox*/
                 }
                 if ($('.chat-textarea textarea').val() != '') {
-                    messageToClient = $('.chat-textarea textarea').val();
+                    kijho_chat_messaget_to_client = $('.chat-textarea textarea').val();
                 }
                 if (key == 13) {
                     sendMessage(session);
@@ -395,7 +395,7 @@
 
         // Permite deshabilitar los eventos sobre los botones, cuando se pierde la conexion
         function unbindUI() {
-            globalSession = null;
+            kijho_chat_global_session_admin = null;
             $(".chat-textarea textarea").unbind();
             $(".open-client-conversation").unbind();
             $(".display-settings").unbind();
@@ -435,14 +435,14 @@
             var textarea = $('.chat-textarea textarea');
             var clientId = textarea.attr('destination-id') + "";
 
-            if (clientId != '' && clientId != 'undefined' && messageToClient != '') {
+            if (clientId != '' && clientId != 'undefined' && kijho_chat_messaget_to_client != '') {
                 
                 var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_TO_CLIENT')}}",
                     clientId: clientId,
-                    message: messageToClient,
+                    message: kijho_chat_messaget_to_client,
                 };
                 session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
-                messageToClient = '';
+                kijho_chat_messaget_to_client = '';
             }
         }
 
@@ -618,7 +618,7 @@
          * el boton de inicio manual del servidor
          */
         function verifyServerConnection() {
-            if (successConnect) {
+            if (kijho_chat_is_success_connect) {
                 $('#container-server-start').css('display', 'none');
             } else {
                 $('#container-server-start').css('display', '');
@@ -689,8 +689,8 @@
 
                 if (isConversationOpened(payload.user_id)) {
                     //debemos marcar los mensajes como leidos
-                    if (globalSession) {
-                        putMessagesReaded(globalSession, payload.user_id);
+                    if (kijho_chat_global_session_admin) {
+                        putMessagesReaded(kijho_chat_global_session_admin, payload.user_id);
                     }
                     //ocultar el icono de unread
                     neonChat.resetUnreads(element.attr('id'));
@@ -909,13 +909,13 @@
             $(".custom-message-to-send input").each( function () {
                 var input = $(this);
                 if ( input.is(':checked') ) {
-                    messageToClient = $(".custom-message-to-send label[for='"+input.attr('id')+"']").html();
-                    if (messageToClient != '') {
+                    kijho_chat_messaget_to_client = $(".custom-message-to-send label[for='"+input.attr('id')+"']").html();
+                    if (kijho_chat_messaget_to_client != '') {
                         var clientId = $(".chat-textarea textarea").attr('destination-id') + "";
                         var element = $(".open-client-conversation[client-id='" + clientId + "']");
                         if (!$.isEmptyObject(element.html())) {
-                            $(".chat-textarea textarea").val(messageToClient);
-                            sendMessage(globalSession);
+                            $(".chat-textarea textarea").val(kijho_chat_messaget_to_client);
+                            sendMessage(kijho_chat_global_session_admin);
                             hideCustomMessages();
                         }
                     }
@@ -950,7 +950,7 @@
                 var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STEAL_CONVERSATION_WITH_CLIENT')}}",
                     clientId: clientId,
                 };
-                globalSession.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
+                kijho_chat_global_session_admin.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
             }
         }
         
@@ -1007,7 +1007,7 @@
 
                 if (isConversationOpened(userIdentifier)) {
                     //debemos marcar los mensajes como leidos
-                    if (globalSession) {
+                    if (kijho_chat_global_session_admin) {
                         neonChat.resetUnreads(element.attr('id'));
                         neonChat.puffUnreadsAll();
                     }

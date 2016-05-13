@@ -157,3 +157,7 @@ span.online-with {
     font-size: 13px;
     margin-bottom: 10px;
 }
+
+#chat{
+    height: 100%;
+}

@@ -864,7 +864,7 @@ var previousAction = 'hideChat';
 	// Set Cursor
 	$conversation_body.on('click', function()
 	{
-		$textarea.focus();
+            /*$textarea.focus();*/
 	});
 	
 	
