@@ -133,6 +133,7 @@ and open the template in the editor.
 
 .chat-group a button.steal-chat {
     margin: 0px !important;
+    padding: 0px;
 }
 
 span.online-with {

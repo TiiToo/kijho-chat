@@ -14,7 +14,7 @@ html, body {
     height: 100%;
     width: 100%;
 }
-body {
+.chat-content {
   font-family: "Helvetica Neue", Helvetica, "Noto Sans", sans-serif, Arial, sans-serif;
   font-size: 12px;
   line-height: 1.42857143;
@@ -29,15 +29,15 @@ textarea {
   font-size: inherit;
   line-height: inherit;
 }
-a {
+.chat-content a {
   color: #373e4a;
   text-decoration: none;
 }
-a:hover,
-a:focus {
+.chat-content a:hover,
+.chat-content a:focus {
   color: #818da2;
 }
-a:focus {
+.chat-content a:focus {
   outline: thin dotted #333;
   outline: 5px auto -webkit-focus-ring-color;
   outline-offset: -2px;
