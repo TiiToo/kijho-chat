@@ -232,7 +232,8 @@ var previousAction = 'hideChat';
 			offset -= minus;
 			
 			$conversation_window.transition({
-				top: offset,
+				/*top: offset,*/
+                                top: 80,
 				opacity: 1
 			});
 			
