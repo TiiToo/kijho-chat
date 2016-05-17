@@ -374,7 +374,13 @@ var public_vars = public_vars || {};
                                     trigger: trigger
                             });
                         } catch(err) {
-                            console.log('$this.tooltip is not a function..');
+                            var displayStatus = $("#chat").css('display');
+                            if (displayStatus == 'none') {
+                                var isChatOpen = parseInt(getCookie('__chat_opened'));
+                                if (isChatOpen == 1) {
+                                    $(".page-container").addClass('chat-visible');
+                                } 
+                            }
                         }
 
 			$this.on('shown.bs.tooltip', function(ev)
