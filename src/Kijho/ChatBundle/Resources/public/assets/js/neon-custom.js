@@ -381,7 +381,6 @@ var public_vars = public_vars || {};
                                     $(".page-container").addClass('chat-visible');
                                 }
                             }
-                            
                         }
 
 			$this.on('shown.bs.tooltip', function(ev)
