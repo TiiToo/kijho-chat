@@ -104,7 +104,7 @@ and open the template in the editor.
     border: 1px solid #e1e1e8 !important;
     height: 445px;
     /*margin: auto;*/
-    top: 100px !important;
+    /*top: 100px !important;*/
     bottom: 80px !important;
     position: fixed !important;
 }
