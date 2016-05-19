@@ -18,7 +18,9 @@
         
         <link rel="stylesheet" href="{{ asset('bundles/chat/assets/css/neon-core.css') }}">
 
-        <script src="{{ asset('bundles/chat/assets/js/jquery-1.11.0.min.js') }}"></script>
+        {% if local is defined and local == true %}
+            <script src="{{ asset('bundles/chat/assets/js/jquery-1.11.0.min.js') }}"></script>
+        {% endif %}
         
     </head><!--/head-->
     <body>
