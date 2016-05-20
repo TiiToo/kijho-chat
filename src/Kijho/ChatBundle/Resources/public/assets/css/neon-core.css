@@ -91,7 +91,7 @@ figure {
 }
 p {
   margin: 0 0 8.5px;
-  font-size: 12px;
+  font-size: 13px;
 }
 .lead {
   margin-bottom: 17px;
@@ -6364,7 +6364,7 @@ textareatable .replace-inputs input {
 }
 #chat .chat-conversation .conversation-header small {
   color: rgba(190, 192, 194, 0.6);
-  font-size: 12px;
+  font-size: 13px;
   padding-left: 8px;
 }
 #chat .chat-conversation .conversation-header .conversation-close {
@@ -6425,7 +6425,7 @@ textareatable .replace-inputs input {
   float: right;
   font-style: italic;
   color: rgba(190, 192, 194, 0.8);
-  font-size: 11px;
+  font-size: 12px;
 }
 #chat .chat-conversation .chat-textarea {
   padding: 10px 14px;
