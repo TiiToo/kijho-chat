@@ -40,18 +40,22 @@
                         <li>
                             <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_ONLINE')}}"><span class="glyphicon glyphicon-ok-sign"></span> {{'global.online'|trans}}</a>
                         </li>
-                        <li>
+                        {#<li>
                             <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_BUSY')}}"><span class="glyphicon glyphicon-remove"></span> {{'global.busy'|trans}}</a>
                         </li>
                         <li>
                             <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_IDLE')}}"><span class="glyphicon glyphicon-time"></span> {{'global.away'|trans}}</a>
-                        </li>
+                        </li>#}
                         <li>
                             <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_OFFLINE')}}"><span class="glyphicon glyphicon-off"></span> {{'global.offline'|trans}}</a>
                         </li>
                         <li class="divider"></li>
                         <li>
                             <a href="javascript:void(0);" class="display-settings"><span class="glyphicon glyphicon-cog"></span> {{'admin_settings.settings'|trans}}</a>
+                        </li>
+                        <li class="divider container-server-stop"></li>
+                        <li class="container-server-stop">
+                            <a href="javascript:void(0);" class="stop-gos-server"><span class="glyphicon glyphicon-stop"></span> {{'server.stop'|trans}}</a>
                         </li>
                     </ul>
                 </div>
@@ -245,6 +249,29 @@
             $.ajax({
                 type: 'POST',
                 url: "{{path('chat_start_gos_server')}}",
+                dataType: 'json',
+                timeout: 5000,
+                success: function (r)
+                {
+                    window.setTimeout(function(){
+                        $(this).removeAttr('disabled');
+                        window.location.reload();
+                    }, 3000);
+                },
+                error: function (r)
+                {
+                    $(this).removeAttr('disabled');
+                    window.location.reload();
+                }
+            });
+        });
+        
+        $(".stop-gos-server").click(function () {
+            $(this).html("{{'global.please_wait'|trans}}");
+            $(this).attr('disabled','disabled');
+            $.ajax({
+                type: 'POST',
+                url: "{{path('chat_stop_gos_server')}}",
                 dataType: 'json',
                 timeout: 5000,
                 success: function (r)
@@ -620,8 +647,10 @@
         function verifyServerConnection() {
             if (kijho_chat_is_success_connect) {
                 $('#container-server-start').css('display', 'none');
+                $(".container-server-stop").css('display', '');
             } else {
                 $('#container-server-start').css('display', '');
+                $(".container-server-stop").css('display', 'none');
             }
         }
 

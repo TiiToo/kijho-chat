@@ -71,6 +71,7 @@ server:
     status_updated: "Status successfully updated"
     email_send: "Email successfully send"
     error_sending_message: "Error while sending email"
+    stop: "Shutdown Server"
     
 connection_form:
     title: "Connect to Chat"

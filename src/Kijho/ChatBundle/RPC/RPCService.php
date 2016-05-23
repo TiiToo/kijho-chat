@@ -23,6 +23,12 @@ class RPCService implements RpcInterface {
         $connection->nickname = 'guest_' . strip_tags($connection->resourceId);
 
         
+        $connection->userType = ChatTopic::USER_CLIENT;
+        if (isset($params['user_type']) && !empty($params['user_type'])) {
+            $userType = strtolower(trim(strip_tags($params['user_type'])));
+            $connection->userType = $userType;
+        }
+        
         if (isset($params['nickname']) && !empty($params['nickname'])) {
             $nickname = strtolower(trim(strip_tags($params['nickname'])));
             $nickname = str_replace(' ', '_', $nickname);
@@ -41,11 +47,7 @@ class RPCService implements RpcInterface {
             $connection->userId = $userId;
         }
 
-        $connection->userType = ChatTopic::USER_CLIENT;
-        if (isset($params['user_type']) && !empty($params['user_type'])) {
-            $userType = strtolower(trim(strip_tags($params['user_type'])));
-            $connection->userType = $userType;
-        }
+        
         
         //esta variable se usa para determinar con que administrador 
         //esta hablando cada usuario (en especial los los clientes)

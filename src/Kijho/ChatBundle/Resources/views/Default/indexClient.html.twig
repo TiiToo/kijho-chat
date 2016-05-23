@@ -58,8 +58,12 @@
                             <li>
                                 <a href="javascript:void(0);" class="display-settings"><span class="glyphicon glyphicon-cog"></span>{{'admin_settings.settings'|trans}}</a>
                             </li>
+                            <li>
+                                <a class="display-chat" href="javascript:void(0);" data-toggle="chat" data-animate="1" data-collapse-sidebar="1">Close</a>
+                            </li>
                         </ul>
                     </div>
+                            <a class="display-chat close-insider pull-right" href="javascript:void(0);" data-toggle="chat" data-animate="1" data-collapse-sidebar="1"><i class="fa fa-times white"></i></a>
                 </div>
                 <div class="row chat-settings col-lg-12 hidden">
                     <a><i class="entypo-cog"></i> {{'admin_settings.settings'|trans}}</a>
@@ -389,6 +393,7 @@
                 $(".connection-container").removeClass('hidden');
                 $(".chat-container").addClass('hidden');
                 $(".group-settings").addClass('hidden');
+                $(".close-insider").removeClass('hidden');
                 $(".admin-offline").addClass('hidden');
                 checkExistingConecction();
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_FROM_ADMIN')}}") {
@@ -579,6 +584,7 @@
                     if (!kijho_chat_is_settings_visible) {
                         $(".chat-container").removeClass('hidden');
                         $(".group-settings").removeClass('hidden');
+                        $(".close-insider").addClass('hidden');
                         $(".admin-offline").addClass('hidden');
                     }
                     //hacemos esta logica para que el cliente siga la conversacion con
@@ -596,6 +602,7 @@
                     if (!kijho_chat_is_settings_visible) {
                         $(".chat-container").addClass('hidden');
                         $(".group-settings").addClass('hidden');
+                        $(".close-insider").removeClass('hidden');
                         $(".admin-offline").removeClass('hidden');
                     }
                 }
@@ -659,6 +666,7 @@
         function notifyServerDown() {
             $(".chat-container").addClass('hidden');
             $(".group-settings").addClass('hidden');
+            $(".close-insider").removeClass('hidden');
             $(".connection-container").addClass('hidden');
             $(".admin-offline").removeClass('hidden');
             $(".admin-offline-message").addClass('hidden');
@@ -671,6 +679,7 @@
         function notifyServerUp() {
             $(".chat-container").removeClass('hidden');
             $(".group-settings").removeClass('hidden');
+            $(".close-insider").addClass('hidden');
             $(".admin-offline").addClass('hidden');
             $(".admin-offline-message").removeClass('hidden');
             $(".server-down-message").addClass('hidden');
@@ -716,6 +725,7 @@
             $(".connection-container").addClass('hidden');
             $(".chat-container").removeClass('hidden');
             $(".group-settings").removeClass('hidden');
+            $(".close-insider").addClass('hidden');
             $(".send-connection-form").removeAttr('disabled');
             $(".send-connection-form").html("{{'global.send'|trans}}");
             

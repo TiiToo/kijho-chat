@@ -21,7 +21,12 @@ chat_panel:
 chat_start_gos_server:
     path:     /startGosServer
     defaults: { _controller: ChatBundle:Default:startGosServer }
-
+    
+chat_stop_gos_server:
+    path:     /stopGosServer
+    defaults: { _controller: ChatBundle:Default:stopGosServer }
+    
+    
 chat_example_client_send_offline_message:
     path:     /client/sendOfflineMessage
     defaults: { _controller: ChatBundle:OfflineMessage:sendOfflineMessage }   

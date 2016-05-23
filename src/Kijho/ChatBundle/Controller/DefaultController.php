@@ -15,22 +15,23 @@ use Kijho\ChatBundle\Form\ContactFormType;
 use Kijho\ChatBundle\Form\ConnectionFormType;
 use Kijho\ChatBundle\Util\Util;
 use Kijho\ChatBundle\Topic\ChatTopic;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 
 class DefaultController extends Controller {
 
-    public function clientPanelAction($nickname = null, $userId = '', $userType = '', $email = '',$local = false) {
+    public function clientPanelAction($nickname = null, $userId = '', $userType = '', $email = '', $local = false) {
         $em = $this->getDoctrine()->getManager();
 
         $nickname = strtolower(trim(strip_tags($nickname)));
         $nickname = str_replace(' ', '_', $nickname);
-        
+
         if ($nickname != '' && $userId == '') {
             $userId = $nickname;
         } else {
             $userId = strtolower(trim(strip_tags($userId)));
             $userId = str_replace(' ', '_', $userId);
         }
-        
+
         //buscamos las configuraciones del usuario, sino tiene se las creamos
         $searchUserSettings = array('userId' => $userId, 'userType' => $userType);
         $userSettings = $em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
@@ -73,14 +74,14 @@ class DefaultController extends Controller {
 
         $nickname = strtolower(trim(strip_tags($nickname)));
         $nickname = str_replace(' ', '_', $nickname);
-        
+
         if ($nickname != '' && $userId == '') {
             $userId = $nickname;
         } else {
             $userId = strtolower(trim(strip_tags($userId)));
             $userId = str_replace(' ', '_', $userId);
         }
-        
+
         $em = $this->getDoctrine()->getManager();
 
         //listado de usuarios que han chateado con el admin, ordenado descendentemente por la fecha del ultimo mensaje
@@ -94,13 +95,13 @@ class DefaultController extends Controller {
             if ($conversationData['type'] == Message::TYPE_ADMIN_TO_CLIENT) {
                 $clientId = $conversationData['destinationId'];
             }
-            
+
             $conversation = $em->getRepository('ChatBundle:Message')->findConversationClientAdmin($clientId, $userId);
             $allConversations[$i]['data'] = $conversationData;
             $allConversations[$i]['messages'] = $conversation;
             $i++;
         }
-        
+
         //buscamos las configuraciones del usuario, sino tiene se las creamos
         $searchUserSettings = array('userId' => $userId, 'userType' => $userType);
         $userSettings = $em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
@@ -196,8 +197,44 @@ class DefaultController extends Controller {
         );
 
         try {
-            $output = shell_exec("php ../app/console gos:websocket:server" . "> /dev/null 2>/dev/null &");
+            $output = shell_exec("php ../app/console gos:websocket:server --env=prod" . "> /dev/null 2>/dev/null &");
             $response['msg'] = "<pre>$output</pre>";
+        } catch (\Exception $exc) {
+            $response = array(
+                'result' => '__KO__',
+                'msg' => 'Server error'
+            );
+        }
+        return new JsonResponse($response);
+    }
+
+    /**
+     * Permite detener la ejecucion del servidor del chat
+     * @return JsonResponse
+     */
+    public function stopGosServerAction() {
+
+        $response = array(
+            'result' => '__OK__',
+            'msg' => 'Server Stopped...'
+        );
+
+        try {
+            
+            $port = $this->container->getParameter('kijho_chat_port');
+            
+            $cmd = 'fuser -KILL -k -n tcp ' . $port;
+
+            $process = new Process($cmd);
+            $process->run();
+
+            // executes after the command finishes
+            if (!$process->isSuccessful()) {
+                $exception = new ProcessFailedException($process);
+                $response['msg'] = $exception->getMessage();
+            } else {
+                $response['msg'] = "<pre>" . $process->getOutput() . "</pre>";
+            }
         } catch (\Exception $exc) {
             $response = array(
                 'result' => '__KO__',

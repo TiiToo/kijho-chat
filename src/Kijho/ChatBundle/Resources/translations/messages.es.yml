@@ -71,6 +71,7 @@ server:
     status_updated: "Estado actualizado exitosamente"
     email_send: "Correo enviado exitosamente"
     error_sending_message: "Error enviando el mensaje"
+    stop: "Apagar el Servidor"
 
 connection_form:
     title: "Conectarse al Chat"

@@ -137,6 +137,14 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
 
         if ($connection->userType == self::USER_ADMIN) {
 
+            
+            //buscamos las configuraciones del cliente para setear su status
+            $searchUserSettings = array('userId' => $connection->userId, 'userType' => $connection->userType);
+            $userSettings = $this->em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
+            if ($userSettings instanceof Entity\UserChatSettings) {
+                $connection->status = $userSettings->getStatus();
+            }
+            
             //Le enviamos a los administradores el listado de usuarios conectados cada 2 segundos
             $topicTimer = $connection->PeriodicTimer;
             $topicTimer->addPeriodicTimer('online_users', self::TIME_REFRESH_ONLINE_USERS, function() use ($topic, $connection) {
