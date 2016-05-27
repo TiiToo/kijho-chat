@@ -192,8 +192,11 @@
     {{ ws_client() }}
 
     <script type="text/javascript">
-        var _WS_URI = "ws://{{ gos_web_socket_server_host }}:{{ gos_web_socket_server_port }}";
-
+        
+        var _WS_URI = "ws://"+window.location.hostname+":{{ gos_web_socket_server_port }}";
+    
+        {#var _WS_URI = "ws://{{ gos_web_socket_server_host }}:{{ gos_web_socket_server_port }}";#}
+        
         var kijho_chat_web_socket = WS.connect(_WS_URI);
 
         var kijho_chat_global_session = null;
