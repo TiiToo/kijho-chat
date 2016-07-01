@@ -52,7 +52,7 @@ class MessageRepository extends EntityRepository {
             $consult->setParameter('adminId', $adminId);
             $consult->setParameter('clientAdmin', Message::TYPE_CLIENT_TO_ADMIN);
             $consult->setParameter('adminClient', Message::TYPE_ADMIN_TO_CLIENT);
-            $consult->setMaxResults(25);
+            $consult->setMaxResults(15);
             return $consult->getArrayResult();
         } else {
             return $result;
@@ -115,7 +115,7 @@ class MessageRepository extends EntityRepository {
             $consult->setParameter('endDate', $endDate);
         }
         
-        $consult->setMaxResults(100);
+        $consult->setMaxResults(50);
         
         
         return $consult->getResult();
