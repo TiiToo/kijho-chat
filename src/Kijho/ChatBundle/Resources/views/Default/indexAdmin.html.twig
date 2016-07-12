@@ -193,42 +193,15 @@
         {% set lastDate = '' %}
         {% set lastHour = '' %}
         {% set listedConversations = [] %}
-        {% for clientConversation in allConversations %}
-            {% set clientId = clientConversation.data.senderId %}
-            {% if clientConversation.data.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_ADMIN_TO_CLIENT') %}
-                {% set clientId = clientConversation.data.destinationId %}
+        {% for clientConversation in lastConversations %}
+            {% set clientId = clientConversation.senderId %}
+            {% if clientConversation.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_ADMIN_TO_CLIENT') %}
+                {% set clientId = clientConversation.destinationId %}
             {% endif %}
             
             {% if clientId not in listedConversations %}
                 {% set listedConversations = listedConversations|merge([clientId]) %}
-
                 <ul class="chat-history" id="client-{{clientId}}">
-                    {#{% for message in clientConversation.messages %}
-                        {% set userClass = 'opponent' %}
-                        {% if message.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_ADMIN_TO_CLIENT') %}
-                            {% set userClass = 'user' %}
-                        {% endif %}
-                        {% set readClass = '' %}
-                        {% if message.readed == false and message.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_CLIENT_TO_ADMIN') %}
-                            {% set readClass = 'unread' %}
-                        {% endif %}
-                        <li class="{{userClass~' '~readClass}}">
-                            {% if userClass == 'user' and message.senderNickname != nickname %}
-                                <span class="user">{{message.senderNickname}}</span>
-                            {% endif %}
-                            <p>{{message.message}}</p>
-                            <span class="time">
-                                {% if message.date|date('d/m/Y') != lastDate %}
-                                    {% set lastDate = message.date|date('d/m/Y') %}
-                                    {{ lastDate }}
-                                {% endif %}
-                                {% if message.date|date('h:i a') != lastHour %}
-                                    {% set lastHour = message.date|date('h:i a') %}
-                                    {{ lastHour }}
-                                {% endif %}
-                            </span>
-                        </li>
-                    {% endfor %}#}
                 </ul>
             {% endif %}
         {% endfor %}
@@ -1075,7 +1048,6 @@
          * Permite solicitar al servidor la carga de los mensajes de un cliente en especifico
          */
         function loadClientConversation(session, clientId) {
-            console.log('vamos a cargar los mensajes del cliente '+clientId);
             if (clientId != '') {
                 var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::LOAD_CLIENT_CONVERSATION')}}",
                     clientId: clientId,

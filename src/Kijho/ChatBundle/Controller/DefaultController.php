@@ -87,21 +87,6 @@ class DefaultController extends Controller {
         //listado de usuarios que han chateado con el admin, ordenado descendentemente por la fecha del ultimo mensaje
         $lastConversations = $em->getRepository('ChatBundle:Message')->findClientChatNickNames($userId);
 
-        //buscamos las conversaciones completas entre el admin y los clientes
-        $allConversations = array();
-        $i = 0;
-        foreach ($lastConversations as $conversationData) {
-            $clientId = $conversationData['senderId'];
-            if ($conversationData['type'] == Message::TYPE_ADMIN_TO_CLIENT) {
-                $clientId = $conversationData['destinationId'];
-            }
-
-            $conversation = $em->getRepository('ChatBundle:Message')->findConversationClientAdmin($clientId, $userId);
-            $allConversations[$i]['data'] = $conversationData;
-            $allConversations[$i]['messages'] = $conversation;
-            $i++;
-        }
-
         //buscamos las configuraciones del usuario, sino tiene se las creamos
         $searchUserSettings = array('userId' => $userId, 'userType' => $userType);
         $userSettings = $em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
@@ -134,7 +119,6 @@ class DefaultController extends Controller {
                     'email' => $email,
                     'userType' => $userType,
                     'lastConversations' => $lastConversations,
-                    'allConversations' => $allConversations,
                     'userSettings' => $userSettings,
                     'userSettingsForm' => $userSettingsForm->createView(),
                     'chatSettings' => $chatSettings,
