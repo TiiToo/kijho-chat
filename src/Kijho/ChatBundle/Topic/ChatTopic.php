@@ -64,7 +64,8 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     const MESSAGES_FROM_OTHER_CONVERSATION = 'messages_from_other_conversation';
     const WRONG_CONNECTION_DATA = 'wrong_connection_data';
     const NICKNAME_REPEATED = 'nickname_repeated';
-
+    const CLIENT_CONVERSATION_HISTORY = 'client_conversation_history';
+    
     /**
      * Constantes para los tipos de mensajes que los usuarios envian al servidor
      */
@@ -76,6 +77,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     const STEAL_CONVERSATION_WITH_CLIENT = 'steal_conversation_with_client';
     const CONNECT_TO_CHAT = 'connect_to_chat';
     const UPDATE_CLIENT_DESTINATION = 'update_client_destination';
+    const LOAD_CLIENT_CONVERSATION = 'load_client_conversation';
 
     /**
      * Constante que controla el tiempo en el cual se actualiza el listado de usuarios
@@ -137,14 +139,14 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
 
         if ($connection->userType == self::USER_ADMIN) {
 
-            
+
             //buscamos las configuraciones del cliente para setear su status
             $searchUserSettings = array('userId' => $connection->userId, 'userType' => $connection->userType);
             $userSettings = $this->em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
             if ($userSettings instanceof Entity\UserChatSettings) {
                 $connection->status = $userSettings->getStatus();
             }
-            
+
             //Le enviamos a los administradores el listado de usuarios conectados cada 2 segundos
             $topicTimer = $connection->PeriodicTimer;
             $topicTimer->addPeriodicTimer('online_users', self::TIME_REFRESH_ONLINE_USERS, function() use ($topic, $connection) {
@@ -578,6 +580,23 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 }
                             }
                         }
+                    } elseif ($eventType == self::LOAD_CLIENT_CONVERSATION) {
+                        $clientId = trim(strip_tags($event['clientId']));
+                        $adminId = trim(strip_tags($event['adminId']));
+                        
+                        $conversation = $this->em->getRepository('ChatBundle:Message')->findConversationClientAdmin($clientId, $adminId);
+                        
+                        $messages = array();
+                        foreach ($conversation as $message) {
+                            array_push($messages, $message->getArrayData());
+                        }
+                        
+                        //enviamos al administrador los mensajes del cliente
+                        $connection->event($topic->getId(), [
+                            'msg_type' => self::CLIENT_CONVERSATION_HISTORY,
+                            'messages' => $messages,
+                            'clientId' => $clientId
+                        ]);
                     }
                 } elseif ($connection->userType == self::USER_CLIENT) {
                     if ($eventType == self::MESSAGE_TO_ADMIN && isset($event['destination'])) {

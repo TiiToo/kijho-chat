@@ -138,7 +138,7 @@
                     {% if conversation.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_CLIENT_TO_ADMIN') %}
                         {% if conversation.senderId not in listedConversations %}
                             {% set listedConversations = listedConversations|merge([conversation.senderId]) %}
-                            <a href="#" class="open-client-conversation" client-id="{{conversation.senderId}}" online-with="" data-conversation-history="#client-{{conversation.senderId}}">
+                            <a href="#" class="open-client-conversation" client-id="{{conversation.senderId}}" online-with="" data-conversation-history="#client-{{conversation.senderId}}" messages-loaded="false">
                                 <span class="user-status is-offline"></span> 
                                 <i class="user-connection fa fa-user" title="{{'global.authenticated_user'|trans}}"></i>
                                 <em>{{conversation.senderNickname}}</em> 
@@ -150,7 +150,7 @@
                     {% elseif conversation.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_ADMIN_TO_CLIENT') %}
                         {% if conversation.destinationId not in listedConversations %}
                             {% set listedConversations = listedConversations|merge([conversation.destinationId]) %}
-                            <a href="#" class="open-client-conversation" client-id="{{conversation.destinationId}}" online-with="" data-conversation-history="#client-{{conversation.destinationId}}">
+                            <a href="#" class="open-client-conversation" client-id="{{conversation.destinationId}}" online-with="" data-conversation-history="#client-{{conversation.destinationId}}" messages-loaded="false">
                                 <span class="user-status is-offline"></span> 
                                 <i class="user-connection fa fa-user"></i>
                                 <em>{{conversation.destinationNickname}}</em> 
@@ -203,7 +203,7 @@
                 {% set listedConversations = listedConversations|merge([clientId]) %}
 
                 <ul class="chat-history" id="client-{{clientId}}">
-                    {% for message in clientConversation.messages %}
+                    {#{% for message in clientConversation.messages %}
                         {% set userClass = 'opponent' %}
                         {% if message.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_ADMIN_TO_CLIENT') %}
                             {% set userClass = 'user' %}
@@ -228,7 +228,7 @@
                                 {% endif %}
                             </span>
                         </li>
-                    {% endfor %}
+                    {% endfor %}#}
                 </ul>
             {% endif %}
         {% endfor %}
@@ -364,6 +364,11 @@
 
             $(".chat-inner").on("click", ".open-client-conversation", function () {
                 var clientId = $(this).attr('client-id');
+                var messagesLoaded = $(this).attr('messages-loaded');
+                if (messagesLoaded == "false") {
+                    loadClientConversation(session, clientId);
+                    $(this).attr('messages-loaded', "true");
+                }
                 prepareToMessage(clientId);
                 putMessagesReaded(session, clientId);
             });
@@ -506,7 +511,9 @@
                 clientStatusUpdated(payload);
             } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGES_FROM_OTHER_CONVERSATION')}}") {
                 messagesFromOtherConversation(payload);
-            }
+            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CLIENT_CONVERSATION_HISTORY')}}") {
+                displayClientConversationHistory(payload);
+            } 
         }
 
         /**
@@ -554,8 +561,7 @@
                     var onlineWithElement = element.find('span.online-with');
                     
                     if (onlineUsers[i]['onlineWithAdmin'] != '' 
-                        && onlineUsers[i]['onlineWithAdmin'] != "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_ALL_ADMINISTRATORS')}}"
-                            && onlineUsers[i]['onlineWithAdmin'] != "{{nickname}}") {
+                        && onlineUsers[i]['onlineWithAdmin'] != "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_ALL_ADMINISTRATORS')}}") {
                             onlineWithElement.removeClass('hidden');
                             onlineWithElement.html('('+onlineUsers[i]['onlineWithAdmin']+')');
                             onlineWithElement.attr('title', "{{'global.online_with'|trans}}"+onlineUsers[i]['onlineWithAdmin']);
@@ -613,7 +619,7 @@
                 var spanStatus = $("#group-2 a[client-id='" + payload.user_id + "'] span").first();
                 spanStatus.attr("class", "user-status "+payload.status); 
             } else {
-                var htmlUser = '<a href="#" class="open-client-conversation" client-id="' + payload.user_id + '" online-with="" data-conversation-history="#client-' + payload.user_id + '"><span class="user-status '+payload.status+'"></span> ';
+                var htmlUser = '<a href="#" class="open-client-conversation" client-id="' + payload.user_id + '" online-with="" data-conversation-history="#client-' + payload.user_id + '" messages-loaded="false"><span class="user-status '+payload.status+'"></span> ';
                 if (payload.isAnonymous) {
                     htmlUser += '<i class="user-connection fa fa-user-secret"></i> '; 
                 } else{
@@ -1062,6 +1068,70 @@
                     return true;
                 }
             } return false;
+        }
+        
+        
+        /**
+         * Permite solicitar al servidor la carga de los mensajes de un cliente en especifico
+         */
+        function loadClientConversation(session, clientId) {
+            console.log('vamos a cargar los mensajes del cliente '+clientId);
+            if (clientId != '') {
+                var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::LOAD_CLIENT_CONVERSATION')}}",
+                    clientId: clientId,
+                    adminId: "{{userId}}"
+                };
+                session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
+            }
+        }
+        
+        /**
+         * Permite desplegar en pantalla el listado de mensajes de un cliente en especifico
+         */
+        function displayClientConversationHistory(data) {
+            
+            var element = $(".open-client-conversation[client-id='" + data.clientId + "']");
+        
+            var messages = data.messages;
+            
+            for (var i = 0; i < messages.length; i++) {
+                var fromOpponent = false;
+                //armamos el html con el mensaje del usuario
+                if (messages[i].type == "{{constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_CLIENT_TO_ADMIN')}}") {
+                    var htmlMessage = '<li class="opponent">';
+                    fromOpponent = true;
+                } else if (messages[i].type == "{{constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_ADMIN_TO_CLIENT')}}") {
+                    var htmlMessage = '<li class="user">';
+                }
+
+                htmlMessage += '<span class="user">' + messages[i].sender_nickname + '</span>';
+
+                htmlMessage += '<p>' + messages[i].message + '</p>'
+                        + '<span class="time">' + messages[i].hour + '</span>'
+                        + '</li>';
+
+                //buscamos el panel de mensajes del usuario
+                var chatContainer = $("#client-" + data.clientId);
+
+                if (typeof chatContainer == "object") {
+                    chatContainer.append(htmlMessage);
+                } else {
+                    //si no habia un panel de mensajes para el usuario, le creamos uno
+                    var html = '<ul class="chat-history" id="client-' + data.clientId + '">'
+                            + htmlMessage + '</ul>';
+                    $(".container-chats").append(html);
+
+                    var chatContainer = $("#client-" + data.clientId);
+                    if (!$.isEmptyObject(chatContainer.html())) {
+                        chatContainer.append(htmlMessage);
+                    }
+                }
+                neonChat.pushMessage(element.attr('id'), messages[i].message, messages[i].sender_nickname, messages[i].hour, fromOpponent, false);
+            }
+            
+            if (isConversationOpened(data.clientId)) {
+                neonChat.renderMessages(element.attr('id'));
+            }
         }
 
     </script>
