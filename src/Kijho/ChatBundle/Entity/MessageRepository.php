@@ -14,7 +14,7 @@ class MessageRepository extends EntityRepository {
      * @param string $adminId identificador del administrador
      * @return type
      */
-    public function findClientChatNickNames($adminId) {
+    /*public function findClientChatNickNames($adminId) {
 
         $em = $this->getEntityManager();
 
@@ -32,21 +32,20 @@ class MessageRepository extends EntityRepository {
 
         $result = $innerQuery->getArrayResult();
 
-        //var_dump($result);die();
 
         if (!empty($result)) {
 
             $dqlQuery = $innerQuery->getDQL();
 
             $consult = $em->createQuery("
-        SELECT m
+        SELECT m.type, m.senderId, m.senderNickname, m.destinationId, m.destinationNickname, m.date
         FROM ChatBundle:Message m
         WHERE ((m.destinationId = :adminId
         AND m.type = :clientAdmin ) OR (
             m.senderId = :adminId
             AND m.type = :adminClient)
         )
-        AND m.date IN (" . $dqlQuery . ")
+        
         GROUP BY m.senderNickname
         ORDER BY m.date DESC");
             $consult->setParameter('adminId', $adminId);
@@ -56,6 +55,33 @@ class MessageRepository extends EntityRepository {
         } else {
             return $result;
         }
+    }*/
+    
+    /**
+     * Permite obtener los nombres de los clientes y la ultima fecha en la que enviarion
+     * mensajes a un administrador en especifico, ordenados desde el mensaje 
+     * mas reciente al mas antiguo
+     * @author Cesar Giraldo <cnaranjo@kijho.com> 07/03/2016
+     * @param string $adminId identificador del administrador
+     * @return type
+     */
+    public function findClientChatNickNames($adminId) {
+        $em = $this->getEntityManager();
+
+            $consult = $em->createQuery("
+        SELECT m.type, m.senderId, m.senderNickname, m.destinationId, m.destinationNickname
+        FROM ChatBundle:Message m
+        WHERE ((m.destinationId = :adminId
+        AND m.type = :clientAdmin ) OR (
+            m.senderId = :adminId
+            AND m.type = :adminClient)
+        )
+        GROUP BY m.senderNickname
+        ORDER BY m.date DESC");
+            $consult->setParameter('adminId', $adminId);
+            $consult->setParameter('clientAdmin', Message::TYPE_CLIENT_TO_ADMIN);
+            $consult->setParameter('adminClient', Message::TYPE_ADMIN_TO_CLIENT);
+            return $consult->getArrayResult();
     }
 
     /**
