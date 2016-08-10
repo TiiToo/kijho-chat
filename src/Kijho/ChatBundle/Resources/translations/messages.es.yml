@@ -72,6 +72,8 @@ server:
     email_send: "Correo enviado exitosamente"
     error_sending_message: "Error enviando el mensaje"
     stop: "Apagar el Servidor"
+    invalid_email: "Correo invalido"
+
 
 connection_form:
     title: "Conectarse al Chat"

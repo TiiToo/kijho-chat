@@ -3,6 +3,7 @@
 namespace Kijho\ChatBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 use Kijho\ChatBundle\Util\Util;
 
 /**
@@ -49,6 +50,7 @@ class OfflineMessage {
     
     /**
      * Email del usuario que envia el mensaje offline
+     * @Assert\Email(checkMX=true)
      * @ORM\Column(name="omes_email", type="string", nullable=true)
      */
     protected $email;

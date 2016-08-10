@@ -72,6 +72,7 @@ server:
     email_send: "Email successfully send"
     error_sending_message: "Error while sending email"
     stop: "Shutdown Server"
+    invalid_email: "Invalid Email"
     
 connection_form:
     title: "Connect to Chat"

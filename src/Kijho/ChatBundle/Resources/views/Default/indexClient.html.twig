@@ -63,7 +63,7 @@
                             </li>
                         </ul>
                     </div>
-                            <a class="display-chat close-insider pull-right" href="javascript:void(0);" data-toggle="chat" data-animate="1" data-collapse-sidebar="1"><i class="fa fa-times white"></i></a>
+                    <a class="display-chat close-insider pull-right" href="javascript:void(0);" data-toggle="chat" data-animate="1" data-collapse-sidebar="1"><i class="fa fa-times white"></i></a>
                 </div>
                 <div class="row chat-settings col-lg-12 hidden">
                     <a><i class="entypo-cog"></i> {{'admin_settings.settings'|trans}}</a>
@@ -140,21 +140,21 @@
                         </div>
                     </div>
                 </div>
-   
+
                 <div class="admin-offline ">
                     <div class="panel-body">
                         <form onsubmit="return false;" id="contact-form">
-                            
+
                             <div class="col-xs-12 admin-offline-message hidden">
                                 <h3>{{'client_email.support_offline'|trans}}</h3>
                                 <p>{{'client_email.no_admin_online'|trans}}</p>
                             </div>
-                            
+
                             <div class="col-xs-12 server-down-message ">
                                 <h3>{{'client_email.server_offline'|trans}}</h3>
                                 <p>{{'client_email.server_offline_message'|trans}}</p>
                             </div>
-                            
+
                             <div class="col-xs-12 margin-top flt-left">
                                 {{ form_label(contactForm.email) }}
                                 {{ form_widget(contactForm.email,{'attr':{'class':'form-control'}}) }}
@@ -192,216 +192,468 @@
     {{ ws_client() }}
 
     <script type="text/javascript">
-        
-        var _WS_URI = "ws://"+window.location.hostname+":{{ gos_web_socket_server_port }}";
-    
+
+        var _WS_URI = "ws://" + window.location.hostname + ":{{ gos_web_socket_server_port }}";
+
         {#var _WS_URI = "ws://{{ gos_web_socket_server_host }}:{{ gos_web_socket_server_port }}";#}
-        
-        var kijho_chat_web_socket = WS.connect(_WS_URI);
 
-        var kijho_chat_global_session = null;
+            var kijho_chat_web_socket = WS.connect(_WS_URI);
 
-        var kijho_chat_online_administrators = [];
-        
-        var kijho_chat_is_connection_succesfully = false;
-        
-        var kijho_chat_user_identifier = '';
-        var kijho_chat_user_nickname = '';
-        var kijho_chat_user_email = '';
-        
-        var kijho_chat_last_admin_id = '';
-        
-        var kijho_chat_is_settings_visible = false;
-        
-        var kijho_chat_is_chat_visibility_checked = false;
-        
-        /**
-         * Cuando el cliente entra al chat, los primeros mensajes que envia (antes de que un administrador le responda)
-         * son enviados a todos los administradores, cuando un admin responde, los mensajes seran solo 
-         * enviados a dicho administrador
-         * @type String
-         */
-        var kijho_chat_destination = "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_ALL_ADMINISTRATORS')}}";
-        
+            var kijho_chat_global_session = null;
+
+            var kijho_chat_online_administrators = [];
+
+            var kijho_chat_is_connection_succesfully = false;
+
+            var kijho_chat_user_identifier = '';
+            var kijho_chat_user_nickname = '';
+            var kijho_chat_user_email = '';
+
+            var kijho_chat_last_admin_id = '';
+
+            var kijho_chat_is_settings_visible = false;
+
+            var kijho_chat_is_chat_visibility_checked = false;
+
+            /**
+             * Cuando el cliente entra al chat, los primeros mensajes que envia (antes de que un administrador le responda)
+             * son enviados a todos los administradores, cuando un admin responde, los mensajes seran solo 
+             * enviados a dicho administrador
+             * @type String
+             */
+            var kijho_chat_destination = "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_ALL_ADMINISTRATORS')}}";
+
         {% if nickname is defined and nickname is not empty %}
             kijho_chat_user_nickname = "{{nickname}}";
         {% endif %}
-            
+
         {% if userId is defined and userId is not empty %}
             kijho_chat_user_identifier = "{{userId}}";
         {% endif %}
-            
+
         {% if email is defined and email is not empty %}
             kijho_chat_user_email = "{{email}}";
         {% endif %}
-        
-        kijho_chat_web_socket.on("socket/connect", function (session) {
-            bindUI(session);
-            console.log("Successfully Connected!");
-            updateConnectionData(session)
-            joinChatRoom(session);
-            notifyServerUp();
-            
-            if (typeof kijhoChatOnline == 'function') {
-                kijhoChatOnline();
+
+            kijho_chat_web_socket.on("socket/connect", function (session) {
+                bindUI(session);
+                console.log("Successfully Connected!");
+                updateConnectionData(session)
+                joinChatRoom(session);
+                notifyServerUp();
+
+                if (typeof kijhoChatOnline == 'function') {
+                    kijhoChatOnline();
+                }
+            });
+
+            kijho_chat_web_socket.on("socket/disconnect", function (error) {
+                console.log("Disconnected for " + error.reason + " with code " + error.code);
+                unbindUI();
+                kijho_chat_online_administrators = [];
+                notifyServerDown();
+                if (typeof kijhoChatOffline == 'function') {
+                    kijhoChatOffline();
+                }
+            });
+
+
+            /**
+             * Permite actualizar la informacion de la conexion del usuario
+             * @param {type} session
+             */
+            function updateConnectionData(session)
+            {
+                session.call("rpc/update_connection_data", {"nickname": kijho_chat_user_nickname, "user_id": kijho_chat_user_identifier, "user_type": "{{userType}}", "email": kijho_chat_user_email}).then(
+                        function (result)
+                        {
+                            console.log("RPC Valid!", result);
+                        },
+                        function (error, desc)
+                        {
+                            console.log("RPC Error", error, desc);
+                        }
+                );
             }
-        });
 
-        kijho_chat_web_socket.on("socket/disconnect", function (error) {
-            console.log("Disconnected for " + error.reason + " with code " + error.code);
-            unbindUI();
-            kijho_chat_online_administrators = [];
-            notifyServerDown();
-            if (typeof kijhoChatOffline == 'function') {
-                kijhoChatOffline();
-            }
-        });
-
-
-        /**
-         * Permite actualizar la informacion de la conexion del usuario
-         * @param {type} session
-         */
-        function updateConnectionData(session)
-        {
-            session.call("rpc/update_connection_data", {"nickname": kijho_chat_user_nickname, "user_id": kijho_chat_user_identifier, "user_type": "{{userType}}", "email": kijho_chat_user_email }).then(
-                    function (result)
-                    {
-                        console.log("RPC Valid!", result);
-                    },
-                    function (error, desc)
-                    {
-                        console.log("RPC Error", error, desc);
+            /**
+             * Permite habilitar los eventos sobre los elementos de la ventana, cuando hay conexion
+             * @param {type} session
+             */
+            function bindUI(session) {
+                kijho_chat_global_session = session;
+                $("#input-message").bind("keydown", function (e) {
+                    var key;
+                    if (window.event) {
+                        key = window.event.keyCode;   /*IE*/
+                    } else {
+                        key = e.which;                /*firefox*/
                     }
-            );
-        }
+                    if (key == 13) {
+                        sendMessage(session);
+                    } else {
+                        notifyTyping(session);
+                    }
+                });
 
-        /**
-         * Permite habilitar los eventos sobre los elementos de la ventana, cuando hay conexion
-         * @param {type} session
-         */
-        function bindUI(session) {
-            kijho_chat_global_session = session;
-            $("#input-message").bind("keydown", function (e) {
-                var key;
-                if (window.event) {
-                    key = window.event.keyCode;   /*IE*/
-                } else {
-                    key = e.which;                /*firefox*/
-                }
-                if (key == 13) {
+                $(".send-message").bind("click", function (e) {
                     sendMessage(session);
-                } else {
-                    notifyTyping(session);
-                }
-            });
+                });
 
-            $(".send-message").bind("click", function (e) {
-                sendMessage(session);
-            });
 
-            
 
-            $(".display-settings").bind("click", function (e) {
-                $(".chat-settings").toggleClass('hidden');
-                $(".chat-container").toggleClass('hidden');
-                
-                if (kijho_chat_is_settings_visible) {
-                    kijho_chat_is_settings_visible =  false;
-                } else {
-                    kijho_chat_is_settings_visible = true;
-                }
-            });
+                $(".display-settings").bind("click", function (e) {
+                    $(".chat-settings").toggleClass('hidden');
+                    $(".chat-container").toggleClass('hidden');
 
-            $("#chatbundle_user_chat_settings_type_notificationSound").bind("change", function (e) {
-                document.getElementById($(this).val()).play();
-            });
+                    if (kijho_chat_is_settings_visible) {
+                        kijho_chat_is_settings_visible = false;
+                    } else {
+                        kijho_chat_is_settings_visible = true;
+                    }
+                });
 
-            $(".play-sound").bind("click", function (e) {
-                var soundF = $("#chatbundle_user_chat_settings_type_notificationSound").val();
-                if (soundF == null || soundF == '') {
-                    soundF = "{{constant('Kijho\\ChatBundle\\Entity\\UserChatSettings::DEFAULT_SOUND')}}";
-                    $("#chatbundle_user_chat_settings_type_notificationSound").val(soundF);
-                }
-                if (soundF != null && soundF != '' && soundF != "sound") {
-                    document.getElementById(soundF).play();
-                }
-            });
+                $("#chatbundle_user_chat_settings_type_notificationSound").bind("change", function (e) {
+                    document.getElementById($(this).val()).play();
+                });
 
-            $(".save-settings").bind("click", function (e) {
-                saveSettings(session);
-            });
+                $(".play-sound").bind("click", function (e) {
+                    var soundF = $("#chatbundle_user_chat_settings_type_notificationSound").val();
+                    if (soundF == null || soundF == '') {
+                        soundF = "{{constant('Kijho\\ChatBundle\\Entity\\UserChatSettings::DEFAULT_SOUND')}}";
+                        $("#chatbundle_user_chat_settings_type_notificationSound").val(soundF);
+                    }
+                    if (soundF != null && soundF != '' && soundF != "sound") {
+                        document.getElementById(soundF).play();
+                    }
+                });
 
-            $(".change-status").bind("click", function (e) {
-                var newStatus = $(this).attr('status');
-                changeStatus(session, newStatus);
-            });
-            
-            $(".send-connection-form").bind("click", function (e) {
-                sendConnectionForm(session);
-            });
-        }
+                $(".save-settings").bind("click", function (e) {
+                    saveSettings(session);
+                });
 
-        /**
-         * Permite deshabilitar los eventos sobre los botones, cuando se pierde la conexion
-         */
-        function unbindUI() {
-            kijho_chat_global_session = null;
-            $(".send-message").unbind();
-            $("#input-message").unbind();
-            $(".display-settings").unbind();
-            $("#chatbundle_user_chat_settings_type_notificationSound").unbind();
-            $(".play-sound").unbind();
-            $(".save-settings").unbind();
-            $(".change-status").unbind();
-        }
+                $(".change-status").bind("click", function (e) {
+                    var newStatus = $(this).attr('status');
+                    changeStatus(session, newStatus);
+                });
 
-        /**
-         * Permite realizar la conexion a una sala en especifico, y establecer un escucha de eventos
-         * @param {type} session
-         */
-        function joinChatRoom(session) {
-            //the callback function in "subscribe" is called everytime an event is published in that channel.
-            session.subscribe("chat/channel", serverEvent);
-        }
-
-        /**
-         * Permite el envio de un mensaje a un usuario en especifico
-         * @param {type} session
-         */
-        function sendMessage(session) {
-            var message = $("#input-message").val();
-            if (message != '') {
-                var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_TO_ADMIN')}}",
-                    message: message,
-                    destination: kijho_chat_destination,
-                };
-                session.publish("chat/channel", data);
-                $("#input-message").val('');
+                $(".send-connection-form").bind("click", function (e) {
+                    sendConnectionForm(session);
+                });
             }
-            $("#input-message").focus();
-        }
 
-        /**
-         * Funcion que escucha los eventos del servidor para efectuar acciones en pantalla
-         * @param {type} uri
-         * @param {type} payload
-         **/
-        function serverEvent(uri, payload) {
-            
-            if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SERVER_WELCOME_MESSAGE')}}") {
-                connectionSuccess(payload);
-            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::NICKNAME_REQUIRED')}}"){
-                kijho_chat_is_connection_succesfully = false;
-                $(".connection-container").removeClass('hidden');
-                $(".chat-container").addClass('hidden');
-                $(".group-settings").addClass('hidden');
-                $(".close-insider").removeClass('hidden');
-                $(".admin-offline").addClass('hidden');
-                checkExistingConecction();
-            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_FROM_ADMIN')}}") {
-                kijho_chat_destination = payload.user_id;
-                kijho_chat_last_admin_id = payload.user_id;
+            /**
+             * Permite deshabilitar los eventos sobre los botones, cuando se pierde la conexion
+             */
+            function unbindUI() {
+                kijho_chat_global_session = null;
+                $(".send-message").unbind();
+                $("#input-message").unbind();
+                $(".display-settings").unbind();
+                $("#chatbundle_user_chat_settings_type_notificationSound").unbind();
+                $(".play-sound").unbind();
+                $(".save-settings").unbind();
+                $(".change-status").unbind();
+            }
+
+            /**
+             * Permite realizar la conexion a una sala en especifico, y establecer un escucha de eventos
+             * @param {type} session
+             */
+            function joinChatRoom(session) {
+                //the callback function in "subscribe" is called everytime an event is published in that channel.
+                session.subscribe("chat/channel", serverEvent);
+            }
+
+            /**
+             * Permite el envio de un mensaje a un usuario en especifico
+             * @param {type} session
+             */
+            function sendMessage(session) {
+                var message = $("#input-message").val();
+                if (message != '') {
+                    var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_TO_ADMIN')}}",
+                        message: message,
+                        destination: kijho_chat_destination,
+                    };
+                    session.publish("chat/channel", data);
+                    $("#input-message").val('');
+                }
+                $("#input-message").focus();
+            }
+
+            /**
+             * Funcion que escucha los eventos del servidor para efectuar acciones en pantalla
+             * @param {type} uri
+             * @param {type} payload
+             **/
+            function serverEvent(uri, payload) {
+
+                if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SERVER_WELCOME_MESSAGE')}}") {
+                    connectionSuccess(payload);
+                } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::NICKNAME_REQUIRED')}}") {
+                    kijho_chat_is_connection_succesfully = false;
+                    $(".connection-container").removeClass('hidden');
+                    $(".chat-container").addClass('hidden');
+                    $(".group-settings").addClass('hidden');
+                    $(".close-insider").removeClass('hidden');
+                    $(".admin-offline").addClass('hidden');
+                    checkExistingConecction();
+                } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_FROM_ADMIN')}}") {
+                    kijho_chat_destination = payload.user_id;
+                    kijho_chat_last_admin_id = payload.user_id;
+                    $(".play-sound").trigger('click');
+                    appendHtmlMessageAdmin(payload);
+                    updateUnreadCounters(1);
+                    var displayStatus = $("#chat").css('display');
+                    if (displayStatus == 'block') {
+                        putMessagesReaded();
+                    }
+                } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_SEND_SUCCESSFULLY')}}") {
+                    appendHtmlMessageClient(payload);
+                } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CLIENT_MESSAGES_PUT_AS_READED')}}") {
+                    window.setTimeout(resetUnreadCounters, 2000);
+                } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SETTINGS_UPDATED')}}") {
+                    settingsUpdated();
+                } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SELF_STATUS_UPDATED')}}") {
+                    selfStatusUpdated(payload);
+                } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::JOIN_LEFT_ADMIN_TO_ROOM')}}") {
+                    kijho_chat_online_administrators = payload.online_administrators;
+                    checkChatToAdmin();
+                    if (typeof kijhoChatCountOnlineHelp == 'function') {
+                        kijhoChatCountOnlineHelp(kijho_chat_online_administrators.length);
+                    }
+                } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::ADMIN_TYPING')}}") {
+                    adminTyping(payload);
+                } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CLIENT_AUTOMATIC_MESSAGE')}}") {
+                    displayAutomaticMessage(payload);
+                } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::WRONG_CONNECTION_DATA')}}") {
+                    wrongConnectionData(payload);
+                } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::NICKNAME_REPEATED')}}") {
+                    wrongConnectionData(payload);
+                }
+            }
+
+            /**
+             * Permite mostrar en el historial del chat, un mensaje que acaba de enviar el cliente
+             * @param {type} payload
+             **/
+            function appendHtmlMessageClient(payload) {
+                var html = '<li class="right clearfix"><span class="chat-img pull-right">'
+                        + '<img src="http://placehold.it/50/FA6F57/fff&amp;text=ME" alt="User Avatar" class="img-circle">'
+                        + '</span>'
+                        + '<div class="chat-body clearfix">'
+                        + '<div class="header">'
+                        + '<small class=" text-muted"><span class="glyphicon glyphicon-time"></span>' + payload.msg_date + '</small>'
+                        + '<strong class="pull-right primary-font">' + payload.nickname + '</strong>'
+                        + '</div>'
+                        + '<p>' + payload.msg + '</p>'
+                        + '</div>'
+                        + '</li>';
+                $("#message-list").append(html);
+                scrollDown();
+            }
+
+            /**
+             * Permite mostrar en el historial del chat, un mensaje que fue enviado por un administrador
+             * @param {type} payload
+             **/
+            function appendHtmlMessageAdmin(payload) {
+                var html = '<li class="left clearfix"><span class="chat-img pull-left">'
+                        + '<img src="http://placehold.it/50/55C1E7/fff&amp;text=U" alt="User Avatar" class="img-circle">'
+                        + '</span>'
+                        + '<div class="chat-body clearfix">'
+                        + '<div class="header">'
+                        + '<strong class="primary-font">' + payload.nickname + '</strong> <small class="pull-right text-muted">'
+                        + '<span class="glyphicon glyphicon-time"></span>' + payload.msg_date + '</small>'
+                        + '</div>'
+                        + '<p>' + payload.msg + '</p>'
+                        + '</div>'
+                        + '</li>';
+                $("#message-list").append(html);
+                scrollDown();
+            }
+
+            /**
+             * Permite hacer scroll down en el historial del chat
+             **/
+            function scrollDown() {
+                var countLi = $('ul#message-list li').length;
+                if (countLi > 0) {
+                    var scroll = Math.abs($('ul#message-list li:first').offset().top);
+                    var scrollDown = Math.abs($('ul#message-list li:last').offset().top);
+                    $("#message-list").scrollTop(scroll + scrollDown);
+                }
+            }
+
+            /**
+             * Permite notificar al servidor que el usuario esta escribiendo un mensaje
+             * @param {type} session
+             **/
+            function notifyTyping(session) {
+                var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CLIENT_TYPING')}}"};
+                session.publish("chat/channel", data);
+            }
+
+            /**
+             * Permite actualizar los contadores de mensajes sin leer por el cliente
+             */
+            function updateUnreadCounters(counter) {
+                var spanNotification = $(".display-chat span.chat-notifications-badge");
+                var currentNumber = parseInt(spanNotification.html());
+                currentNumber += counter;
+                spanNotification.html(currentNumber);
+
+                var secondSpanNotification = $(".panel-heading-chat span.badge-success");
+                secondSpanNotification.html(currentNumber);
+
+                if (spanNotification.hasClass('hidden')) {
+                    spanNotification.removeClass('hidden');
+                    secondSpanNotification.removeClass('hidden');
+                }
+            }
+
+            function resetUnreadCounters() {
+                $(".display-chat span.chat-notifications-badge").html('0');
+                $(".display-chat span.chat-notifications-badge").addClass('hidden');
+
+                $(".panel-heading-chat span.badge-success").html('0');
+                $(".panel-heading-chat span.badge-success").addClass('hidden');
+            }
+
+            /**
+             * Permite marcar los mensajes enviados al cliente como leidos
+             **/
+            function putMessagesReaded() {
+                var displayStatus = $("#chat").css('display');
+                if (displayStatus == 'none') {
+                    $("#input-message").focus();
+                }
+                if (kijho_chat_global_session) {
+                    var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::PUT_MESSAGES_AS_READED')}}"};
+                    kijho_chat_global_session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
+                }
+            }
+
+            /**
+             * Permite enviar las nuevas configuraciones del chat al servidor 
+             * para que sean validadas y almacenadas
+             **/
+            function saveSettings(session) {
+                var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::UPDATE_SETTINGS')}}",
+                    notificationSound: $("#chatbundle_user_chat_settings_type_notificationSound").val(),
+                };
+                session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
+
+                $(".save-settings").html("{{'global.please_wait'|trans}}");
+                $(".save-settings").attr('disabled', 'disabled');
+            }
+
+            /**
+             * Permite realizar cambios en pantalla una vez almacenadas las 
+             * configuraciones del chat
+             **/
+            function settingsUpdated() {
+                $(".save-settings").html("{{'global.save_changes'|trans}}");
+                $(".save-settings").removeAttr('disabled');
+                $(".chat-settings").toggleClass('hidden');
+                kijho_chat_is_settings_visible = false;
+            }
+
+            /**
+             * Permite solicitar al servidor el cambio de estado del usuario
+             */
+            function changeStatus(session, newStatus) {
+                var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHANGE_CLIENT_STATUS')}}",
+                    newStatus: newStatus,
+                };
+                session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
+            }
+
+            /**
+             * Permite modificar visualmente el cambio de estado realizado por el admin
+             */
+            function selfStatusUpdated(payload) {
+                $(".panel-heading span.main-status").removeClass(payload.previous_status);
+                $(".panel-heading span.main-status").addClass(payload.new_status);
+            }
+
+            /**
+             * Permite realizar cambios en pantalla acorde al numero de administradores online
+             */
+            function checkChatToAdmin() {
+                if (kijho_chat_is_connection_succesfully) {
+                    if (kijho_chat_online_administrators.length > 0) {
+                        if (!kijho_chat_is_settings_visible) {
+                            $(".chat-container").removeClass('hidden');
+                            $(".group-settings").removeClass('hidden');
+                            $(".close-insider").addClass('hidden');
+                            $(".admin-offline").addClass('hidden');
+                        }
+                        //hacemos esta logica para que el cliente siga la conversacion con
+                        //el ultimo administrador con quin ha conversado
+                        for (var i = 0; i < kijho_chat_online_administrators.length; i++) {
+                            if (kijho_chat_online_administrators[i].user_id == kijho_chat_last_admin_id
+                                    && kijho_chat_last_admin_id != kijho_chat_destination) {
+                                kijho_chat_destination = kijho_chat_last_admin_id;
+                                //debemos mandar al servidor para setear el destino de los mensajes
+                                updateClientDestination(kijho_chat_destination);
+                                break;
+                            }
+                        }
+                    } else {
+                        if (!kijho_chat_is_settings_visible) {
+                            $(".chat-container").addClass('hidden');
+                            $(".group-settings").addClass('hidden');
+                            $(".close-insider").removeClass('hidden');
+                            $(".admin-offline").removeClass('hidden');
+                        }
+                    }
+                }
+            }
+
+            function updateClientDestination(client_destination) {
+                var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::UPDATE_CLIENT_DESTINATION')}}",
+                    destination: client_destination,
+                };
+                kijho_chat_global_session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
+            }
+
+            /**
+             * Permite limpiar el formulario de envio de email al administrador
+             **/
+            function clearContactForm(payload) {
+                $("#chatbundle_contact_form_type_email").val('');
+                $("#chatbundle_contact_form_type_subject").val('');
+                $("#chatbundle_contact_form_type_message").val('');
+                $(".send-contact-form").removeAttr('disabled');
+                $(".send-contact-form").html("{{'global.send'|trans}}");
+                $("#contact-form").addClass('hidden');
+                $(".contact-message-notification").removeClass('hidden');
+                $(".contact-message-notification div.alert-success").html(payload.msg);
+                $(".offline-message-alert").html('');
+            }
+
+            /**
+             * Permite mostrar en pantalla que un administrador esta escribiendo
+             **/
+            function adminTyping(payload) {
+                $(".typing-text").html(payload.msg);
+                $(".typing-text").removeClass('hidden');
+                window.setTimeout(hideTyping, 2000);
+            }
+
+            /**
+             * Permite ocultar el mensaje que indica que un administrador esta escribiendo
+             **/
+            function hideTyping() {
+                var object = $(".typing-text");
+                if (!object.hasClass('hidden')) {
+                    object.addClass('hidden');
+                }
+            }
+
+            function displayAutomaticMessage(payload) {
                 $(".play-sound").trigger('click');
                 appendHtmlMessageAdmin(payload);
                 updateUnreadCounters(1);
@@ -409,291 +661,39 @@
                 if (displayStatus == 'block') {
                     putMessagesReaded();
                 }
-            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_SEND_SUCCESSFULLY')}}") {
-                appendHtmlMessageClient(payload);
-            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CLIENT_MESSAGES_PUT_AS_READED')}}") {
-                window.setTimeout(resetUnreadCounters, 2000);
-            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SETTINGS_UPDATED')}}") {
-                settingsUpdated();
-            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::SELF_STATUS_UPDATED')}}") {
-                selfStatusUpdated(payload);
-            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::JOIN_LEFT_ADMIN_TO_ROOM')}}") {
-                kijho_chat_online_administrators = payload.online_administrators;
-                checkChatToAdmin();
-                if (typeof kijhoChatCountOnlineHelp == 'function') {
-                    kijhoChatCountOnlineHelp(kijho_chat_online_administrators.length);
-                }
-            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::ADMIN_TYPING')}}") {
-                adminTyping(payload);
-            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CLIENT_AUTOMATIC_MESSAGE')}}") {
-                displayAutomaticMessage(payload);
-            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::WRONG_CONNECTION_DATA')}}") {
-                wrongConnectionData(payload);
-            } else if (payload.msg_type == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::NICKNAME_REPEATED')}}") {
-                wrongConnectionData(payload);
             }
-        }
 
-        /**
-         * Permite mostrar en el historial del chat, un mensaje que acaba de enviar el cliente
-         * @param {type} payload
-         **/
-        function appendHtmlMessageClient(payload) {
-            var html = '<li class="right clearfix"><span class="chat-img pull-right">'
-                    + '<img src="http://placehold.it/50/FA6F57/fff&amp;text=ME" alt="User Avatar" class="img-circle">'
-                    + '</span>'
-                    + '<div class="chat-body clearfix">'
-                    + '<div class="header">'
-                    + '<small class=" text-muted"><span class="glyphicon glyphicon-time"></span>' + payload.msg_date + '</small>'
-                    + '<strong class="pull-right primary-font">' + payload.nickname + '</strong>'
-                    + '</div>'
-                    + '<p>' + payload.msg + '</p>'
-                    + '</div>'
-                    + '</li>';
-            $("#message-list").append(html);
-            scrollDown();
-        }
-
-        /**
-         * Permite mostrar en el historial del chat, un mensaje que fue enviado por un administrador
-         * @param {type} payload
-         **/
-        function appendHtmlMessageAdmin(payload) {
-            var html = '<li class="left clearfix"><span class="chat-img pull-left">'
-                    + '<img src="http://placehold.it/50/55C1E7/fff&amp;text=U" alt="User Avatar" class="img-circle">'
-                    + '</span>'
-                    + '<div class="chat-body clearfix">'
-                    + '<div class="header">'
-                    + '<strong class="primary-font">' + payload.nickname + '</strong> <small class="pull-right text-muted">'
-                    + '<span class="glyphicon glyphicon-time"></span>' + payload.msg_date + '</small>'
-                    + '</div>'
-                    + '<p>' + payload.msg + '</p>'
-                    + '</div>'
-                    + '</li>';
-            $("#message-list").append(html);
-            scrollDown();
-        }
-
-        /**
-         * Permite hacer scroll down en el historial del chat
-         **/
-        function scrollDown() {
-            var countLi = $('ul#message-list li').length;
-            if (countLi > 0) {
-                var scroll =  Math.abs($('ul#message-list li:first').offset().top);
-                var scrollDown = Math.abs($('ul#message-list li:last').offset().top);
-                $("#message-list").scrollTop(scroll+scrollDown);
+            /**
+             * Permite realizar cambios en pantalla cuendo el servidor esta fuera de linea
+             */
+            function notifyServerDown() {
+                $(".chat-container").addClass('hidden');
+                $(".group-settings").addClass('hidden');
+                $(".close-insider").removeClass('hidden');
+                $(".connection-container").addClass('hidden');
+                $(".admin-offline").removeClass('hidden');
+                $(".admin-offline-message").addClass('hidden');
+                $(".server-down-message").removeClass('hidden');
             }
-        }
 
-        /**
-         * Permite notificar al servidor que el usuario esta escribiendo un mensaje
-         * @param {type} session
-         **/
-        function notifyTyping(session) {
-            var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CLIENT_TYPING')}}"};
-            session.publish("chat/channel", data);
-        }
-
-        /**
-         * Permite actualizar los contadores de mensajes sin leer por el cliente
-         */
-        function updateUnreadCounters(counter) {
-            var spanNotification = $(".display-chat span.chat-notifications-badge");
-            var currentNumber = parseInt(spanNotification.html());
-            currentNumber += counter;
-            spanNotification.html(currentNumber);
-
-            var secondSpanNotification = $(".panel-heading-chat span.badge-success");
-            secondSpanNotification.html(currentNumber);
-
-            if (spanNotification.hasClass('hidden')) {
-                spanNotification.removeClass('hidden');
-                secondSpanNotification.removeClass('hidden');
+            /**
+             * Permite realizar cambios en pantalla cuendo el servidor esta en linea
+             */
+            function notifyServerUp() {
+                $(".chat-container").removeClass('hidden');
+                $(".group-settings").removeClass('hidden');
+                $(".close-insider").addClass('hidden');
+                $(".admin-offline").addClass('hidden');
+                $(".admin-offline-message").removeClass('hidden');
+                $(".server-down-message").addClass('hidden');
             }
-        }
 
-        function resetUnreadCounters() {
-            $(".display-chat span.chat-notifications-badge").html('0');
-            $(".display-chat span.chat-notifications-badge").addClass('hidden');
+            function sendConnectionForm(session) {
+                var email = $("#chatbundle_connection_form_type_email").val();
+                var nickname = $("#chatbundle_connection_form_type_nickname").val();
 
-            $(".panel-heading-chat span.badge-success").html('0');
-            $(".panel-heading-chat span.badge-success").addClass('hidden');
-        }
-
-        /**
-         * Permite marcar los mensajes enviados al cliente como leidos
-         **/
-        function putMessagesReaded() {
-            var displayStatus = $("#chat").css('display');
-            if (displayStatus == 'none') {
-                $("#input-message").focus();
-            }
-            if (kijho_chat_global_session) {
-                var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::PUT_MESSAGES_AS_READED')}}"};
-                kijho_chat_global_session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
-            }
-        }
-
-        /**
-         * Permite enviar las nuevas configuraciones del chat al servidor 
-         * para que sean validadas y almacenadas
-         **/
-        function saveSettings(session) {
-            var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::UPDATE_SETTINGS')}}",
-                notificationSound: $("#chatbundle_user_chat_settings_type_notificationSound").val(),
-            };
-            session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
-
-            $(".save-settings").html("{{'global.please_wait'|trans}}");
-            $(".save-settings").attr('disabled', 'disabled');
-        }
-
-        /**
-         * Permite realizar cambios en pantalla una vez almacenadas las 
-         * configuraciones del chat
-         **/
-        function settingsUpdated() {
-            $(".save-settings").html("{{'global.save_changes'|trans}}");
-            $(".save-settings").removeAttr('disabled');
-            $(".chat-settings").toggleClass('hidden');
-            kijho_chat_is_settings_visible = false;
-        }
-
-        /**
-         * Permite solicitar al servidor el cambio de estado del usuario
-         */
-        function changeStatus(session, newStatus) {
-            var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHANGE_CLIENT_STATUS')}}",
-                newStatus: newStatus,
-            };
-            session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
-        }
-
-        /**
-         * Permite modificar visualmente el cambio de estado realizado por el admin
-         */
-        function selfStatusUpdated(payload) {
-            $(".panel-heading span.main-status").removeClass(payload.previous_status);
-            $(".panel-heading span.main-status").addClass(payload.new_status);
-        }
-
-        /**
-         * Permite realizar cambios en pantalla acorde al numero de administradores online
-         */
-        function checkChatToAdmin() {
-            if (kijho_chat_is_connection_succesfully) {
-                if (kijho_chat_online_administrators.length > 0) {
-                    if (!kijho_chat_is_settings_visible) {
-                        $(".chat-container").removeClass('hidden');
-                        $(".group-settings").removeClass('hidden');
-                        $(".close-insider").addClass('hidden');
-                        $(".admin-offline").addClass('hidden');
-                    }
-                    //hacemos esta logica para que el cliente siga la conversacion con
-                    //el ultimo administrador con quin ha conversado
-                    for (var i = 0; i < kijho_chat_online_administrators.length; i++) {
-                        if (kijho_chat_online_administrators[i].user_id == kijho_chat_last_admin_id
-                                && kijho_chat_last_admin_id != kijho_chat_destination) {
-                            kijho_chat_destination = kijho_chat_last_admin_id;
-                            //debemos mandar al servidor para setear el destino de los mensajes
-                            updateClientDestination(kijho_chat_destination);
-                            break;
-                        }
-                    }
-                } else {
-                    if (!kijho_chat_is_settings_visible) {
-                        $(".chat-container").addClass('hidden');
-                        $(".group-settings").addClass('hidden');
-                        $(".close-insider").removeClass('hidden');
-                        $(".admin-offline").removeClass('hidden');
-                    }
-                }
-            }
-        }
-        
-        function updateClientDestination(client_destination) {
-            var data = {type: "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::UPDATE_CLIENT_DESTINATION')}}",
-                            destination: client_destination,
-                        };
-            kijho_chat_global_session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
-        }
-
-        /**
-         * Permite limpiar el formulario de envio de email al administrador
-         **/
-        function clearContactForm(payload) {
-            $("#chatbundle_contact_form_type_email").val('');
-            $("#chatbundle_contact_form_type_subject").val('');
-            $("#chatbundle_contact_form_type_message").val('');
-            $(".send-contact-form").removeAttr('disabled');
-            $(".send-contact-form").html("{{'global.send'|trans}}");
-            $("#contact-form").addClass('hidden');
-            $(".contact-message-notification").removeClass('hidden');
-            $(".contact-message-notification div.alert-success").html(payload.msg);
-            $(".offline-message-alert").html('');
-        }
-        
-        /**
-         * Permite mostrar en pantalla que un administrador esta escribiendo
-         **/
-        function adminTyping(payload) {
-            $(".typing-text").html(payload.msg);
-            $(".typing-text").removeClass('hidden');
-            window.setTimeout(hideTyping, 2000);
-        }
-
-        /**
-         * Permite ocultar el mensaje que indica que un administrador esta escribiendo
-         **/
-        function hideTyping() {
-            var object = $(".typing-text");
-            if (!object.hasClass('hidden')) {
-                object.addClass('hidden');
-            }
-        }
-        
-        function displayAutomaticMessage(payload) {
-            $(".play-sound").trigger('click');
-            appendHtmlMessageAdmin(payload);
-            updateUnreadCounters(1);
-            var displayStatus = $("#chat").css('display');
-            if (displayStatus == 'block') {
-                putMessagesReaded();
-            }
-        }
-        
-        /**
-         * Permite realizar cambios en pantalla cuendo el servidor esta fuera de linea
-         */
-        function notifyServerDown() {
-            $(".chat-container").addClass('hidden');
-            $(".group-settings").addClass('hidden');
-            $(".close-insider").removeClass('hidden');
-            $(".connection-container").addClass('hidden');
-            $(".admin-offline").removeClass('hidden');
-            $(".admin-offline-message").addClass('hidden');
-            $(".server-down-message").removeClass('hidden');
-        }
-        
-        /**
-         * Permite realizar cambios en pantalla cuendo el servidor esta en linea
-         */
-        function notifyServerUp() {
-            $(".chat-container").removeClass('hidden');
-            $(".group-settings").removeClass('hidden');
-            $(".close-insider").addClass('hidden');
-            $(".admin-offline").addClass('hidden');
-            $(".admin-offline-message").removeClass('hidden');
-            $(".server-down-message").addClass('hidden');
-        }
-        
-        function sendConnectionForm(session) {
-            var email = $("#chatbundle_connection_form_type_email").val();
-            var nickname = $("#chatbundle_connection_form_type_nickname").val();
-
-            if (email != '' && validateEmail(email)) {
-                if (nickname != '' && validateNickname(nickname)) {
+                if (email != '' && validateEmail(email)) {
+                    if (nickname != '' && validateNickname(nickname)) {
                         $(".send-connection-form").attr('disabled', 'disabled');
                         $(".send-connection-form").html("{{'global.please_wait'|trans}}");
 
@@ -702,240 +702,243 @@
                             nickname: nickname,
                         };
                         session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
+                    } else {
+                        $(".connection-container p.alert-danger").removeClass('hidden');
+                        $(".connection-container p.alert-danger").html("{{'connection_form.insert_valid_nickname'|trans}}");
+                        $("#chatbundle_connection_form_type_nickname").select();
+                    }
                 } else {
                     $(".connection-container p.alert-danger").removeClass('hidden');
-                    $(".connection-container p.alert-danger").html("{{'connection_form.insert_valid_nickname'|trans}}");
-                    $("#chatbundle_connection_form_type_nickname").select();
-                }
-            } else {
-                $(".connection-container p.alert-danger").removeClass('hidden');
-                $(".connection-container p.alert-danger").html("{{'connection_form.insert_valid_email'|trans}}");
-                $("#chatbundle_connection_form_type_email").select();
-            }
-        }
-        
-        /**
-         * Permte realizar cambios en pantalla una vez realizada la conexion de un usuario
-         **/
-        function connectionSuccess(payload) {
-            kijho_chat_is_connection_succesfully = true;
-            $(".connection-container p.alert-danger").addClass('hidden');
-            if (payload.msg != '') {
-                if (!$("#message-list li:first").hasClass('welcome')) {
-                    $("#message-list").prepend('<li class="welcome">' + payload.msg + '</li>');
+                    $(".connection-container p.alert-danger").html("{{'connection_form.insert_valid_email'|trans}}");
+                    $("#chatbundle_connection_form_type_email").select();
                 }
             }
-            $(".connection-container").addClass('hidden');
-            $(".chat-container").removeClass('hidden');
-            $(".group-settings").removeClass('hidden');
-            $(".close-insider").addClass('hidden');
-            $(".send-connection-form").removeAttr('disabled');
-            $(".send-connection-form").html("{{'global.send'|trans}}");
-            
-            if (payload.anonymous != '' && payload.anonymous != 'undefined' && payload.anonymous == true) {
-                document.cookie="__nickname="+payload.nickname;
-                document.cookie="__email="+payload.email;
-                kijho_chat_user_identifier = payload.nickname;
-                kijho_chat_user_nickname = payload.nickname;
-                kijho_chat_user_email = payload.email;
-                $(".panel-heading span.main-status").addClass(payload.status);
-                $(".panel-heading span.main-status").removeClass('is-offline');
-                if (payload.sound != '') {
-                    $("#chatbundle_user_chat_settings_type_notificationSound").val(payload.sound);
-                }
-                if (kijho_chat_user_identifier != '') {
-                    getClientMessages(kijho_chat_user_nickname, kijho_chat_user_identifier);
-                }
-            }
-        }
-        
-        /**
-         * Permte realizar cambios en pantalla cuando el usuario ingresa datos 
-         * invalidos cuando realiza una conexion
-         **/
-        function wrongConnectionData(payload) {
-            $("#chatbundle_connection_form_type_nickname").focus();
-            $(".send-connection-form").removeAttr('disabled');
-            $(".send-connection-form").html("{{'global.send'|trans}}");
-            $(".connection-container p.alert-success").addClass('hidden');
-            $(".connection-container p.alert-danger").removeClass('hidden');
-            $(".connection-container p.alert-danger").html(payload.msg);
-        }
-        
-        function checkExistingConecction() {
-            var previousEmail = getCookie('__email');
-            var previousNickname = getCookie('__nickname');
-            
-            if (previousEmail != '' && previousEmail != 'undefined' && previousNickname != '' && previousNickname != 'undefined' ) {
-                $("#chatbundle_connection_form_type_email").val(previousEmail);
-                $("#chatbundle_connection_form_type_nickname").val(previousNickname);
-                $(".send-connection-form").trigger('click');
-            }
-        }
-        
-        function getCookie(cname) {
-            var name = cname + "=";
-            var ca = document.cookie.split(';');
-            for(var i=0; i<ca.length; i++) {
-                var c = ca[i];
-                while (c.charAt(0)==' ') c = c.substring(1);
-                if (c.indexOf(name) == 0) return c.substring(name.length,c.length);
-            }
-            return "";
-        } 
-        
-        /**
-        * Ajax que permite consultar los mensajes del usuario
-        **/
-        function getClientMessages(nickname, userId) {
-            $.ajax({
-                type: 'POST',
-                url: "{{path('chat_example_client_get_messages')}}",
-                dataType: 'json',
-                async: false,
-                data: {nickname: nickname, userId: userId},
-                success: function (resp)
-                {
-                    if (resp.result == '__OK__') {
-                        if (resp.unreadCounter > 0) {
-                            updateUnreadCounters(resp.unreadCounter);
-                        }
 
-                        var messages = JSON.parse(resp.messages)
-                        for (var i = 0; i < messages.length; i++) {
-                            if (messages[i].type == "{{constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_CLIENT_TO_ADMIN')}}") {
-                                appendHtmlMessageClient(messages[i]);
-                                kijho_chat_last_admin_id = messages[i].destination_id;
-                            } else if (messages[i].type == "{{constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_ADMIN_TO_CLIENT')}}") {
-                                appendHtmlMessageAdmin(messages[i]);
-                                kijho_chat_last_admin_id = messages[i].sender_id;
-                            }
-                        }
-                        scrollDown();
+            /**
+             * Permte realizar cambios en pantalla una vez realizada la conexion de un usuario
+             **/
+            function connectionSuccess(payload) {
+                kijho_chat_is_connection_succesfully = true;
+                $(".connection-container p.alert-danger").addClass('hidden');
+                if (payload.msg != '') {
+                    if (!$("#message-list li:first").hasClass('welcome')) {
+                        $("#message-list").prepend('<li class="welcome">' + payload.msg + '</li>');
                     }
-                },
-                error: function (resp)
-                {
-                    console.log("Error cargando los mensajes del cliente")
                 }
-            });
-        }
-        
-        function verifyChatOpen() {
-            var displayStatus = $("#chat").css('display');
-            if (displayStatus == 'none') {
-                var isChatOpen = parseInt(getCookie('__chat_opened'));
-                if (isChatOpen == 1) {
-                    $(".display-chat").trigger('click');
-                } 
+                $(".connection-container").addClass('hidden');
+                $(".chat-container").removeClass('hidden');
+                $(".group-settings").removeClass('hidden');
+                $(".close-insider").addClass('hidden');
+                $(".send-connection-form").removeAttr('disabled');
+                $(".send-connection-form").html("{{'global.send'|trans}}");
+
+                if (payload.anonymous != '' && payload.anonymous != 'undefined' && payload.anonymous == true) {
+                    document.cookie = "__nickname=" + payload.nickname;
+                    document.cookie = "__email=" + payload.email;
+                    kijho_chat_user_identifier = payload.nickname;
+                    kijho_chat_user_nickname = payload.nickname;
+                    kijho_chat_user_email = payload.email;
+                    $(".panel-heading span.main-status").addClass(payload.status);
+                    $(".panel-heading span.main-status").removeClass('is-offline');
+                    if (payload.sound != '') {
+                        $("#chatbundle_user_chat_settings_type_notificationSound").val(payload.sound);
+                    }
+                    if (kijho_chat_user_identifier != '') {
+                        getClientMessages(kijho_chat_user_nickname, kijho_chat_user_identifier);
+                    }
+                }
             }
-            kijho_chat_is_chat_visibility_checked = true;
-        }
-        
-        function validateEmail(email) {
-            var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-            return re.test(email);
-        }
-        
-        function validateNickname(nickname) {
-            var re = /^[a-z0-9_-]{3,15}$/;
-            return re.test(nickname);
-        }
+
+            /**
+             * Permte realizar cambios en pantalla cuando el usuario ingresa datos 
+             * invalidos cuando realiza una conexion
+             **/
+            function wrongConnectionData(payload) {
+                $("#chatbundle_connection_form_type_nickname").focus();
+                $(".send-connection-form").removeAttr('disabled');
+                $(".send-connection-form").html("{{'global.send'|trans}}");
+                $(".connection-container p.alert-success").addClass('hidden');
+                $(".connection-container p.alert-danger").removeClass('hidden');
+                $(".connection-container p.alert-danger").html(payload.msg);
+            }
+
+            function checkExistingConecction() {
+                var previousEmail = getCookie('__email');
+                var previousNickname = getCookie('__nickname');
+
+                if (previousEmail != '' && previousEmail != 'undefined' && previousNickname != '' && previousNickname != 'undefined') {
+                    $("#chatbundle_connection_form_type_email").val(previousEmail);
+                    $("#chatbundle_connection_form_type_nickname").val(previousNickname);
+                    $(".send-connection-form").trigger('click');
+                }
+            }
+
+            function getCookie(cname) {
+                var name = cname + "=";
+                var ca = document.cookie.split(';');
+                for (var i = 0; i < ca.length; i++) {
+                    var c = ca[i];
+                    while (c.charAt(0) == ' ')
+                        c = c.substring(1);
+                    if (c.indexOf(name) == 0)
+                        return c.substring(name.length, c.length);
+                }
+                return "";
+            }
+
+            /**
+             * Ajax que permite consultar los mensajes del usuario
+             **/
+            function getClientMessages(nickname, userId) {
+                $.ajax({
+                    type: 'POST',
+                    url: "{{path('chat_example_client_get_messages')}}",
+                    dataType: 'json',
+                    async: false,
+                    data: {nickname: nickname, userId: userId},
+                    success: function (resp)
+                    {
+                        if (resp.result == '__OK__') {
+                            if (resp.unreadCounter > 0) {
+                                updateUnreadCounters(resp.unreadCounter);
+                            }
+
+                            var messages = JSON.parse(resp.messages)
+                            for (var i = 0; i < messages.length; i++) {
+                                if (messages[i].type == "{{constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_CLIENT_TO_ADMIN')}}") {
+                                    appendHtmlMessageClient(messages[i]);
+                                    kijho_chat_last_admin_id = messages[i].destination_id;
+                                } else if (messages[i].type == "{{constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_ADMIN_TO_CLIENT')}}") {
+                                    appendHtmlMessageAdmin(messages[i]);
+                                    kijho_chat_last_admin_id = messages[i].sender_id;
+                                }
+                            }
+                            scrollDown();
+                        }
+                    },
+                    error: function (resp)
+                    {
+                        console.log("Error cargando los mensajes del cliente")
+                    }
+                });
+            }
+
+            function verifyChatOpen() {
+                var displayStatus = $("#chat").css('display');
+                if (displayStatus == 'none') {
+                    var isChatOpen = parseInt(getCookie('__chat_opened'));
+                    if (isChatOpen == 1) {
+                        $(".display-chat").trigger('click');
+                    }
+                }
+                kijho_chat_is_chat_visibility_checked = true;
+            }
+
+            function validateEmail(email) {
+                var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+                return re.test(email);
+            }
+
+            function validateNickname(nickname) {
+                var re = /^[a-z0-9_-]{3,15}$/;
+                return re.test(nickname);
+            }
     </script>
 {% endblock %}
 
 {% block scripts %}
-    
-    $(".display-chat").click(function (e) {
-        
-        if (kijho_chat_is_chat_visibility_checked == true) {
-            var displayStatus = $("#chat").css('display');
-            if (displayStatus == 'none') {
-                document.cookie="__chat_opened=1";
-            } else {
-                document.cookie="__chat_opened=0";
-            }
-        }
+        $(".display-chat").click(function (e) {
 
-        scrollDown();
-        putMessagesReaded();
-
-    });
-    
-    
-    {% if nickname is defined and nickname is not empty %}
-        getClientMessages("{{nickname}}", "{{userId}}");
-        scrollDown();
-    {% endif %}
-    
-    verifyChatOpen();
-    
-    $(".send-other-message").click(function (e) {
-        $(".contact-message-notification").addClass('hidden');
-        $("#contact-form").removeClass('hidden');
-    });
-
-    $('.lower-case').keyup(function () {
-        var text = $(this).val();
-        text = text.toLowerCase();
-        $(this).val(text);
-    });
-    
-    /**
-    * Permite enviar al servidor el formulario de contacto para enviar
-    * un correo al administrador cuando no hay ninguno online
-    */
-    $(".send-contact-form").click(function (e) {
-        e.preventDefault();
-        var email = $("#chatbundle_contact_form_type_email").val();
-        var subject = $("#chatbundle_contact_form_type_subject").val();
-        var message = $("#chatbundle_contact_form_type_message").val();
-
-        if (email != '' && validateEmail(email)) {
-            if (subject != '') {
-                if (message != '') {
-
-                    $(".send-contact-form").attr('disabled', 'disabled');
-                    $(".send-contact-form").html("{{'global.please_wait'|trans}}");
-
-                    var data = {
-                        email: email,
-                        subject: subject,
-                        message: message,
-                        userId: kijho_chat_user_identifier,
-                        nickname: kijho_chat_user_nickname
-                    };
-                    
-                    $.ajax({
-                        type: 'POST',
-                        url: "{{path('chat_example_client_send_offline_message')}}",
-                        dataType: 'json',
-                        data: data,
-                        success: function (resp)
-                        {
-                            if (resp.result == '__OK__') {
-                                clearContactForm(resp);
-                            } else {
-                                $(".send-contact-form").removeAttr('disabled');
-                                $(".send-contact-form").html("{{'global.send'|trans}}");
-                                $(".offline-message-alert").html(resp.msg);
-                            }
-                        },
-                        error: function (resp)
-                        {
-                            $(".send-contact-form").removeAttr('disabled');
-                            $(".send-contact-form").html("{{'global.send'|trans}}");
-                            console.log("Error enviando correo electronico")
-                        }
-                    });
+            if (kijho_chat_is_chat_visibility_checked == true) {
+                var displayStatus = $("#chat").css('display');
+                if (displayStatus == 'none') {
+                    document.cookie = "__chat_opened=1";
                 } else {
-                    $("#chatbundle_contact_form_type_message").focus();
+                    document.cookie = "__chat_opened=0";
                 }
-            } else {
-                $("#chatbundle_contact_form_type_subject").focus();
             }
-        } else {
-            $("#chatbundle_contact_form_type_email").select();
-        }
-    });
-{% endblock %}
+
+            scrollDown();
+            putMessagesReaded();
+
+        });
+
+
+        {% if nickname is defined and nickname is not empty %}
+            getClientMessages("{{nickname}}", "{{userId}}");
+            scrollDown();
+        {% endif %}
+
+            verifyChatOpen();
+
+            $(".send-other-message").click(function (e) {
+                $(".contact-message-notification").addClass('hidden');
+                $("#contact-form").removeClass('hidden');
+            });
+
+            $('.lower-case').keyup(function () {
+                var text = $(this).val();
+                text = text.toLowerCase();
+                $(this).val(text);
+            });
+
+            /**
+             * Permite enviar al servidor el formulario de contacto para enviar
+             * un correo al administrador cuando no hay ninguno online
+             */
+            $(".send-contact-form").click(function (e) {
+                e.preventDefault();
+                var email = $("#chatbundle_contact_form_type_email").val();
+                var subject = $("#chatbundle_contact_form_type_subject").val();
+                var message = $("#chatbundle_contact_form_type_message").val();
+
+                if (email != '' && validateEmail(email)) {
+                    if (subject != '') {
+                        if (message != '') {
+
+                            $(".send-contact-form").attr('disabled', 'disabled');
+                            $(".send-contact-form").html("{{'global.please_wait'|trans}}");
+
+                            var data = {
+                                email: email,
+                                subject: subject,
+                                message: message,
+                                userId: kijho_chat_user_identifier,
+                                nickname: kijho_chat_user_nickname
+                            };
+
+                            $.ajax({
+                                type: 'POST',
+                                url: "{{path('chat_example_client_send_offline_message')}}",
+                                dataType: 'json',
+                                data: data,
+                                success: function (resp)
+                                {
+                                    if (resp.result == '__OK__') {
+                                        clearContactForm(resp);
+                                    } else {
+                                        $(".send-contact-form").removeAttr('disabled');
+                                        $(".send-contact-form").html("{{'global.send'|trans}}");
+                                        $(".offline-message-alert").html("<div class='alert alert-danger alert-dismissible'>\
+                         <button aria-hidden='true' data-dismiss='alert' class='close' type='button'>×</button>\
+                         <i class='icon fa fa-ban'></i>" + '&nbsp;' + resp.msg + "</div>");
+                                    }
+                                },
+                                error: function (resp)
+                                {
+                                    $(".send-contact-form").removeAttr('disabled');
+                                    $(".send-contact-form").html("{{'global.send'|trans}}");
+                                    console.log("Error enviando correo electronico")
+                                }
+                            });
+                        } else {
+                            $("#chatbundle_contact_form_type_message").focus();
+                        }
+                    } else {
+                        $("#chatbundle_contact_form_type_subject").focus();
+                    }
+                } else {
+                    $("#chatbundle_contact_form_type_email").select();
+                }
+            });
+    {% endblock %}
