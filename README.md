@@ -74,15 +74,11 @@ You must add FrchoCrontaskBundle to the assetic.bundle config
 assetic:
     debug:          "%kernel.debug%"
     use_controller: false
-    bundles:        [FrchoCrontaskBundle]
+    bundles:        [ChatBundle]
     #java: /usr/bin/java
     filters:
         cssrewrite: ~
         #closure:
-     
-fkr_css_url_rewrite:
-    rewrite_only_if_file_exists: true
-    clear_urls: true
 ```
 Enabled locale
 =======
@@ -100,7 +96,7 @@ gos_web_socket:
         host: 127.0.0.1           #The host ip to bind to
         router:
             resources:
-                - @ChatBundle/Resources/config/routing/chat.yml
+                - "@ChatBundle/Resources/config/routing/chat.yml"
 ```
 
 Update the database schema and assets :
