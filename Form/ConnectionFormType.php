@@ -5,23 +5,17 @@ namespace Kijho\ChatBundle\Form;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\Extension\Core\Type as Type;
-use Symfony\Component\DependencyInjection\Container;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ConnectionFormType extends AbstractType {
-
-    private $container;
-    private $translator;
-
-    public function __construct(Container $container) {
-        $this->container = $container;
-        $this->translator = $this->container->get('translator');
-    }
 
     /**
      * @param FormBuilderInterface $builder
      * @param array $options
      */
     public function buildForm(FormBuilderInterface $builder, array $options) {
+        $this->translator = $options['translator'];
+
         $builder
                 ->add('email', Type\EmailType::class, array(
                     'required' => true,
@@ -44,10 +38,21 @@ class ConnectionFormType extends AbstractType {
     }
 
     /**
+     * @param OptionsResolver $resolver
+     */
+    public function configureOptions(OptionsResolver $resolver) {
+        $resolver->setRequired('translator');
+    }
+
+    /**
      * @return string
      */
     public function getName() {
         return 'chatbundle_connection_form_type';
+    }
+
+    public function getBlockPrefix() {
+        return $this->getName();
     }
 
 }

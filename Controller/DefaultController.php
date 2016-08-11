@@ -48,9 +48,9 @@ class DefaultController extends Controller {
             }
         }
 
-        $userSettingsForm = $this->createForm(UserChatSettingsType::class, $userSettings);
-        $contactForm = $this->createForm(ContactFormType::class);
-        $connectionForm = $this->createForm(ConnectionFormType::class);
+        $userSettingsForm = $this->createForm(UserChatSettingsType::class, $userSettings, array('translator' => $this->get('translator')));
+        $contactForm = $this->createForm(ContactFormType::class, null, array('translator' => $this->get('translator')));
+        $connectionForm = $this->createForm(ConnectionFormType::class, null, array('translator' => $this->get('translator')));
 
 
         return $this->render('ChatBundle:Default:indexClient.html.twig', array(
@@ -101,7 +101,7 @@ class DefaultController extends Controller {
             $em->flush();
         }
 
-        $userSettingsForm = $this->createForm(UserChatSettingsType::class, $userSettings);
+        $userSettingsForm = $this->createForm(UserChatSettingsType::class, $userSettings, array('translator' => $this->get('translator')));
 
         $chatSettings = $em->getRepository('ChatBundle:ChatSettings')->findOneBy(array(), array());
         if (!$chatSettings) {
@@ -112,7 +112,7 @@ class DefaultController extends Controller {
 
         $customMessages = json_decode($chatSettings->getCustomMessages());
 
-        $settingsForm = $this->createForm(ChatSettingsType::class, $chatSettings);
+        $settingsForm = $this->createForm(ChatSettingsType::class, $chatSettings, array('translator' => $this->get('translator')));
 
         return $this->render('ChatBundle:Default:indexAdmin.html.twig', array(
                     'local' => $local,

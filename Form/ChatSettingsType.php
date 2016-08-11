@@ -10,19 +10,13 @@ use Symfony\Component\DependencyInjection\Container;
 
 class ChatSettingsType extends AbstractType {
 
-    private $container;
-    private $translator;
-
-    public function __construct(Container $container) {
-        $this->container = $container;
-        $this->translator = $this->container->get('translator');
-    }
-
     /**
      * @param FormBuilderInterface $builder
      * @param array $options
      */
     public function buildForm(FormBuilderInterface $builder, array $options) {
+        $this->translator = $options['translator'];
+
         $builder
                 ->add('emailOfflineMessages', Type\EmailType::class, array(
                     'required' => false,
@@ -46,16 +40,22 @@ class ChatSettingsType extends AbstractType {
      * @param OptionsResolver $resolver
      */
     public function configureOptions(OptionsResolver $resolver) {
+        $resolver->setRequired('translator');
+
         $resolver->setDefaults(array(
             'data_class' => 'Kijho\ChatBundle\Entity\ChatSettings'
         ));
     }
-    
+
     /**
      * @return string
      */
     public function getName() {
         return 'chatbundle_chat_settings_type';
+    }
+
+    public function getBlockPrefix() {
+        return $this->getName();
     }
 
 }

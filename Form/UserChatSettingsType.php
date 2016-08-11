@@ -6,23 +6,15 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type as Type;
-use Symfony\Component\DependencyInjection\Container;
 
 class UserChatSettingsType extends AbstractType {
-
-    private $container;
-    private $translator;
-
-    public function __construct(Container $container) {
-        $this->container = $container;
-        $this->translator = $this->container->get('translator');
-    }
-
     /**
      * @param FormBuilderInterface $builder
      * @param array $options
      */
     public function buildForm(FormBuilderInterface $builder, array $options) {
+        $this->translator = $options['translator'];
+
         $builder
                 ->add('notificationSound', Type\ChoiceType::class, array(
                     'required' => false,
@@ -52,16 +44,22 @@ class UserChatSettingsType extends AbstractType {
      * @param OptionsResolver $resolver
      */
     public function configureOptions(OptionsResolver $resolver) {
+        $resolver->setRequired('translator');
+
         $resolver->setDefaults(array(
             'data_class' => 'Kijho\ChatBundle\Entity\UserChatSettings'
         ));
     }
-    
+
     /**
      * @return string
      */
     public function getName() {
         return 'chatbundle_user_chat_settings_type';
+    }
+
+    public function getBlockPrefix() {
+        $this->getName();
     }
 
 }
