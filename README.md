@@ -96,7 +96,7 @@ gos_web_socket:
         host: 127.0.0.1           #The host ip to bind to
         router:
             resources:
-                - @ChatBundle/Resources/config/routing/chat.yml
+                - "@ChatBundle/Resources/config/routing/chat.yml"
 ```
 
 Update the database schema and assets :
