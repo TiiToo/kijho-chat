@@ -6,9 +6,9 @@ Chat plugin for Symfony >= 2.8
 
 Preview
 ============
-Screenshot admin panel
+Screenshot admin panel: local.loc/app_dev.php/chat/admin
 ![alt tag](https://github.com/KijhoTechnologies/kijho-chat/blob/master/Resources/public/images/Admin.png)
-Screenshot client panel
+Screenshot client panel: local.loc/app_dev.php/chat/client
 ![alt tag](https://github.com/KijhoTechnologies/kijho-chat/blob/master/Resources/public/images/Client.png)
 
 Installation
@@ -69,13 +69,17 @@ chat:
     prefix:   /{_locale}/chat
 
 ```
-Update the database schema :
+Update the database schema and assets :
 ```bash
 symfony 3.0
 bin/console doctrine:schema:update --force
+bin/console assets:install
+bin/console assetic:dump
 
 symfony 2.8
 app/console doctrine:schema:update --force
+app/console assets:install
+app/console assetic:dump
 ```
 You must add FrchoCrontaskBundle to the assetic.bundle config
 ```bash
@@ -110,6 +114,20 @@ gos_web_socket:
             resources:
                 - @ChatBundle/Resources/config/routing/chat.yml
 ```
+
+Update the database schema and assets :
+```bash
+symfony 3.0
+bin/console doctrine:schema:update --force
+bin/console assets:install
+bin/console assetic:dump
+
+symfony 2.8
+app/console doctrine:schema:update --force
+app/console assets:install
+app/console assetic:dump
+```
+
 Launching the Server
 
 The Server Side WebSocket installation is now complete. You should be able to run this from the root of your symfony installation.
