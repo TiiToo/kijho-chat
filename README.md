@@ -74,7 +74,7 @@ You must add FrchoCrontaskBundle to the assetic.bundle config
 assetic:
     debug:          "%kernel.debug%"
     use_controller: false
-    bundles:        [FrchoCrontaskBundle]
+    bundles:        [ChatBundle]
     #java: /usr/bin/java
     filters:
         cssrewrite: ~
