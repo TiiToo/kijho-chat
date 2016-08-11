@@ -6,8 +6,10 @@ Chat plugin for Symfony >= 2.8
 
 Preview
 ============
-
-
+Screenshot admin panel
+![alt tag](https://github.com/KijhoTechnologies/kijho-chat/blob/master/Resources/public/images/Admin.png)
+Screenshot client panel
+![alt tag](https://github.com/KijhoTechnologies/kijho-chat/blob/master/Resources/public/images/Client.png)
 
 Installation
 ============
