@@ -4,6 +4,11 @@ Bundle for chat
 
 Chat plugin for Symfony >= 2.8
 
+Preview
+============
+
+
+
 Installation
 ============
 
