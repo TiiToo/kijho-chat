@@ -148,3 +148,6 @@ bin/console gos:websocket:server --profile --env=prod
 
 And trigger all the things.
 
+Source
+=====
+https://github.com/GeniusesOfSymfony/WebSocketBundle/blob/master/README.md
