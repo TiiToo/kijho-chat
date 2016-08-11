@@ -1,3 +1,0 @@
-chat:
-    resource: "@ChatBundle/Resources/config/routing.yml"
-    prefix:   /
