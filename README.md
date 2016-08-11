@@ -79,10 +79,6 @@ assetic:
     filters:
         cssrewrite: ~
         #closure:
-     
-fkr_css_url_rewrite:
-    rewrite_only_if_file_exists: true
-    clear_urls: true
 ```
 Enabled locale
 =======
