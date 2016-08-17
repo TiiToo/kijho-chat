@@ -2,7 +2,7 @@ kijho-chat
 ===================
 Bundle for chat
 
-Chat plugin for Symfony >= 2.8
+Chat plugin for Symfony 2.8 and 3.x
 
 Preview
 ============
