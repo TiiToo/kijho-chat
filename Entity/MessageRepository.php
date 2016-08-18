@@ -3,6 +3,7 @@
 namespace Kijho\ChatBundle\Entity;
 
 use Doctrine\ORM\EntityRepository;
+use Kijho\ChatBundle\Util\Util;
 
 class MessageRepository extends EntityRepository {
 
@@ -14,74 +15,49 @@ class MessageRepository extends EntityRepository {
      * @param string $adminId identificador del administrador
      * @return type
      */
-    /*public function findClientChatNickNames($adminId) {
-
+    public function findClientChatNickNames($adminId = null, $today = false) {
         $em = $this->getEntityManager();
 
-        $innerQuery = $em->createQuery("SELECT MAX(mes.date)
-            FROM ChatBundle:Message mes
-            WHERE (mes.destinationId = :adminId
-            AND mes.type = :clientAdmin ) 
-            OR (mes.senderId = :adminId
-            AND mes.type = :adminClient ) 
-            GROUP BY mes.senderNickname")
-                ->setMaxResults(1)
-                ->setParameter('adminId', $adminId)
-                ->setParameter('clientAdmin', Message::TYPE_CLIENT_TO_ADMIN)
-                ->setParameter('adminClient', Message::TYPE_ADMIN_TO_CLIENT);
-
-        $result = $innerQuery->getArrayResult();
-
-
-        if (!empty($result)) {
-
-            $dqlQuery = $innerQuery->getDQL();
-
-            $consult = $em->createQuery("
-        SELECT m.type, m.senderId, m.senderNickname, m.destinationId, m.destinationNickname, m.date
-        FROM ChatBundle:Message m
-        WHERE ((m.destinationId = :adminId
-        AND m.type = :clientAdmin ) OR (
-            m.senderId = :adminId
-            AND m.type = :adminClient)
-        )
+        $extraQuery = '';
         
-        GROUP BY m.senderNickname
-        ORDER BY m.date DESC");
-            $consult->setParameter('adminId', $adminId);
-            $consult->setParameter('clientAdmin', Message::TYPE_CLIENT_TO_ADMIN);
-            $consult->setParameter('adminClient', Message::TYPE_ADMIN_TO_CLIENT);
-            return $consult->getArrayResult();
-        } else {
-            return $result;
+        if ($adminId) {
+            $extraQuery .= "((m.destinationId = :adminId
+            AND m.type = :clientAdmin ) OR (
+                m.senderId = :adminId
+                AND m.type = :adminClient)
+            ) ";
         }
-    }*/
-    
-    /**
-     * Permite obtener los nombres de los clientes y la ultima fecha en la que enviarion
-     * mensajes a un administrador en especifico, ordenados desde el mensaje 
-     * mas reciente al mas antiguo
-     * @author Cesar Giraldo <cnaranjo@kijho.com> 07/03/2016
-     * @param string $adminId identificador del administrador
-     * @return type
-     */
-    public function findClientChatNickNames($adminId) {
-        $em = $this->getEntityManager();
-
-            $consult = $em->createQuery("
-        SELECT m.type, m.senderId, m.senderNickname, m.destinationId, m.destinationNickname
+        
+        if ($today) {
+            if ($adminId) {
+                $extraQuery .= " AND m.date >= :today ";
+            } else {
+                $extraQuery .= " m.date >= :today ";
+            }
+        }
+        
+        $query = "
+        SELECT m.type, m.senderId, m.senderNickname, m.destinationId, 
+        m.destinationNickname, m.date
         FROM ChatBundle:Message m
-        WHERE ((m.destinationId = :adminId
-        AND m.type = :clientAdmin ) OR (
-            m.senderId = :adminId
-            AND m.type = :adminClient)
-        )
+        WHERE " . $extraQuery . "
         GROUP BY m.senderNickname
-        ORDER BY m.date DESC");
+        ORDER BY m.date DESC";
+
+        $consult = $em->createQuery($query);
+        if ($adminId) {
             $consult->setParameter('adminId', $adminId);
             $consult->setParameter('clientAdmin', Message::TYPE_CLIENT_TO_ADMIN);
             $consult->setParameter('adminClient', Message::TYPE_ADMIN_TO_CLIENT);
-            return $consult->getArrayResult();
+        }
+        
+        if ($today) {
+            $date = Util::getCurrentDate();
+            $date->setTime(00, 00, 00);
+            $consult->setParameter('today', $date);
+        }
+        
+        return $consult->getArrayResult();
     }
 
     /**
@@ -139,7 +115,7 @@ class MessageRepository extends EntityRepository {
         if ($endDate) {
             $consult->setParameter('endDate', $endDate);
         }
-        
+
         return $consult->getResult();
     }
 

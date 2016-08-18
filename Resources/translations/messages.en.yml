@@ -29,6 +29,10 @@ admin:
     new_message_from: "New message from "
     waiting_admin_response: "Waiting for Admin Response"
     custom_messages: "Custom Messages"
+    last_conversations: "Last Messages"
+    online_clients: "Online Clients"
+    waiting_for_clients: "No online clients"
+    no_messages_today: "No messages today"
     
 admin_settings:
     settings: "Settings"

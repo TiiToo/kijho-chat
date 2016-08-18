@@ -39,13 +39,7 @@
                         </li>
                         <li>
                             <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_ONLINE')}}"><span class="glyphicon glyphicon-ok-sign"></span> {{'global.online'|trans}}</a>
-                        </li>
-                        {#<li>
-                            <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_BUSY')}}"><span class="glyphicon glyphicon-remove"></span> {{'global.busy'|trans}}</a>
-                        </li>
-                        <li>
-                            <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_IDLE')}}"><span class="glyphicon glyphicon-time"></span> {{'global.away'|trans}}</a>
-                        </li>#}
+                        </li>                        
                         <li>
                             <a href="javascript:void(0);" class="change-status" status="{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::STATUS_OFFLINE')}}"><span class="glyphicon glyphicon-off"></span> {{'global.offline'|trans}}</a>
                         </li>
@@ -131,8 +125,8 @@
                 <a class="btn btn-success btn-md start-gos-server">{{'admin_settings.start_server_message'|trans}}</a>
             </div>
 
-            <div class="chat-group" id="group-2">
-                <strong>{{'admin.clients'|trans}}</strong>
+            <div class="chat-group" id="group-1">
+                <strong>{{'admin.last_conversations'|trans}}</strong>
                 {% set listedConversations = [] %}
                 {% for conversation in lastConversations %}
                     {% if conversation.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_CLIENT_TO_ADMIN') %}
@@ -161,8 +155,43 @@
                         {% endif %}
                     {% endif %}
                 {% else %}
-                    <a class="disabled" href="return false;">{{'admin.no_chat_history'|trans}}</a>
+                    <a class="disabled" href="return false;">{{'admin.no_messages_today'|trans}}</a>
                 {% endfor %}
+            </div>
+            
+            <div class="chat-group" id="group-2">
+                <strong>{{'admin.online_clients'|trans}}</strong>
+                {#{% set listedConversations = [] %}
+                {% for conversation in allConversations %}
+                    {% if conversation.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_CLIENT_TO_ADMIN') %}
+                        {% if conversation.senderId not in listedConversations %}
+                            {% set listedConversations = listedConversations|merge([conversation.senderId]) %}
+                            <a href="#" class="open-client-conversation" client-id="{{conversation.senderId}}" online-with="" data-conversation-history="#client-{{conversation.senderId}}" messages-loaded="false">
+                                <span class="user-status is-offline"></span> 
+                                <i class="user-connection fa fa-user" title="{{'global.authenticated_user'|trans}}"></i>
+                                <em>{{conversation.senderNickname}}</em> 
+                                <span class="online-with hidden"></span>
+                                <button class="hidden pull-right steal-chat" client-id="{{conversation.senderId}}" title="{{'admin.steal_conversation'|trans}}"><i class="entypo-eye"></i></button>
+                                <span class="typing hidden pull-right"><i>{{'global.typing'|trans}}</i></span>
+                            </a>
+                        {% endif %}
+                    {% elseif conversation.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_ADMIN_TO_CLIENT') %}
+                        {% if conversation.destinationId not in listedConversations %}
+                            {% set listedConversations = listedConversations|merge([conversation.destinationId]) %}
+                            <a href="#" class="open-client-conversation" client-id="{{conversation.destinationId}}" online-with="" data-conversation-history="#client-{{conversation.destinationId}}" messages-loaded="false">
+                                <span class="user-status is-offline"></span> 
+                                <i class="user-connection fa fa-user"></i>
+                                <em>{{conversation.destinationNickname}}</em> 
+                                <span class="online-with hidden"></span>
+                                <button class="hidden pull-right steal-chat" client-id="{{conversation.destinationId}}" title="{{'admin.steal_conversation'|trans}}"><i class="entypo-eye"></i></button>
+                                <span class="typing hidden pull-right"><i>{{'global.typing'|trans}}</i></span>
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                {% else %}
+                    <a class="disabled" href="return false;">{{'admin.no_chat_history'|trans}}</a>
+                {% endfor %}#}
+                <a class="disabled" href="return false;">{{'admin.waiting_for_clients'|trans}}</a>
             </div>
         </div>
 
@@ -193,7 +222,7 @@
         {% set lastDate = '' %}
         {% set lastHour = '' %}
         {% set listedConversations = [] %}
-        {% for clientConversation in lastConversations %}
+        {#{% for clientConversation in allConversations %}
             {% set clientId = clientConversation.senderId %}
             {% if clientConversation.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_ADMIN_TO_CLIENT') %}
                 {% set clientId = clientConversation.destinationId %}
@@ -204,7 +233,7 @@
                 <ul class="chat-history" id="client-{{clientId}}">
                 </ul>
             {% endif %}
-        {% endfor %}
+        {% endfor %}#}
     </div>
 
 {% endblock %}
@@ -266,8 +295,7 @@
             removeCustomMessage($(this));
         });
         
-        
-        $( "#group-2" ).on( "click", ".steal-chat", function( event ) {
+        $( "#group-1, #group-2" ).on( "click", ".steal-chat", function( event ) {
             stealConversation($(this));
         });
     {% endblock %}
@@ -278,8 +306,6 @@
         <script type = "text/javascript" >
         
         var _WS_URI = "ws://"+window.location.hostname+":{{ gos_web_socket_server_port }}";
-        
-        {#var _WS_URI = "ws://{{ gos_web_socket_server_host }}:{{ gos_web_socket_server_port }}";#}
 
         var kijho_chat_web_socket = WS.connect(_WS_URI);
 
@@ -398,8 +424,6 @@
                 }
             });
         }
-
-
 
         // Permite deshabilitar los eventos sobre los botones, cuando se pierde la conexion
         function unbindUI() {
@@ -524,19 +548,32 @@
             
             //verificamos si los online estan en el listado de conversaciones para ponerlos online (verde)
             for (i = 0; i < onlineUsers.length; i++) {
-                var element = $("#group-2 a[client-id='" + onlineUsers[i]['user_id'] + "']");
+                
+                var element = $("#group-1 a[client-id='" + onlineUsers[i]['user_id'] + "']");
+                var group = 1;
+                if ($.isEmptyObject(element.html())) {
+                    element = $("#group-2 a[client-id='" + onlineUsers[i]['user_id'] + "']");
+                    group = 2;
+                }
                 
                 if (!$.isEmptyObject(element.html())) {
                     
                     element.attr('online-with', onlineUsers[i]['onlineWithAdmin']);
                     
-                    var stealElement = $("#group-2 button.steal-chat[client-id='" + onlineUsers[i]['user_id'] + "']");
+                    var stealElement = $("#group-"+group+" button.steal-chat[client-id='" + onlineUsers[i]['user_id'] + "']");
                     var onlineWithElement = element.find('span.online-with');
                     
                     if (onlineUsers[i]['onlineWithAdmin'] != '' 
-                        && onlineUsers[i]['onlineWithAdmin'] != "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_ALL_ADMINISTRATORS')}}") {
+                        && onlineUsers[i]['onlineWithAdmin'] != "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_ALL_ADMINISTRATORS')}}"
+                        && onlineUsers[i]['onlineWithAdmin'] != "{{nickname}}") {
                             onlineWithElement.removeClass('hidden');
-                            onlineWithElement.html('('+onlineUsers[i]['onlineWithAdmin']+')');
+                            
+                            var onlineWith = onlineUsers[i]['onlineWithAdmin'];
+                            if(onlineWith.length > 11) {
+                                onlineWith = onlineWith.substring(0, 11) + '...'; 
+                            }
+                            
+                            onlineWithElement.html('('+onlineWith+')');
                             onlineWithElement.attr('title', "{{'global.online_with'|trans}}"+onlineUsers[i]['onlineWithAdmin']);
                             stealElement.removeClass('hidden');
                     } else {
@@ -544,10 +581,10 @@
                         onlineWithElement.addClass('hidden');
                     }
                     
-                    var spanStatus = $("#group-2 a[client-id='" + onlineUsers[i]['user_id'] + "'] span").first();
+                    var spanStatus = $("#group-"+group+" a[client-id='" + onlineUsers[i]['user_id'] + "'] span").first();
                     spanStatus.attr('class', 'user-status '+ onlineUsers[i]['status']);
                 
-                    var iconConnection = $("#group-2 a[client-id='" + onlineUsers[i]['user_id'] + "'] i.user-connection");
+                    var iconConnection = $("#group-"+group+" a[client-id='" + onlineUsers[i]['user_id'] + "'] i.user-connection");
                     if (onlineUsers[i]['isAnonymous'] && iconConnection.hasClass('fa-user')) {
                         iconConnection.removeClass('fa-user');
                         iconConnection.addClass('fa-user-secret');
@@ -557,7 +594,6 @@
                         iconConnection.addClass('fa-user');
                         iconConnection.attr('title',"{{'global.authenticated_user'|trans}}");
                     }
-                    
                 } else {
                     clientJoinRoom(onlineUsers[i]);
                 }
@@ -571,9 +607,17 @@
          * @param {type} payload
          **/
         function clientLeftRoom(payload) {
-            var element = $("#group-2 a[client-id='" + payload.user_id + "']");
+        
+            // Debemos verificar si esta en el grupo1 para hacer los cambios ahi
+            var element = $("#group-1 a[client-id='" + payload.user_id + "']");
+            var group = 1;
+            if ($.isEmptyObject(element.html())) {
+                element = $("#group-2 a[client-id='" + payload.user_id + "']");
+                group = 2;
+            }
+        
             if (!$.isEmptyObject(element.html())) {
-                var spanStatus = $("#group-2 a[client-id='" + payload.user_id + "'] span").first();
+                var spanStatus = $("#group-"+group+" a[client-id='" + payload.user_id + "'] span").first();
                 spanStatus.attr('class', 'user-status is-offline');
             }
             neonChat.refreshUserIds();
@@ -587,9 +631,16 @@
          **/
         function clientJoinRoom(payload) {
             
-            var element = $("#group-2 a[client-id='" + payload.user_id + "']");
+            // Debemos verificar si esta en el grupo 1 para hacer los cambios alla
+            var element = $("#group-1 a[client-id='" + payload.user_id + "']");
+            var group = 1;
+            if ($.isEmptyObject(element.html())) {
+                element = $("#group-2 a[client-id='" + payload.user_id + "']");
+                group = 2;
+            }
+            
             if (!$.isEmptyObject(element.html())) {
-                var spanStatus = $("#group-2 a[client-id='" + payload.user_id + "'] span").first();
+                var spanStatus = $("#group-"+group+" a[client-id='" + payload.user_id + "'] span").first();
                 spanStatus.attr("class", "user-status "+payload.status); 
             } else {
                 var htmlUser = '<a href="#" class="open-client-conversation" client-id="' + payload.user_id + '" online-with="" data-conversation-history="#client-' + payload.user_id + '" messages-loaded="false"><span class="user-status '+payload.status+'"></span> ';
@@ -603,12 +654,12 @@
                 htmlUser += '<span class="online-with hidden"></span>';
                 htmlUser += '<button class="hidden pull-right steal-chat" client-id="' + payload.user_id + '" title="{{'admin.steal_conversation'|trans}}"><i class="entypo-eye"></i></button>';
                 htmlUser += '<span class="typing hidden pull-right"><i>{{'global.typing'|trans}}</i></span></a>';
-                var firstUser = $('#group-2 a').first();
+                var firstUser = $('#group-'+group+' a').first();
                 if (firstUser.hasClass('disabled')) {
                     firstUser.remove();
-                    $('#group-2').append(htmlUser);
+                    $('#group-'+group).append(htmlUser);
                 } else {
-                    $('#group-2 a').first().before(htmlUser);
+                    $('#group-'+group+' a').first().before(htmlUser);
                 }
             }
             neonChat.refreshUserIds();
@@ -658,12 +709,30 @@
          **/
         function messageFromClient(payload) {
             
+            // Si el cliente onlie envia un mensaje, lo mostramos en el grupo de last conversations
+            var element = $("#group-1 .open-client-conversation[client-id='" + payload.user_id + "']");
+            if ($.isEmptyObject(element.html())) {
+                
+                var otherElement = $("#group-2 .open-client-conversation[client-id='" + payload.user_id + "']");
+                
+                var firstUser = $('#group-1 a').first();
+                if (firstUser.hasClass('disabled')) {
+                    firstUser.remove();
+                    $('#group-1').append(otherElement);
+                } else {
+                    $('#group-1 a').first().before(otherElement);
+                }
+        
+                element = $("#group-1 .open-client-conversation[client-id='" + payload.user_id + "']");
+                neonChat.refreshUserIds();
+            }
+            
             displayNotification("{{'admin.new_message_from'|trans}}" + payload.nickname);
-
+            
             $(".play-sound").trigger('click');
 
             //buscamos el tab de conversacion del usuario en el listado de conversaciones
-            var element = $(".open-client-conversation[client-id='" + payload.user_id + "']");
+            //var element = $(".open-client-conversation[client-id='" + payload.user_id + "']");
             if (!$.isEmptyObject(element.html())) {
                 increaseUnreadCounters(element);
 
@@ -682,8 +751,7 @@
                 //buscamos el panel de mensajes del usuario
                 var chatContainer = $("#client-" + payload.user_id);
                 if (typeof chatContainer == "object") {
-                    chatContainer.append(htmlMessage);
-                    //chatContainer.html(htmlMessage);
+                    //chatContainer.append(htmlMessage);
                 } else {
                     //si no habia un panel de mensajes para el usuario, le creamos uno
                     var html = '<ul class="chat-history" id="client-' + payload.user_id + '">'
@@ -691,12 +759,14 @@
                     $(".container-chats").append(html);
                     var chatContainer = $("#client-" + payload.user_id);
                     if (!$.isEmptyObject(chatContainer.html())) {
-                        chatContainer.append(htmlMessage);
+                        //chatContainer.append(htmlMessage);
                     }
                 }
 
-                neonChat.pushMessage(element.attr('id'), payload.msg, '', payload.msg_date, true, true);
-
+                var messagesLoaded = element.attr('messages-loaded');
+                if (messagesLoaded == "true") {
+                    neonChat.pushMessage(element.attr('id'), payload.msg, '', payload.msg_date, true, true);
+                }
 
                 if (isConversationOpened(payload.user_id)) {
                     //debemos marcar los mensajes como leidos
@@ -1066,6 +1136,12 @@
         
             var messages = data.messages;
             var date = '';
+            
+            var chatContainer = $("#client-" + data.clientId);
+            if (typeof chatContainer == "object") {
+                chatContainer.html('');
+            }
+            
             for (var i = 0; i < messages.length; i++) {
                 var fromOpponent = false;
                 //armamos el html con el mensaje del usuario
@@ -1083,7 +1159,7 @@
                         + '</li>';
 
                 //buscamos el panel de mensajes del usuario
-                var chatContainer = $("#client-" + data.clientId);
+                
 
                 if (typeof chatContainer == "object") {
                     chatContainer.append(htmlMessage);
@@ -1105,7 +1181,7 @@
                 } else {
                     var showDate = messages[i].hour; 
                 }
-                neonChat.pushMessage(element.attr('id'), messages[i].message, messages[i].sender_nickname, showDate, fromOpponent, false);
+                neonChat.pushMessage(element.attr('id'), messages[i].message, '', showDate, fromOpponent, false);
             }
             
             if (isConversationOpened(data.clientId)) {
