@@ -125,8 +125,11 @@
                 <a class="btn btn-success btn-md start-gos-server">{{'admin_settings.start_server_message'|trans}}</a>
             </div>
 
-            <div class="chat-group" id="group-1">
+            <div class="chat-group">
                 <strong>{{'admin.last_conversations'|trans}}</strong>
+            </div>
+            <div class="chat-group" id="group-1">
+                
                 {% set listedConversations = [] %}
                 {% for conversation in lastConversations %}
                     {% if conversation.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_CLIENT_TO_ADMIN') %}
