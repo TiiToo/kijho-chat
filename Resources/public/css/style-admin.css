@@ -7,10 +7,6 @@ and open the template in the editor.
     Created on : Mar 22, 2016, 4:47:38 PM
     Author     : cesargiraldonaranjo
 */
-.chat-conversation li p {
-    color: #949494 !important;
-}
-
 .badge-success {
     background-color: #00a651 !important;
 }
@@ -24,8 +20,12 @@ and open the template in the editor.
     border-radius: 4px;
 }
 
-.chat-settings a {
+div.chat-settings a {
     color: #f0f0f1;
+}
+
+.chat-settings a i.entypo-cancel {
+    color: #f0f0f1 !important;
     font-weight: bold;
     font-size: 14px;
 }

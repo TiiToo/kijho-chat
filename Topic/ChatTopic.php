@@ -410,6 +410,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                     } elseif ($eventType == self::UPDATE_SETTINGS) {
 
                         $notificationSound = trim(strip_tags($event['notificationSound']));
+                        $theme = trim(strip_tags($event['theme']));
                         $emailOfflineMessages = trim(strip_tags($event['emailOfflineMessages']));
                         $automaticWelcomeMessage = trim(strip_tags($event['automaticWelcomeMessage']));
                         $customMessages = (array) $event['customMessages'];
@@ -420,6 +421,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
 
                         if ($userSettings instanceof Entity\UserChatSettings) {
                             $userSettings->setNotificationSound($notificationSound);
+                            $userSettings->setTheme($theme);
                             $this->em->persist($userSettings);
 
                             $settings = $this->em->getRepository('ChatBundle:ChatSettings')->findOneBy(array(), array());
@@ -445,6 +447,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 'msg' => $this->translator->trans('server.settings_updated'),
                                 'enableCustomMessages' => $enableCustomMessages,
                                 'html_custom_messages' => $htmlCustomMessages,
+                                'theme' => $userSettings->getTheme()
                             ]);
                         }
                     } else if ($eventType == self::CHANGE_ADMIN_STATUS) {

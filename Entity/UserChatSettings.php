@@ -60,6 +60,12 @@ class UserChatSettings {
      */
     protected $userEmail;
     
+    /**
+     * Tema para el color del chat que desea el usuario
+     * @ORM\Column(name="uset_theme", type="string", nullable=true)
+     */
+    protected $theme;
+    
     function getId() {
         return $this->id;
     }
@@ -110,6 +116,14 @@ class UserChatSettings {
 
     function setUserEmail($userEmail) {
         $this->userEmail = $userEmail;
+    }
+    
+    function getTheme() {
+        return $this->theme;
+    }
+
+    function setTheme($theme) {
+        $this->theme = $theme;
     }
 
     /**

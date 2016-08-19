@@ -6363,9 +6363,9 @@ textareatable .replace-inputs input {
   border-bottom: 1px solid #343a45;
 }
 #chat .chat-conversation .conversation-header small {
-  color: rgba(190, 192, 194, 0.6);
   font-size: 13px;
   padding-left: 8px;
+  font-weight: bold;
 }
 #chat .chat-conversation .conversation-header .conversation-close {
   float: right;
@@ -6424,7 +6424,7 @@ textareatable .replace-inputs input {
 #chat .chat-conversation .conversation-body > li .time {
   float: right;
   font-style: italic;
-  color: rgba(190, 192, 194, 0.8);
+  /*color: rgba(190, 192, 194, 0.8);*/
   font-size: 12px;
 }
 #chat .chat-conversation .chat-textarea {

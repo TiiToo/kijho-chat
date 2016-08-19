@@ -44,6 +44,7 @@ admin_settings:
     notification_sound: "Sonido de Notificación"
     user_settings: "Configuración de Usuario"
     general_settings: "Configuración General"
+    visual_theme: "Apariencia"
     
 client_email:
     support_offline: "Equipo de Soporte fuera de linea"

@@ -44,6 +44,7 @@ admin_settings:
     notification_sound: "Notification Sound"
     user_settings: "User Settings"
     general_settings: "General Settings"
+    visual_theme: "Visual Theme"
     
 client_email:
     support_offline: "Support Team Offline"

@@ -25,6 +25,7 @@ class UserChatSettingsType extends AbstractType {
             $builder->add('notificationSound', Type\ChoiceType::class, array(
                 'required' => false,
                 'label' => $this->translator->trans('admin_settings.notification_sound'),
+                'placeholder' => 'Default',
                 'choices' => array(
                     'sounds-capisci.mp3' => 'Capisci',
                     'sounds-come-to-daddy.mp3' => 'Come to Daddy',
@@ -41,6 +42,21 @@ class UserChatSettingsType extends AbstractType {
                     'sounds-worthwhile.mp3' => 'Worthwhile',
                     'sounds-you-know.mp3' => 'You know',
                     'sounds-your-turn.mp3' => 'Your turn',
+                )
+            ));
+            $builder->add('theme', Type\ChoiceType::class, array(
+                'required' => false,
+                'label' => $this->translator->trans('admin_settings.visual_theme'),
+                'placeholder' => 'Default',
+                'choices' => array(
+                    'black' => 'Black',
+                    'blue' => 'Blue',
+                    'brown' => 'Brown',
+                    'green' => 'Green',
+                    'purple' => 'Purple',
+                    'red' => 'Red',
+                    'white' => 'White',
+                    'yellow' => 'Yellow'
                 )
             ));
         } else {
@@ -63,6 +79,20 @@ class UserChatSettingsType extends AbstractType {
                     'Worthwhile' => 'sounds-worthwhile.mp3',
                     'You know' => 'sounds-you-know.mp3',
                     'Your turn' => 'sounds-your-turn.mp3',
+                )
+            ));
+            $builder->add('theme', Type\ChoiceType::class, array(
+                'required' => false,
+                'label' => $this->translator->trans('admin_settings.visual_theme'),
+                'choices' => array(
+                    'Black' => 'black',
+                    'Blue' => 'blue',
+                    'Brown' => 'brown',
+                    'Green' => 'green',
+                    'Purple' => 'purple',
+                    'Red' => 'red',
+                    'White' => 'white',
+                    'Yellow' => 'yellow'
                 )
             ));
         }

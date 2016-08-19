@@ -21,11 +21,45 @@
 
         <link rel="stylesheet" href=" {{ asset('bundles/chat/css/style-admin.css') }}" media="screen">
         
+        {% set skin = 'default' %}
+        {% if userSettings is defined %}
+            
+            {% if userSettings.theme == 'black' %}
+                {% set skin = 'skin-black' %}
+                <link rel="stylesheet" href="{{ asset('bundles/chat/assets/css/skins/black.css') }}">
+            {% elseif userSettings.theme == 'blue' %}
+                {% set skin = 'skin-blue' %}
+                <link rel="stylesheet" href="{{ asset('bundles/chat/assets/css/skins/blue.css') }}">
+            {% elseif userSettings.theme == 'brown' %}
+                {% set skin = 'skin-cafe' %}
+                <link rel="stylesheet" href="{{ asset('bundles/chat/assets/css/skins/cafe.css') }}">
+            {% elseif userSettings.theme == 'green' %}
+                {% set skin = 'skin-green' %}
+                <link rel="stylesheet" href="{{ asset('bundles/chat/assets/css/skins/green.css') }}">
+            {% elseif userSettings.theme == 'purple' %}
+                {% set skin = 'skin-purple' %}
+                <link rel="stylesheet" href="{{ asset('bundles/chat/assets/css/skins/purple.css') }}">
+            {% elseif userSettings.theme == 'red' %}
+                {% set skin = 'skin-red' %}
+                <link rel="stylesheet" href="{{ asset('bundles/chat/assets/css/skins/red.css') }}">
+            {% elseif userSettings.theme == 'white' %}
+                {% set skin = 'skin-white' %}
+                <link rel="stylesheet" href="{{ asset('bundles/chat/assets/css/skins/white.css') }}">
+            {% elseif userSettings.theme == 'yellow' %}
+                {% set skin = 'skin-yellow' %}
+                <link rel="stylesheet" href="{{ asset('bundles/chat/assets/css/skins/yellow.css') }}">
+            {% endif %}
+        {% endif %}
+        
+        {% if skin == 'default' %}
+            <link rel="stylesheet" href="{{ asset('bundles/chat/assets/css/skins/default.css') }}">
+        {% endif %}
+        
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
         
         <script src="{{ asset('bundles/chat/assets/js/jquery-1.11.0.min.js') }}"></script>
     </head><!--/head-->
-    <body class="page-body  page-fade">
+    <body class="page-body  {% if skin != 'default' %}{{skin}}{% else %}page-fade{% endif %}">
 
         <div class="page-container">
             {% block content %}
