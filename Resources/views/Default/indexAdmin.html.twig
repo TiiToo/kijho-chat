@@ -550,6 +550,24 @@
          **/
         function messageSendSuccessfully(payload) {
         
+            // Verificamos si el cliente no estaba en el listado de last conversations para pasarlo
+            var element = $("#group-1 .open-client-conversation[client-id='" + payload.client_id + "']");
+            if ($.isEmptyObject(element.html())) {
+                
+                var otherElement = $("#group-2 .open-client-conversation[client-id='" + payload.client_id + "']");
+                
+                var firstUser = $('#group-1 a').first();
+                if (firstUser.hasClass('disabled')) {
+                    firstUser.remove();
+                    $('#group-1').append(otherElement);
+                } else {
+                    $('#group-1 a').first().before(otherElement);
+                }
+        
+                element = $("#group-1 .open-client-conversation[client-id='" + payload.client_id + "']");
+                neonChat.refreshUserIds();
+            }
+        
             displayNotification('Message send successfully');
             //$(".chat-conversation i.waiting-response").remove();
 
@@ -565,7 +583,7 @@
 
             if (typeof chatContainer == "object") {
                 chatContainer.append(htmlMessage);
-                var element = $(".open-client-conversation[client-id='" + payload.client_id + "']");
+                
                 var currentDate = getCurrenDateFormated();
                 element.attr('date', currentDate);
                 calculateElapsedTime();
@@ -633,7 +651,7 @@
                     clientJoinRoom(onlineUsers[i]);
                 }
             }
-            neonChat.orderGroups();
+            //neonChat.orderGroups();
         }
 
         /**
@@ -656,7 +674,7 @@
                 spanStatus.attr('class', 'user-status is-offline');
             }
             neonChat.refreshUserIds();
-            neonChat.orderGroups();
+            //neonChat.orderGroups();
         }
 
         /**
@@ -700,7 +718,7 @@
                 }
             }
             neonChat.refreshUserIds();
-            neonChat.orderGroups();
+            //neonChat.orderGroups();
             
             //buscamos el panel de mensajes del usuario
             var chatContainer = $("#client-" + payload.user_id);
@@ -762,7 +780,13 @@
         
                 element = $("#group-1 .open-client-conversation[client-id='" + payload.user_id + "']");
                 neonChat.refreshUserIds();
-                neonChat.orderGroups();
+                //neonChat.orderGroups();
+            }
+            
+            // Verificamos si el cliente no es el primero en la lista, para ubicarlo en dicha posicion
+            var firstClient = $("#group-1 .open-client-conversation").first();
+            if (firstClient.attr('client-id') != payload.user_id) {
+                element.prependTo("#group-1");
             }
             
             displayNotification("{{'admin.new_message_from'|trans}}" + payload.nickname);
