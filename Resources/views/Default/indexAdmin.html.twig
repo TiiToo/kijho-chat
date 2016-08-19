@@ -126,7 +126,9 @@
             </div>
 
             <div class="chat-group">
-                <strong>{{'admin.last_conversations'|trans}}</strong>
+                <strong>{{'admin.last_conversations'|trans}}
+                    <span class="alert-success btn-sm counter-indicator hidden" id='counter-last-conversations'>0</span>
+                </strong>
             </div>
             <div class="chat-group" id="group-1">
                 
@@ -162,8 +164,19 @@
                 {% endfor %}
             </div>
             
-            <div class="chat-group" id="group-2">
-                <strong>{{'admin.online_clients'|trans}}</strong>
+            
+            <div class="chat-group">
+                <strong>{{'admin.online_clients'|trans}} 
+                    <span class="alert-success btn-sm counter-indicator hidden" id='counter-online-users'>0</span>
+                    <button class="btn btn-default btn-xs display-online-clients pull-right" type="button">
+                        <span class="glyphicon glyphicon-chevron-down"></span>
+                    </button>
+                    <button class="btn btn-default btn-xs hide-online-clients pull-right hidden" type="button">
+                        <span class="glyphicon glyphicon-chevron-up"></span>
+                    </button>
+                </strong>
+            </div>
+            <div class="chat-group" id="group-2" style="display: none;">
                 {#{% set listedConversations = [] %}
                 {% for conversation in allConversations %}
                     {% if conversation.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_CLIENT_TO_ADMIN') %}
@@ -301,6 +314,15 @@
         $( "#group-1, #group-2" ).on( "click", ".steal-chat", function( event ) {
             stealConversation($(this));
         });
+        
+        $(".display-online-clients, .hide-online-clients").click(function(){
+            $(".display-online-clients").toggleClass('hidden');
+            $(".hide-online-clients").toggleClass('hidden');
+            $("#group-2").slideToggle('fast');
+        });
+        
+        setInterval(countOnlineUsers, 2000);
+        setInterval(countLastConversations, 2000);
     {% endblock %}
 
     {% block other_scripts %}
@@ -601,7 +623,7 @@
                     clientJoinRoom(onlineUsers[i]);
                 }
             }
-            //neonChat.orderGroups();
+            neonChat.orderGroups();
         }
 
         /**
@@ -624,7 +646,7 @@
                 spanStatus.attr('class', 'user-status is-offline');
             }
             neonChat.refreshUserIds();
-            //neonChat.orderGroups();
+            neonChat.orderGroups();
         }
 
         /**
@@ -666,7 +688,7 @@
                 }
             }
             neonChat.refreshUserIds();
-            //neonChat.orderGroups();
+            neonChat.orderGroups();
             
             //buscamos el panel de mensajes del usuario
             var chatContainer = $("#client-" + payload.user_id);
@@ -728,6 +750,7 @@
         
                 element = $("#group-1 .open-client-conversation[client-id='" + payload.user_id + "']");
                 neonChat.refreshUserIds();
+                neonChat.orderGroups();
             }
             
             displayNotification("{{'admin.new_message_from'|trans}}" + payload.nickname);
@@ -1190,6 +1213,25 @@
             if (isConversationOpened(data.clientId)) {
                 neonChat.renderMessages(element.attr('id'));
             }
+        }
+        
+        /**
+         * Permite contar el numero de usuarios online
+         * @returns {undefined}         
+         **/
+        function countOnlineUsers() {
+            $(".counter-indicator").removeClass('hidden');
+            var countOnline = $( "#group-2 a.open-client-conversation span.is-online" ).length;
+            $("#counter-online-users").html(countOnline);
+        }
+        
+        /**
+         * Permite contar el numero de ultimas conversaciones
+         * @returns {undefined}         
+         **/
+        function countLastConversations() {
+            var countOnline = $( "#group-1 a.open-client-conversation" ).length;
+            $("#counter-last-conversations").html(countOnline);
         }
 
     </script>
