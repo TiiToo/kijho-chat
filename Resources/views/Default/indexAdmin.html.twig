@@ -137,25 +137,27 @@
                     {% if conversation.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_CLIENT_TO_ADMIN') %}
                         {% if conversation.senderId not in listedConversations %}
                             {% set listedConversations = listedConversations|merge([conversation.senderId]) %}
-                            <a href="#" class="open-client-conversation" client-id="{{conversation.senderId}}" online-with="" data-conversation-history="#client-{{conversation.senderId}}" messages-loaded="false">
+                            <a href="#" class="open-client-conversation" client-id="{{conversation.senderId}}" online-with="" data-conversation-history="#client-{{conversation.senderId}}" messages-loaded="false" date="{{conversation.date|date('Y,m,d,H,i,s')}}">
                                 <span class="user-status is-offline"></span> 
                                 <i class="user-connection fa fa-user" title="{{'global.authenticated_user'|trans}}"></i>
                                 <em>{{conversation.senderNickname}}</em> 
                                 <span class="online-with hidden"></span>
                                 <button class="hidden pull-right steal-chat" client-id="{{conversation.senderId}}" title="{{'admin.steal_conversation'|trans}}"><i class="entypo-eye"></i></button>
-                                <span class="typing hidden pull-right"><i>{{'global.typing'|trans}}</i></span>
+                                <span class="typing hidden"><i>{{'global.typing'|trans}}</i></span>
+                                <span class="time-last-message hidden pull-right"></span>
                             </a>
                         {% endif %}
                     {% elseif conversation.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_ADMIN_TO_CLIENT') %}
                         {% if conversation.destinationId not in listedConversations %}
                             {% set listedConversations = listedConversations|merge([conversation.destinationId]) %}
-                            <a href="#" class="open-client-conversation" client-id="{{conversation.destinationId}}" online-with="" data-conversation-history="#client-{{conversation.destinationId}}" messages-loaded="false">
+                            <a href="#" class="open-client-conversation" client-id="{{conversation.destinationId}}" online-with="" data-conversation-history="#client-{{conversation.destinationId}}" messages-loaded="false" date="{{conversation.date|date('Y,m,d,H,i,s')}}">
                                 <span class="user-status is-offline"></span> 
                                 <i class="user-connection fa fa-user"></i>
                                 <em>{{conversation.destinationNickname}}</em> 
                                 <span class="online-with hidden"></span>
                                 <button class="hidden pull-right steal-chat" client-id="{{conversation.destinationId}}" title="{{'admin.steal_conversation'|trans}}"><i class="entypo-eye"></i></button>
-                                <span class="typing hidden pull-right"><i>{{'global.typing'|trans}}</i></span>
+                                <span class="typing hidden"><i>{{'global.typing'|trans}}</i></span>
+                                <span class="time-last-message hidden pull-right"></span>
                             </a>
                         {% endif %}
                     {% endif %}
@@ -321,8 +323,13 @@
             $("#group-2").slideToggle('fast');
         });
         
+        /* Cada 2 segundos verificamos el número de usuarios online y conversaciones */
         setInterval(countOnlineUsers, 2000);
         setInterval(countLastConversations, 2000);
+        
+        /* Cada 15 segundos, verificamos el tiempo transcurrido para las ultimas conversaciones */
+        setInterval(calculateElapsedTime, 15000);
+        calculateElapsedTime();
     {% endblock %}
 
     {% block other_scripts %}
@@ -559,6 +566,9 @@
             if (typeof chatContainer == "object") {
                 chatContainer.append(htmlMessage);
                 var element = $(".open-client-conversation[client-id='" + payload.client_id + "']");
+                var currentDate = getCurrenDateFormated();
+                element.attr('date', currentDate);
+                calculateElapsedTime();
                 neonChat.pushMessage(element.attr('id'), payload.msg, '', payload.msg_date, false, false);
                 neonChat.renderMessages(element.attr('id'));
                 $(".chat-textarea textarea").val('');
@@ -668,7 +678,8 @@
                 var spanStatus = $("#group-"+group+" a[client-id='" + payload.user_id + "'] span").first();
                 spanStatus.attr("class", "user-status "+payload.status); 
             } else {
-                var htmlUser = '<a href="#" class="open-client-conversation" client-id="' + payload.user_id + '" online-with="" data-conversation-history="#client-' + payload.user_id + '" messages-loaded="false"><span class="user-status '+payload.status+'"></span> ';
+                var currentDate = getCurrenDateFormated();
+                var htmlUser = '<a href="#" class="open-client-conversation" client-id="' + payload.user_id + '" online-with="" data-conversation-history="#client-' + payload.user_id + '" messages-loaded="false" date="'+currentDate+'"><span class="user-status '+payload.status+'"></span> ';
                 if (payload.isAnonymous) {
                     htmlUser += '<i class="user-connection fa fa-user-secret"></i> '; 
                 } else{
@@ -678,7 +689,8 @@
                 htmlUser += '<span class="badge badge-info is-hidden">0</span> ';
                 htmlUser += '<span class="online-with hidden"></span>';
                 htmlUser += '<button class="hidden pull-right steal-chat" client-id="' + payload.user_id + '" title="{{'admin.steal_conversation'|trans}}"><i class="entypo-eye"></i></button>';
-                htmlUser += '<span class="typing hidden pull-right"><i>{{'global.typing'|trans}}</i></span></a>';
+                htmlUser += '<span class="typing hidden"><i>{{'global.typing'|trans}}</i></span>';
+                htmlUser += '<span class="time-last-message hidden pull-right"></span></a>';
                 var firstUser = $('#group-'+group+' a').first();
                 if (firstUser.hasClass('disabled')) {
                     firstUser.remove();
@@ -761,6 +773,11 @@
             //var element = $(".open-client-conversation[client-id='" + payload.user_id + "']");
             if (!$.isEmptyObject(element.html())) {
                 increaseUnreadCounters(element);
+
+                // Seteamos con la fecha actual el envio del ultimo mensaje
+                var currentDate = getCurrenDateFormated();
+                element.attr('date', currentDate);
+                calculateElapsedTime();
 
                 //armamos el html con el mensaje del usuario
                 var htmlMessage = '<li class="opponent unread">';
@@ -1232,6 +1249,50 @@
         function countLastConversations() {
             var countOnline = $( "#group-1 a.open-client-conversation" ).length;
             $("#counter-last-conversations").html(countOnline);
+        }
+        
+        /**
+         * Permite calcular el tiempo transcurrido entre el ultimo mensaje
+         * de un cliente y la hora actual
+         * @returns {undefined}         
+         * */
+        function calculateElapsedTime() {
+            var now = new Date();
+            
+            $("#group-1 a.open-client-conversation").each(function () {
+                var object = $(this);
+                var stringDate = object.attr('date');
+                var arrayDate = stringDate.split(",");
+                var messageDate = new Date(arrayDate[0],arrayDate[1]-1,arrayDate[2],arrayDate[3],arrayDate[4],arrayDate[5]);
+                
+                var diffMs = (messageDate - now); // milliseconds between now & Christmas
+                var diffHrs = Math.abs(Math.round((diffMs % 86400000) / 3600000)); // hours
+                var diffMins = Math.abs(Math.round(((diffMs % 86400000) % 3600000) / 60000)); // minutes
+                
+                var diffSecs =  Math.abs(Math.round((((diffMs % 86400000) % 3600000) % 60000) / 1000)); // seconds
+                
+                var textDiff = '';
+                if (diffHrs > 0) {
+                    textDiff += diffHrs + 'h ';
+                }
+                if (diffMins > 0) {
+                    textDiff += diffMins + 'm ';
+                } else if (diffHrs == 0) {
+                    textDiff += diffSecs + 's ';
+                }
+                
+                if (textDiff != '') {
+                    object.find('span.time-last-message').html(textDiff);
+                    object.find('span.time-last-message').removeClass('hidden');
+                }
+            });
+        }
+        
+        function getCurrenDateFormated() {
+            var currentDate = new Date();
+            currentDate = currentDate.getFullYear()+','+currentDate.getMonth()+','+currentDate.getDate()+','+
+                    +currentDate.getHours()+','+currentDate.getMinutes()+','+currentDate.getSeconds();
+            return currentDate;
         }
 
     </script>

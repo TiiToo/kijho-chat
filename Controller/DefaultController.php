@@ -84,13 +84,8 @@ class DefaultController extends Controller {
 
         $em = $this->getDoctrine()->getManager();
 
-        //listado de usuarios que han chateado con el admin, ordenado descendentemente por la fecha del ultimo mensaje
-        $allConversations = $em->getRepository('ChatBundle:Message')->findClientChatNickNames($userId);
-
-        // listado de las conversaciones del dia actual con el admin
-        $lastConversations = $em->getRepository('ChatBundle:Message')->findClientChatNickNames(null, true);
-        
-        //\Symfony\Component\VarDumper\VarDumper::dump($lastConversations);
+        // listado del ultimo mensaje de los clientes para el dia actual
+        $lastConversations = $em->getRepository('ChatBundle:Message')->findTodayClientChatNickNames();
         
         //buscamos las configuraciones del usuario, sino tiene se las creamos
         $searchUserSettings = array('userId' => $userId, 'userType' => $userType);
@@ -123,7 +118,6 @@ class DefaultController extends Controller {
                     'userId' => $userId,
                     'email' => $email,
                     'userType' => $userType,
-                    'allConversations' => $allConversations,
                     'lastConversations' => $lastConversations,
                     'userSettings' => $userSettings,
                     'userSettingsForm' => $userSettingsForm->createView(),

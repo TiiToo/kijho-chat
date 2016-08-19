@@ -183,3 +183,13 @@ span.online-with {
     overflow-x: hidden !important;
     overflow-y: auto !important;
 }
+
+.typing{ 
+    display: inline-block;
+    color : #00a65a;
+}
+
+.time-last-message {
+    display: inline-block;
+    font-style: italic;
+}

@@ -9,6 +9,44 @@ class MessageRepository extends EntityRepository {
 
     /**
      * Permite obtener los nombres de los clientes y la ultima fecha en la que enviarion
+     * mensajes, ordenados desde el mensaje 
+     * mas reciente al mas antiguo
+     * @author Cesar Giraldo <cnaranjo@kijho.com> 19/08/2016
+     * @return type
+     */
+    public function findTodayClientChatNickNames() {
+        $em = $this->getEntityManager();
+
+        $date = Util::getCurrentDate();
+        $date->setTime(00, 00, 00);
+
+        $innerQuery = $em->createQuery("SELECT MAX(mes.date)
+            FROM ChatBundle:Message mes
+            WHERE mes.date >= :today  
+            GROUP BY mes.senderNickname")
+                ->setMaxResults(1)
+                ->setParameter('today', $date);
+        $result = $innerQuery->getArrayResult();
+
+        if (!empty($result)) {
+            $dqlQuery = $innerQuery->getDQL();
+            $consult = $em->createQuery("
+                SELECT m.type, m.senderId, m.senderNickname, 
+                m.destinationId, m.destinationNickname, m.date
+                FROM ChatBundle:Message m
+                WHERE m.date >= :today
+                AND m.date IN (" . $dqlQuery . ")
+                GROUP BY m.senderNickname
+                ORDER BY m.date DESC");
+            $consult->setParameter('today', $date);
+            return $consult->getArrayResult();
+        } else {
+            return $result;
+        }
+    }
+
+    /**
+     * Permite obtener los nombres de los clientes y la ultima fecha en la que enviarion
      * mensajes a un administrador en especifico, ordenados desde el mensaje 
      * mas reciente al mas antiguo
      * @author Cesar Giraldo <cnaranjo@kijho.com> 07/03/2016
@@ -19,7 +57,7 @@ class MessageRepository extends EntityRepository {
         $em = $this->getEntityManager();
 
         $extraQuery = '';
-        
+
         if ($adminId) {
             $extraQuery .= "((m.destinationId = :adminId
             AND m.type = :clientAdmin ) OR (
@@ -27,7 +65,7 @@ class MessageRepository extends EntityRepository {
                 AND m.type = :adminClient)
             ) ";
         }
-        
+
         if ($today) {
             if ($adminId) {
                 $extraQuery .= " AND m.date >= :today ";
@@ -35,7 +73,7 @@ class MessageRepository extends EntityRepository {
                 $extraQuery .= " m.date >= :today ";
             }
         }
-        
+
         $query = "
         SELECT m.type, m.senderId, m.senderNickname, m.destinationId, 
         m.destinationNickname, m.date
@@ -50,13 +88,13 @@ class MessageRepository extends EntityRepository {
             $consult->setParameter('clientAdmin', Message::TYPE_CLIENT_TO_ADMIN);
             $consult->setParameter('adminClient', Message::TYPE_ADMIN_TO_CLIENT);
         }
-        
+
         if ($today) {
             $date = Util::getCurrentDate();
             $date->setTime(00, 00, 00);
             $consult->setParameter('today', $date);
         }
-        
+
         return $consult->getArrayResult();
     }
 
