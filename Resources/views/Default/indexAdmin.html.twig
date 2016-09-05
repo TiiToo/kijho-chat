@@ -614,9 +614,8 @@
                 $(".chat-textarea textarea").val('');
                 
                 console.log('calculando tiempo transcurrido..');
-                var currentDate = getCurrenDateFormated();
-                element.attr('date', currentDate);
-                calculateElapsedTime();
+                element.find('span.time-last-message').html('0s');
+                element.find('span.time-last-message').removeClass('hidden');
                 console.log('tiempo transcurrido calculado..');
             }
         }
@@ -899,9 +898,8 @@
                 
                 // Seteamos con la fecha actual el envio del ultimo mensaje
                 console.log('calculando tiempo transcurrido');
-                var currentDate = getCurrenDateFormated();
-                element.attr('date', currentDate);
-                calculateElapsedTime();
+                element.find('span.time-last-message').html('0s');
+                element.find('span.time-last-message').removeClass('hidden');
                 console.log('tiempo transcurrido calculado');
             }
 

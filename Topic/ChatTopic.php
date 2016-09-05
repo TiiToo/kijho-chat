@@ -65,7 +65,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
     const WRONG_CONNECTION_DATA = 'wrong_connection_data';
     const NICKNAME_REPEATED = 'nickname_repeated';
     const CLIENT_CONVERSATION_HISTORY = 'client_conversation_history';
-    
+
     /**
      * Constantes para los tipos de mensajes que los usuarios envian al servidor
      */
@@ -117,10 +117,17 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
      */
     protected $translator;
 
+    /**
+     * Almacena las configuraciones generales del chat
+     * @var type 
+     */
+    protected $chatSettings;
+
     public function __construct(EntityManager $em, ContainerInterface $container) {
         $this->em = $em;
         $this->container = $container;
         $this->translator = $this->container->get('translator');
+        $this->chatSettings = null;
     }
 
     /**
@@ -139,6 +146,14 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
 
         if ($connection->userType == self::USER_ADMIN) {
 
+
+            //debemos consultar si el el primer mensaje del cliente en el dia actual, para enviarle un mensaje automatico
+            if (!$this->chatSettings) {
+                $chatSettings = $this->em->getRepository('ChatBundle:ChatSettings')->findOneBy(array(), array());
+                if ($chatSettings instanceof Entity\ChatSettings) {
+                    $this->chatSettings = $chatSettings;
+                }
+            }
 
             //buscamos las configuraciones del cliente para setear su status
             $searchUserSettings = array('userId' => $connection->userId, 'userType' => $connection->userType);
@@ -174,6 +189,15 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
             $userSettings = $this->em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
             if ($userSettings instanceof Entity\UserChatSettings) {
                 $connection->status = $userSettings->getStatus();
+            }
+            
+            //verificamos si el cliente ha enviado mensajes hoy
+            $date = Util::getCurrentStartDate();
+            $clientMessages = $this->em->getRepository('ChatBundle:Message')->findClientMessagesFromDate($connection->userId, $date);
+            if (count($clientMessages) > 0) {
+                $connection->messagesToday = true;
+            } else {
+                $connection->messagesToday = false;
             }
 
             if ($connection->status != self::STATUS_WAITING_NICKNAME) {
@@ -351,7 +375,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                         $notifyOtherAdmins = true;
                                     }
                                     $clientTopic->onlineWithAdmin = $connection->nickname;
-
+                                    $connection->messagesToday = true;
                                     $clientTopic->event($topic->getId(), [
                                         'msg_type' => self::MESSAGE_FROM_ADMIN,
                                         'msg' => $message,
@@ -431,6 +455,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 $settings->setCustomMessages(json_encode($customMessages, true));
                                 $settings->setAutomaticMessage($automaticWelcomeMessage);
                                 $this->em->persist($settings);
+                                $this->chatSettings = $settings;
                             }
 
                             $this->em->flush();
@@ -586,14 +611,14 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                     } elseif ($eventType == self::LOAD_CLIENT_CONVERSATION) {
                         $clientId = trim(strip_tags($event['clientId']));
                         $adminId = trim(strip_tags($event['adminId']));
-                        
+
                         $conversation = $this->em->getRepository('ChatBundle:Message')->findConversationClientAdmin($clientId, $adminId);
-                        
+
                         $messages = array();
                         foreach ($conversation as $message) {
                             array_push($messages, $message->getArrayData());
                         }
-                        
+
                         //enviamos al administrador los mensajes del cliente
                         $connection->event($topic->getId(), [
                             'msg_type' => self::CLIENT_CONVERSATION_HISTORY,
@@ -607,17 +632,13 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                         $sendAutomaticMessage = false;
                         $automaticMessage = '';
 
-                        //debemos consultar si el el primer mensaje del cliente en el dia actual, para enviarle un mensaje automatico
-                        $chatSettings = $this->em->getRepository('ChatBundle:ChatSettings')->findOneBy(array(), array());
-                        if ($chatSettings instanceof Entity\ChatSettings && !empty($chatSettings->getAutomaticMessage())) {
-                            $date = Util::getCurrentStartDate();
-                            $clientMessages = $this->em->getRepository('ChatBundle:Message')->findClientMessagesFromDate($connection->userId, $date);
-                            if (empty($clientMessages)) {
+                        // verificamos si la opcion de mensajes automaticos esta habilitada y si el cliente no ha enviado mensajes
+                        if ($this->chatSettings instanceof Entity\ChatSettings && !empty($this->chatSettings->getAutomaticMessage())) {
+                            if ($connection->messagesToday == false) {
                                 $sendAutomaticMessage = true;
-                                $automaticMessage = $chatSettings->getAutomaticMessage();
+                                $automaticMessage = $this->chatSettings->getAutomaticMessage();
                             }
                         }
-
 
                         $message = trim(strip_tags($event['message']));
                         $messageSaved = false;
@@ -671,6 +692,9 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
 
                         if ($messageSaved) {
 
+                            // notificamos que el cliente ya envio su primer mensaje
+                            $connection->messagesToday = true;
+                            
                             //notificamos al usuario que su mensaje se envio exitosamente
                             $connection->event($topic->getId(), [
                                 'msg_type' => self::MESSAGE_SEND_SUCCESSFULLY,

@@ -21,7 +21,6 @@ class RPCService implements RpcInterface {
      */
     public function updateConnectionData(ConnectionInterface $connection, WampRequest $request, $params) {
         $connection->nickname = 'guest_' . strip_tags($connection->resourceId);
-
         
         $connection->userType = ChatTopic::USER_CLIENT;
         if (isset($params['user_type']) && !empty($params['user_type'])) {
