@@ -88,6 +88,7 @@ class MessageRepository extends EntityRepository {
             $consult->setParameter('clientAdmin', Message::TYPE_CLIENT_TO_ADMIN);
             $consult->setParameter('adminClient', Message::TYPE_ADMIN_TO_CLIENT);
         }
+        $consult->setMaxResults(50);
 
         if ($today) {
             $date = Util::getCurrentDate();
