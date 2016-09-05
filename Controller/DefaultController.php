@@ -87,6 +87,9 @@ class DefaultController extends Controller {
         // listado del ultimo mensaje de los clientes para el dia actual
         $lastConversations = $em->getRepository('ChatBundle:Message')->findTodayClientChatNickNames();
         
+        // listado de los nombres de los clientes que han hablado con el administrador
+        $adminConversations = $em->getRepository('ChatBundle:Message')->findClientChatNickNames($userId);
+        
         //buscamos las configuraciones del usuario, sino tiene se las creamos
         $searchUserSettings = array('userId' => $userId, 'userType' => $userType);
         $userSettings = $em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
@@ -119,6 +122,7 @@ class DefaultController extends Controller {
                     'email' => $email,
                     'userType' => $userType,
                     'lastConversations' => $lastConversations,
+                    'adminConversations' => $adminConversations,
                     'userSettings' => $userSettings,
                     'userSettingsForm' => $userSettingsForm->createView(),
                     'chatSettings' => $chatSettings,

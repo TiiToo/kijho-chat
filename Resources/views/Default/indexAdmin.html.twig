@@ -244,7 +244,7 @@
         {% set lastDate = '' %}
         {% set lastHour = '' %}
         {% set listedConversations = [] %}
-        {#{% for clientConversation in allConversations %}
+        {% for clientConversation in adminConversations %}
             {% set clientId = clientConversation.senderId %}
             {% if clientConversation.type == constant('Kijho\\ChatBundle\\Entity\\Message::TYPE_ADMIN_TO_CLIENT') %}
                 {% set clientId = clientConversation.destinationId %}
@@ -255,7 +255,7 @@
                 <ul class="chat-history" id="client-{{clientId}}">
                 </ul>
             {% endif %}
-        {% endfor %}#}
+        {% endfor %}
     </div>
 
 {% endblock %}
@@ -811,11 +811,6 @@
             if (!$.isEmptyObject(element.html())) {
                 increaseUnreadCounters(element);
 
-                // Seteamos con la fecha actual el envio del ultimo mensaje
-                var currentDate = getCurrenDateFormated();
-                element.attr('date', currentDate);
-                calculateElapsedTime();
-
                 //armamos el html con el mensaje del usuario
                 var htmlMessage = '<li class="opponent unread">';
 
@@ -831,7 +826,7 @@
                 //buscamos el panel de mensajes del usuario
                 var chatContainer = $("#client-" + payload.user_id);
                 if (typeof chatContainer == "object") {
-                    //chatContainer.append(htmlMessage);
+                    chatContainer.append(htmlMessage);
                 } else {
                     //si no habia un panel de mensajes para el usuario, le creamos uno
                     var html = '<ul class="chat-history" id="client-' + payload.user_id + '">'
@@ -839,14 +834,16 @@
                     $(".container-chats").append(html);
                     var chatContainer = $("#client-" + payload.user_id);
                     if (!$.isEmptyObject(chatContainer.html())) {
-                        //chatContainer.append(htmlMessage);
+                        chatContainer.append(htmlMessage);
                     }
                 }
 
-                var messagesLoaded = element.attr('messages-loaded');
+                /*var messagesLoaded = element.attr('messages-loaded');
                 if (messagesLoaded == "true") {
                     neonChat.pushMessage(element.attr('id'), payload.msg, '', payload.msg_date, true, true);
-                }
+                }*/
+                
+                neonChat.pushMessage(element.attr('id'), payload.msg, '', payload.msg_date, true, true);
 
                 if (isConversationOpened(payload.user_id)) {
                     //debemos marcar los mensajes como leidos
@@ -865,6 +862,11 @@
                     //console.log('por acaca '+ payload.admin_destination);
                     //$(".chat-conversation i.waiting-response").remove();
                 }
+                
+                // Seteamos con la fecha actual el envio del ultimo mensaje
+                var currentDate = getCurrenDateFormated();
+                element.attr('date', currentDate);
+                calculateElapsedTime();
             }
 
         }
