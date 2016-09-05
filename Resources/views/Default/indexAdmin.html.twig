@@ -511,7 +511,6 @@
                     clientId: clientId,
                     message: kijho_chat_messaget_to_client,
                 };
-                console.log('enviando mensaje desde al admin..');
                 session.publish("{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::CHAT_CHANNEL')}}", data);
                 kijho_chat_messaget_to_client = '';
             }
@@ -557,8 +556,6 @@
          **/
         function messageSendSuccessfully(payload) {
         
-            console.log('enviando enviado al cliente con exito..');
-        
             // Verificamos si el cliente no estaba en el listado de last conversations para pasarlo
             var element = $("#group-1 .open-client-conversation[client-id='" + payload.client_id + "']");
             if ($.isEmptyObject(element.html())) {
@@ -575,21 +572,16 @@
         
                 element = $("#group-1 .open-client-conversation[client-id='" + payload.client_id + "']");
                 //neonChat.refreshUserIds();
-                console.log('el elemento se movio al listado de last conversations..');
             }
             
             
             // Verificamos si el cliente no es el primero en la lista, para ubicarlo en dicha posicion
             var firstClient = $("#group-1 .open-client-conversation").first();
             if (firstClient.attr('client-id') != payload.user_id) {
-                console.log('el elemento no estaba al principio de last conversations..');
                 element.prependTo("#group-1");
-                console.log('el elemento se movio al principio de last conversations..');
             }
         
-            console.log('mostrando notificacion..');
             displayNotification('Message send successfully');
-            console.log('notificacion desplegada..');
             //$(".chat-conversation i.waiting-response").remove();
 
             //armamos el html con el mensaje del usuario
@@ -605,18 +597,12 @@
             if (typeof chatContainer == "object") {
                 chatContainer.append(htmlMessage);
                 
-                console.log('haciendo el push del mansaje..');
                 neonChat.pushMessage(element.attr('id'), payload.msg, ' ', payload.msg_date, false, false);
-                console.log('push realizado');
-                console.log('renderizando mensajes..');
                 neonChat.renderMessages(element.attr('id'));
-                console.log('renderizacion completa..');
                 $(".chat-textarea textarea").val('');
                 
-                console.log('calculando tiempo transcurrido..');
                 element.find('span.time-last-message').html('0s');
                 element.find('span.time-last-message').removeClass('hidden');
-                console.log('tiempo transcurrido calculado..');
             }
         }
 
@@ -790,11 +776,9 @@
          * @param {type} payload
          **/
         function messageFromClient(payload) {
-            console.log('ha llegado un mensaje del cliente..');
             // Si el cliente onlie envia un mensaje, lo mostramos en el grupo de last conversations
             var element = $("#group-1 .open-client-conversation[client-id='" + payload.user_id + "']");
             if ($.isEmptyObject(element.html())) {
-                console.log('el cliente no estaba en last conversations..');
                 var otherElement = $("#group-2 .open-client-conversation[client-id='" + payload.user_id + "']");
                 
                 var firstUser = $('#group-1 a').first();
@@ -804,7 +788,6 @@
                 } else {
                     $('#group-1 a').first().before(otherElement);
                 }
-                console.log('se mueve el cliente a last conversations..');
                 element = $("#group-1 .open-client-conversation[client-id='" + payload.user_id + "']");
                 //neonChat.refreshUserIds();
                 //neonChat.orderGroups();
@@ -813,25 +796,17 @@
             // Verificamos si el cliente no es el primero en la lista, para ubicarlo en dicha posicion
             var firstClient = $("#group-1 .open-client-conversation").first();
             if (firstClient.attr('client-id') != payload.user_id) {
-                console.log('el cliente no era el primero en la lista...');
                 element.prependTo("#group-1");
-                console.log('moviendo el cliente a la primer posicion');
             }
             
-            console.log('desplegando notificacion..');
             displayNotification("{{'admin.new_message_from'|trans}}" + payload.nickname);
-            console.log('notificacion desplegada..');
             
-            console.log('reproduciendo sonido..');
             $(".play-sound").trigger('click');
-            console.log('sonido reproducido..');
 
             //buscamos el tab de conversacion del usuario en el listado de conversaciones
             //var element = $(".open-client-conversation[client-id='" + payload.user_id + "']");
             if (!$.isEmptyObject(element.html())) {
-                console.log('incrementando contadores..');
                 increaseUnreadCounters(element);
-                console.log('contadores incrementados..');
 
                 //armamos el html con el mensaje del usuario
                 var htmlMessage = '<li class="opponent unread">';
@@ -860,33 +835,21 @@
                     }
                 }
 
-                /*var messagesLoaded = element.attr('messages-loaded');
+                var messagesLoaded = element.attr('messages-loaded');
                 if (messagesLoaded == "true") {
-                    neonChat.pushMessage(element.attr('id'), payload.msg, '', payload.msg_date, true, true);
-                }*/
+                    neonChat.pushMessage(element.attr('id'), payload.msg, ' ', payload.msg_date, true, true);
+                }
                 
-                console.log('haciendo push del mensaje..');
-                neonChat.pushMessage(element.attr('id'), payload.msg, ' ', payload.msg_date, true, true);
-                console.log('push del mensaje correctamente..');
-
                 if (isConversationOpened(payload.user_id)) {
                     //debemos marcar los mensajes como leidos
                     if (kijho_chat_global_session_admin) {
-                        console.log('colocando mensajes como leidos');
                         putMessagesReaded(kijho_chat_global_session_admin, payload.user_id);
-                        console.log('mensajes puestos como leidos');
                     }
                     //ocultar el icono de unread
-                    console.log('reseteando unreads');
                     neonChat.resetUnreads(element.attr('id'));
-                    console.log('unreads reseteados');
-                    console.log('renderizando mensajes');
                     neonChat.renderMessages(element.attr('id'));
-                    console.log('mensajes renderizados');
                     
-                    console.log('mostrando mensajes leidos');
                     neonChat.puffUnreadsAll();
-                    console.log('mensajes mostrados como leidos');
                 }
 
                 //validamos si otro administrador ya atendio al cliente, para quitar la alerta
@@ -897,10 +860,8 @@
                 }
                 
                 // Seteamos con la fecha actual el envio del ultimo mensaje
-                console.log('calculando tiempo transcurrido');
                 element.find('span.time-last-message').html('0s');
                 element.find('span.time-last-message').removeClass('hidden');
-                console.log('tiempo transcurrido calculado');
             }
 
         }
