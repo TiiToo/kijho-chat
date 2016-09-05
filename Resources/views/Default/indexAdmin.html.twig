@@ -328,8 +328,8 @@
         });
         
         /* Cada 2 segundos verificamos el número de usuarios online y conversaciones */
-        setInterval(countOnlineUsers, 2000);
-        setInterval(countLastConversations, 2000);
+        setInterval(countOnlineUsers, 3000);
+        setInterval(countLastConversations, 3000);
         
         /* Cada 15 segundos, verificamos el tiempo transcurrido para las ultimas conversaciones */
         setInterval(calculateElapsedTime, 15000);
@@ -597,12 +597,13 @@
             if (typeof chatContainer == "object") {
                 chatContainer.append(htmlMessage);
                 
-                var currentDate = getCurrenDateFormated();
-                element.attr('date', currentDate);
-                calculateElapsedTime();
                 neonChat.pushMessage(element.attr('id'), payload.msg, '', payload.msg_date, false, false);
                 neonChat.renderMessages(element.attr('id'));
                 $(".chat-textarea textarea").val('');
+                
+                var currentDate = getCurrenDateFormated();
+                element.attr('date', currentDate);
+                calculateElapsedTime();
             }
         }
 
@@ -907,10 +908,7 @@
                 var tabConversation = $(".open-client-conversation[client-id='" + payload.user_id + "']");
                 tabConversation.find("span.typing").removeClass('hidden');
                 window.setTimeout(hideTyping, 2000);
-            } else {
-                //console.log(payload.online_with);
             }
-            
         }
 
         /**
