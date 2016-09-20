@@ -728,7 +728,7 @@
                 htmlUser += '<span class="typing hidden"><i>{{'global.typing'|trans}}</i></span>';
                 htmlUser += '<span class="time-last-message hidden pull-right"></span></a>';
                 var firstUser = $('#group-2 a').first();
-                if (!$.isEmptyObject(element.html())) {
+                if (!$.isEmptyObject(firstUser.html())) {
                     if (firstUser.hasClass('disabled')) {
                         firstUser.remove();
                         $('#group-2').append(htmlUser);
