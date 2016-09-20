@@ -697,6 +697,8 @@
          **/
         function clientJoinRoom(payload) {
             
+            console.log('llego un nuevo cliente '+payload.nickname);
+            
             // Debemos verificar si esta en el grupo 1 para hacer los cambios alla
             var element = $("#group-1 a[client-id='" + payload.user_id + "']");
             var group = 1;
@@ -709,6 +711,9 @@
                 var spanStatus = $("#group-"+group+" a[client-id='" + payload.user_id + "'] span").first();
                 spanStatus.attr("class", "user-status "+payload.status); 
             } else {
+                
+                // No se encontro el usuario en ningun listado, lo ponemos en el listado de online
+                
                 var currentDate = getCurrenDateFormated();
                 var htmlUser = '<a href="#" class="open-client-conversation" client-id="' + payload.user_id + '" online-with="" data-conversation-history="#client-' + payload.user_id + '" messages-loaded="false" date="'+currentDate+'"><span class="user-status '+payload.status+'"></span> ';
                 if (payload.isAnonymous) {
@@ -722,12 +727,12 @@
                 htmlUser += '<button class="hidden pull-right steal-chat" client-id="' + payload.user_id + '" title="{{'admin.steal_conversation'|trans}}"><i class="entypo-eye"></i></button>';
                 htmlUser += '<span class="typing hidden"><i>{{'global.typing'|trans}}</i></span>';
                 htmlUser += '<span class="time-last-message hidden pull-right"></span></a>';
-                var firstUser = $('#group-'+group+' a').first();
+                var firstUser = $('#group-2 a').first();
                 if (firstUser.hasClass('disabled')) {
                     firstUser.remove();
-                    $('#group-'+group).append(htmlUser);
+                    $('#group-2').append(htmlUser);
                 } else {
-                    $('#group-'+group+' a').first().before(htmlUser);
+                    $('#group-2 a').first().before(htmlUser);
                 }
             }
             neonChat.refreshUserIds();
