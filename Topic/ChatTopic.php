@@ -631,6 +631,8 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                 } elseif ($connection->userType == self::USER_CLIENT) {
                     if ($eventType == self::MESSAGE_TO_ADMIN && isset($event['destination'])) {
 
+                        $this->serverLog('enviar mensaje a '.$event['destination']);
+                        
                         $sendAutomaticMessage = false;
                         $automaticMessage = '';
 
@@ -715,6 +717,8 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                     'msg_date' => Util::getCurrentDate()->format('h:i a'),
                                 ]);
                             }
+                        } else {
+                            $this->serverLog('el mensaje '.$message.' que iba para '.$event['destination']);
                         }
                     } elseif ($eventType == self::CLIENT_TYPING) {
 
