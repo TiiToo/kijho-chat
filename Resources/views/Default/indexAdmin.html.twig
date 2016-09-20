@@ -728,11 +728,15 @@
                 htmlUser += '<span class="typing hidden"><i>{{'global.typing'|trans}}</i></span>';
                 htmlUser += '<span class="time-last-message hidden pull-right"></span></a>';
                 var firstUser = $('#group-2 a').first();
-                if (firstUser.hasClass('disabled')) {
-                    firstUser.remove();
-                    $('#group-2').append(htmlUser);
+                if (!$.isEmptyObject(element.html())) {
+                    if (firstUser.hasClass('disabled')) {
+                        firstUser.remove();
+                        $('#group-2').append(htmlUser);
+                    } else {
+                        $('#group-2 a').first().before(htmlUser);
+                    }
                 } else {
-                    $('#group-2 a').first().before(htmlUser);
+                    $('#group-2').append(htmlUser);
                 }
             }
             neonChat.refreshUserIds();

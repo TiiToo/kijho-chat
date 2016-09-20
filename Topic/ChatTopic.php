@@ -695,6 +695,10 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                             }
                         }
 
+                        if (!$messageSaved) {
+                            
+                        }
+                        
                         if ($messageSaved) {
 
                             // notificamos que el cliente ya envio su primer mensaje
@@ -718,7 +722,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 ]);
                             }
                         } else {
-                            $this->serverLog('el mensaje '.$message.' que iba para '.$event['destination']);
+                            $this->serverLog('el mensaje '.$message.' que iba para '.$event['destination'].' no se pudo guardar');
                         }
                     } elseif ($eventType == self::CLIENT_TYPING) {
 
