@@ -420,6 +420,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                         $this->em->flush();
 
                                         $adminTopic->event($topic->getId(), [
+                                            'msg_id' => $cliMessage->getId(),
                                             'msg_type' => self::MESSAGE_FROM_CLIENT,
                                             'msg' => $message,
                                             'nickname' => $connection->nickname,
@@ -573,6 +574,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                         $this->em->flush();
 
                                         $previousAdmin->event($topic->getId(), [
+                                            'msg_id' => $cliMessage->getId(),
                                             'msg_type' => self::MESSAGE_FROM_CLIENT,
                                             'msg' => $message,
                                             'nickname' => $connection->nickname,
@@ -680,6 +682,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                 }
 
                                 $adminTopic->event($topic->getId(), [
+                                    'msg_id' => $cliMessage->getId(),
                                     'msg_type' => self::MESSAGE_FROM_CLIENT,
                                     'msg' => $message,
                                     'nickname' => $connection->nickname,

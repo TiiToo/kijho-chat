@@ -809,7 +809,7 @@
                 increaseUnreadCounters(element);
 
                 //armamos el html con el mensaje del usuario
-                var htmlMessage = '<li class="opponent unread">';
+                var htmlMessage = '<li class="opponent unread" message-id="'+payload.msg_id+'">';
 
                 if (payload.admin_destination == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_ALL_ADMINISTRATORS')}}") {
                     htmlMessage += '<span class="user pull-left">' + payload.nickname + ' <i class="pull-right waiting-response">({{'admin.waiting_admin_response'|trans}})</i></span>';
@@ -829,14 +829,10 @@
                     var html = '<ul class="chat-history" id="client-' + payload.user_id + '">'
                             + htmlMessage + '</ul>';
                     $(".container-chats").append(html);
-                    var chatContainer = $("#client-" + payload.user_id);
-                    if (!$.isEmptyObject(chatContainer.html())) {
-                        chatContainer.append(htmlMessage);
-                    }
                 }
 
                 var messagesLoaded = element.attr('messages-loaded');
-                if (messagesLoaded == "true") {
+                if (messagesLoaded == "true" || payload.admin_destination == "{{constant('Kijho\\ChatBundle\\Topic\\ChatTopic::MESSAGE_ALL_ADMINISTRATORS')}}") {
                     neonChat.pushMessage(element.attr('id'), payload.msg, ' ', payload.msg_date, true, true);
                 }
                 
@@ -1220,6 +1216,7 @@
             var chatContainer = $("#client-" + data.clientId);
             if (typeof chatContainer == "object") {
                 chatContainer.html('');
+                $(".chat-conversation ul.conversation-body").html('');
             }
             
             for (var i = 0; i < messages.length; i++) {
@@ -1239,8 +1236,6 @@
                         + '</li>';
 
                 //buscamos el panel de mensajes del usuario
-                
-
                 if (typeof chatContainer == "object") {
                     chatContainer.append(htmlMessage);
                 } else {
@@ -1248,11 +1243,6 @@
                     var html = '<ul class="chat-history" id="client-' + data.clientId + '">'
                             + htmlMessage + '</ul>';
                     $(".container-chats").append(html);
-
-                    var chatContainer = $("#client-" + data.clientId);
-                    if (!$.isEmptyObject(chatContainer.html())) {
-                        chatContainer.append(htmlMessage);
-                    }
                 }
                 
                 if (date != messages[i].date) {
@@ -1261,6 +1251,7 @@
                 } else {
                     var showDate = messages[i].hour; 
                 }
+
                 neonChat.pushMessage(element.attr('id'), messages[i].message, ' ', showDate, fromOpponent, false);
             }
             

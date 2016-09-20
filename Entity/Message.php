@@ -230,6 +230,7 @@ class Message {
     public function getArrayData() {
         
         $arrayData = [
+            'msg_id' => $this->getId(),
             'date' => $this->getDate()->format('d/m/Y'),
             'hour' => $this->getDate()->format('h:i a'),
             'destination_id' => $this->getDestinationId(),
