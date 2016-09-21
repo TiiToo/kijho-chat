@@ -648,7 +648,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                         //buscamos al administrador con el nickname para mandarle el mensaje
                         foreach ($administrators as $adminTopic) {
 
-                            console.log('administrador en linea con el id :' + $adminTopic->userId);
+                            $this->serverLog('administrador en linea con el id :' + $adminTopic->userId);
                             
                             if ($adminId == self::MESSAGE_ALL_ADMINISTRATORS || $adminTopic->userId == $adminId) {
 
