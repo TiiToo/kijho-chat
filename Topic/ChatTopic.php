@@ -202,7 +202,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
 
             if ($connection->status != self::STATUS_WAITING_NICKNAME) {
                 //notificamos a los administradores que un nuevo cliente se conectó
-                $administrators = $this->getOnlineAdministrators();
+                $administrators = $this->getOnlineAdministrators(true);
                 foreach ($administrators as $adminTopic) {
                     $adminTopic->event($topic->getId(), [
                         'msg_type' => self::SERVER_NEW_CLIENT_CONNECTION,
@@ -267,7 +267,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
 
         if ($connection->userType == self::USER_CLIENT) {
             //notificamos a los administradores que un cliente abandona la sala
-            $administrators = $this->getOnlineAdministrators();
+            $administrators = $this->getOnlineAdministrators(true);
             foreach ($administrators as $adminTopic) {
                 $adminTopic->event($topic->getId(), [
                     'msg_type' => self::SERVER_CLIENT_LEFT_ROOM,
@@ -399,13 +399,13 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                             }
 
                             /**
-                             * Verificamos si tenbemos que notificar a los otros administradores
+                             * Verificamos si teneemos que notificar a los otros administradores
                              * que el administrador actual ya se hizo cargo de la conversacion
                              */
                             if ($notifyOtherAdmins && $foundClient) {
                                 $message = $this->translator->trans('server.automatic_message') . $connection->nickname . $this->translator->trans('server.will_continue_conversation');
 
-                                $administrators = $this->getOnlineAdministrators();
+                                $administrators = $this->getOnlineAdministrators(true);
                                 foreach ($administrators as $adminTopic) {
                                     if ($adminTopic->userId != $connection->userId) {
                                         $cliMessage = new Entity\Message();
@@ -519,9 +519,8 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
 
                             if ($adminNickname) {
 
-
                                 //buscamos el administrador con quien esta hablando el cliente
-                                $administrators = $this->getOnlineAdministrators();
+                                $administrators = $this->getOnlineAdministrators(true);
                                 $adminId = null;
                                 $previousAdmin = null;
                                 foreach ($administrators as $adminTopic) {
@@ -537,9 +536,6 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                                     //debemos consultar el listado de todos los mensajes del dia actual entre ese cliente y ese admin (mensajes no robados)
                                     $startDate = Util::getCurrentStartDate();
                                     $endDate = Util::getCurrentDate();
-
-                                    $this->serverLog($startDate->format('d/m/Y H:i'));
-                                    $this->serverLog($endDate->format('d/m/Y H:i'));
 
                                     //consultamos y duplicamos los mensajes en base de datos, pero guardandolos con el identificador del admin (senderId, destinationId)
                                     $conversation = $this->em->getRepository('ChatBundle:Message')->findConversationClientAdmin($clientId, $adminId, false, false, $startDate, $endDate);
@@ -630,8 +626,6 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                     }
                 } elseif ($connection->userType == self::USER_CLIENT) {
                     if ($eventType == self::MESSAGE_TO_ADMIN && isset($event['destination'])) {
-
-                        $this->serverLog('enviar mensaje a '.$event['destination']);
                         
                         $sendAutomaticMessage = false;
                         $automaticMessage = '';
@@ -646,7 +640,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
 
                         $message = trim(strip_tags($event['message']));
                         $messageSaved = false;
-                        $administrators = $this->getOnlineAdministrators();
+                        $administrators = $this->getOnlineAdministrators(true);
 
                         $adminId = trim(strip_tags($event['destination']));
 
@@ -729,7 +723,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                     } elseif ($eventType == self::CLIENT_TYPING) {
 
                         //buscamos a los administradores para notificarles que el cliente esta escribiendo
-                        $administrators = $this->getOnlineAdministrators();
+                        $administrators = $this->getOnlineAdministrators(true);
 
                         foreach ($administrators as $adminTopic) {
                             $adminTopic->event($topic->getId(), [
@@ -759,7 +753,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                     } elseif ($eventType == self::UPDATE_CLIENT_DESTINATION) {
                         $destinationId = trim(strip_tags($event['destination']));
 
-                        $administrators = $this->getOnlineAdministrators();
+                        $administrators = $this->getOnlineAdministrators(true);
 
                         //buscamos al administrador con el id para setear el destino
                         foreach ($administrators as $adminTopic) {
@@ -816,7 +810,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
                             ]);
 
                             //debemos notificar a todos los administradores el cambio de status del cliente
-                            $administrators = $this->getOnlineAdministrators();
+                            $administrators = $this->getOnlineAdministrators(true);
 
                             foreach ($administrators as $adminTopic) {
                                 $adminTopic->event($topic->getId(), [
@@ -930,11 +924,11 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
      * @author Cesar Giraldo <cnaranjo@kijho.com> 02/03/2016
      * @return array
      */
-    private function getOnlineAdministrators() {
+    private function getOnlineAdministrators($allStatus = false) {
         $onlineAdministrators = array();
         if ($this->chatTopic) {
             foreach ($this->chatTopic->getIterator() as $subscriber) {
-                if ($subscriber->userType == self::USER_ADMIN && $subscriber->status != self::STATUS_OFFLINE) {
+                if ($subscriber->userType == self::USER_ADMIN && ($allStatus || $subscriber->status != self::STATUS_OFFLINE)) {
                     array_push($onlineAdministrators, $subscriber);
                 }
             }
