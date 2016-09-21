@@ -106,7 +106,36 @@ class MessageRepository extends EntityRepository {
      * @param string $adminId identificador del segundo usuario involucrado en la conversacion
      * @return type
      */
-    public function findConversationClientAdmin($clientId, $adminId, $steal = null, $allAdmin = null, $startDate = null, $endDate = null) {
+    public function findConversationClientAdmin($clientId, $adminId) {
+
+        $em = $this->getEntityManager();
+
+        $extraQuery = '';
+
+        $consult = $em->createQuery("
+        SELECT m
+        FROM ChatBundle:Message m
+        WHERE 
+        ((m.senderId = :client AND m.destinationId = :admin)
+        OR (m.senderId = :admin AND m.destinationId = :client))
+        AND (m.type = :clientToAdmin OR m.type = :adminToClient) " . $extraQuery
+                . " ORDER BY m.date ASC");
+        $consult->setParameter('client', $clientId);
+        $consult->setParameter('admin', $adminId);
+        $consult->setParameter('clientToAdmin', Message::TYPE_CLIENT_TO_ADMIN);
+        $consult->setParameter('adminToClient', Message::TYPE_ADMIN_TO_CLIENT);
+
+        return $consult->getResult();
+    }
+    
+    /**
+     * Permite cargar una conversacion completa entre dos partes
+     * @author Cesar Giraldo <cnaranjo@kijho.com> 07/03/2016
+     * @param string $clientId identificador de uno de los involucrados en la conversacion
+     * @param string $adminNickname identificador del segundo usuario involucrado en la conversacion
+     * @return type
+     */
+    public function findConversationClientAdminToSteal($clientId, $adminNickname, $steal = null, $allAdmin = null, $startDate = null, $endDate = null) {
 
         $em = $this->getEntityManager();
 
@@ -139,12 +168,12 @@ class MessageRepository extends EntityRepository {
         SELECT m
         FROM ChatBundle:Message m
         WHERE 
-        ((m.senderId = :client AND m.destinationId = :admin)
-        OR (m.senderId = :admin AND m.destinationId = :client))
+        ((m.senderId = :client AND m.destinationNickname = :admin)
+        OR (m.senderNickname = :admin AND m.destinationId = :client))
         AND (m.type = :clientToAdmin OR m.type = :adminToClient) " . $extraQuery
                 . " ORDER BY m.date ASC");
         $consult->setParameter('client', $clientId);
-        $consult->setParameter('admin', $adminId);
+        $consult->setParameter('admin', $adminNickname);
         $consult->setParameter('clientToAdmin', Message::TYPE_CLIENT_TO_ADMIN);
         $consult->setParameter('adminToClient', Message::TYPE_ADMIN_TO_CLIENT);
 

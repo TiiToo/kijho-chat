@@ -601,6 +601,8 @@
                 neonChat.renderMessages(element.attr('id'));
                 $(".chat-textarea textarea").val('');
                 
+                var currentDate = getCurrenDateFormated();
+                element.attr('date', currentDate);
                 element.find('span.time-last-message').html('0s');
                 element.find('span.time-last-message').removeClass('hidden');
             }
@@ -865,6 +867,8 @@
                 }
                 
                 // Seteamos con la fecha actual el envio del ultimo mensaje
+                var currentDate = getCurrenDateFormated();
+                element.attr('date', currentDate);
                 element.find('span.time-last-message').html('0s');
                 element.find('span.time-last-message').removeClass('hidden');
             }
@@ -1302,11 +1306,11 @@
                 var arrayDate = stringDate.split(",");
                 var messageDate = new Date(arrayDate[0],arrayDate[1]-1,arrayDate[2],arrayDate[3],arrayDate[4],arrayDate[5]);
                 
-                var diffMs = (messageDate - now); // milliseconds between now & Christmas
-                var diffHrs = Math.abs(Math.round((diffMs % 86400000) / 3600000)); // hours
-                var diffMins = Math.abs(Math.round(((diffMs % 86400000) % 3600000) / 60000)); // minutes
+                var diffMs = (messageDate - now); // milliseconds between now 
+                var diffHrs = Math.floor(Math.abs((diffMs % 86400000) / 3600000)); // hours
+                var diffMins = Math.floor(Math.abs(((diffMs % 86400000) % 3600000) / 60000)); // minutes
                 
-                var diffSecs =  Math.abs(Math.round((((diffMs % 86400000) % 3600000) % 60000) / 1000)); // seconds
+                var diffSecs =  Math.floor(Math.abs((((diffMs % 86400000) % 3600000) % 60000) / 1000)); // seconds
                 
                 var textDiff = '';
                 if (diffHrs > 0) {
@@ -1317,6 +1321,8 @@
                 } else if (diffHrs == 0) {
                     textDiff += diffSecs + 's ';
                 }
+                
+                console.log(textDiff);
                 
                 if (textDiff != '') {
                     object.find('span.time-last-message').html(textDiff);
