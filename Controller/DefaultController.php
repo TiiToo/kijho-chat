@@ -86,10 +86,10 @@ class DefaultController extends Controller {
 
         // listado del ultimo mensaje de los clientes para el dia actual
         $lastConversations = $em->getRepository('ChatBundle:Message')->findTodayClientChatNickNames();
-        
+
         // listado de los nombres de los clientes que han hablado con el administrador
         $adminConversations = $em->getRepository('ChatBundle:Message')->findClientChatNickNames($userId);
-        
+
         //buscamos las configuraciones del usuario, sino tiene se las creamos
         $searchUserSettings = array('userId' => $userId, 'userType' => $userType);
         $userSettings = $em->getRepository('ChatBundle:UserChatSettings')->findOneBy($searchUserSettings);
@@ -184,15 +184,40 @@ class DefaultController extends Controller {
             'msg' => 'Server Running...'
         );
 
+        $consolePath = $this->container->getParameter('kernel.root_dir') . '/console';
+        // Detect if console binary is in new symfony 3 structure folder
+        if (file_exists($this->container->getParameter('kernel.root_dir') . '/../bin/console')) {
+            $consolePath = realpath($this->container->getParameter('kernel.root_dir') . '/../bin/console');
+        }
+        //delete data in conteiner
+
+        $commandline = 'php ' . $consolePath . ' gos:websocket:server';
+
+        $process = new \Symfony\Component\Process\Process($commandline);
+        $process->run();
         try {
-            $output = shell_exec("php ../app/console gos:websocket:server" . "> /dev/null 2>/dev/null &");
-            $response['msg'] = "<pre>$output</pre>";
-        } catch (\Exception $exc) {
+            if (!$process->isSuccessful()) {
+                throw new \RuntimeException($process->getErrorOutput());
+            }
+            $response['msg'] = $process->getOutput() . '<hr/>';
+//            echo $process->getOutput() . '<hr/>';
+        } catch (\RuntimeException $r) {
             $response = array(
                 'result' => '__KO__',
-                'msg' => 'Server error'
+                'msg' => $r->getMessage()
             );
+//            echo $r->getMessage();
         }
+
+//        try {
+//            $output = shell_exec("php ../bin/console gos:websocket:server > /dev/null 2>&1 ");
+//            $response['msg'] = "<pre>$output</pre>";
+//        } catch (\Exception $exc) {
+//            $response = array(
+//                'result' => '__KO__',
+//                'msg' => 'Server error'
+//            );
+//        }
         return new JsonResponse($response);
     }
 
@@ -208,9 +233,9 @@ class DefaultController extends Controller {
         );
 
         try {
-            
+
             $port = $this->container->getParameter('kijho_chat_port');
-            
+
             $cmd = 'fuser -KILL -k -n tcp ' . $port;
 
             $process = new Process($cmd);
