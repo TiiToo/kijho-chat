@@ -83,7 +83,7 @@ class ChatTopic extends Controller implements TopicInterface, TopicPeriodicTimer
      * Constante que controla el tiempo en el cual se actualiza el listado de usuarios
      * conectados para el panel de usuarios online
      */
-    const TIME_REFRESH_ONLINE_USERS = 3;
+    const TIME_REFRESH_ONLINE_USERS = 2;
 
     /**
      * Constante que controla el tiempo en el cual se envia a los clientes el numero

@@ -185,7 +185,7 @@ class DefaultController extends Controller {
         );
 
         try {
-            $output = shell_exec("php ../app/console gos:websocket:server --env=prod" . "> /dev/null 2>/dev/null &");
+            $output = shell_exec("php ../app/console gos:websocket:server" . "> /dev/null 2>/dev/null &");
             $response['msg'] = "<pre>$output</pre>";
         } catch (\Exception $exc) {
             $response = array(
