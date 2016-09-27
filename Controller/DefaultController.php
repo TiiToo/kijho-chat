@@ -189,18 +189,19 @@ class DefaultController extends Controller {
         if (file_exists($this->container->getParameter('kernel.root_dir') . '/../bin/console')) {
             $consolePath = realpath($this->container->getParameter('kernel.root_dir') . '/../bin/console');
         }
-        //delete data in conteiner
 
-//        $commandline = 'php ' . $consolePath . ' gos:websocket:server';
+        $commandline = 'php ' . $consolePath . ' gos:websocket:server';
 
-//        $process = new \Symfony\Component\Process\Process($commandline);
-//        $process->run();
+        $process = new \Symfony\Component\Process\Process($commandline);
+        $process->setTimeout(82800);
+//        $process->setIdleTimeout(600);
+        $process->run();
 //        try {
-//            if (!$process->isSuccessful()) {
-//                throw new \RuntimeException($process->getErrorOutput());
-//            }
-//            $response['msg'] = $process->getOutput() . '<hr/>';
-////            echo $process->getOutput() . '<hr/>';
+        if (!$process->isSuccessful()) {
+            throw new \RuntimeException($process->getErrorOutput());
+        }
+        $response['msg'] = $process->getOutput() . '<hr/>';
+//            echo $process->getOutput() . '<hr/>';
 //        } catch (\RuntimeException $r) {
 //            $response = array(
 //                'result' => '__KO__',
@@ -208,16 +209,15 @@ class DefaultController extends Controller {
 //            );
 ////            echo $r->getMessage();
 //        }
-
-        try {
-            $output = shell_exec('php ' . $consolePath . ' gos:websocket:server > /dev/null 2>&1');
-            $response['msg'] = "<pre>$output</pre>";
-        } catch (\Exception $exc) {
-            $response = array(
-                'result' => '__KO__',
-                'msg' => 'Server error'
-            );
-        }
+//        try {
+//            $output = shell_exec('php ' . $consolePath . ' gos:websocket:server > /dev/null 2>&1');
+//            $response['msg'] = "<pre>$output</pre>";
+//        } catch (\Exception $exc) {
+//            $response = array(
+//                'result' => '__KO__',
+//                'msg' => 'Server error'
+//            );
+//        }
         return new JsonResponse($response);
     }
 
