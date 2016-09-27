@@ -191,33 +191,33 @@ class DefaultController extends Controller {
         }
         //delete data in conteiner
 
-        $commandline = 'php ' . $consolePath . ' gos:websocket:server';
+//        $commandline = 'php ' . $consolePath . ' gos:websocket:server';
 
-        $process = new \Symfony\Component\Process\Process($commandline);
-        $process->run();
-        try {
-            if (!$process->isSuccessful()) {
-                throw new \RuntimeException($process->getErrorOutput());
-            }
-            $response['msg'] = $process->getOutput() . '<hr/>';
-//            echo $process->getOutput() . '<hr/>';
-        } catch (\RuntimeException $r) {
-            $response = array(
-                'result' => '__KO__',
-                'msg' => $r->getMessage()
-            );
-//            echo $r->getMessage();
-        }
-
+//        $process = new \Symfony\Component\Process\Process($commandline);
+//        $process->run();
 //        try {
-//            $output = shell_exec("php ../bin/console gos:websocket:server > /dev/null 2>&1 ");
-//            $response['msg'] = "<pre>$output</pre>";
-//        } catch (\Exception $exc) {
+//            if (!$process->isSuccessful()) {
+//                throw new \RuntimeException($process->getErrorOutput());
+//            }
+//            $response['msg'] = $process->getOutput() . '<hr/>';
+////            echo $process->getOutput() . '<hr/>';
+//        } catch (\RuntimeException $r) {
 //            $response = array(
 //                'result' => '__KO__',
-//                'msg' => 'Server error'
+//                'msg' => $r->getMessage()
 //            );
+////            echo $r->getMessage();
 //        }
+
+        try {
+            $output = shell_exec('php ' . $consolePath . ' gos:websocket:server > /dev/null 2>&1');
+            $response['msg'] = "<pre>$output</pre>";
+        } catch (\Exception $exc) {
+            $response = array(
+                'result' => '__KO__',
+                'msg' => 'Server error'
+            );
+        }
         return new JsonResponse($response);
     }
 
