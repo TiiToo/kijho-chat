@@ -45,6 +45,8 @@ admin_settings:
     user_settings: "User Settings"
     general_settings: "General Settings"
     visual_theme: "Visual Theme"
+    msg_chat_start: Please wait, the chat begins in a few minutes, you must reload the page to check if the chat is working
+    msg_chat_stop: In a few moments the chat will be disabled, and it won't be possible to use
     
 client_email:
     support_offline: "Support Team Offline"

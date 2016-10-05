@@ -126,7 +126,13 @@
             {% endif %}
             <div class="col-xs-12" id="container-server-start" style="display: none;">
                 <p>{{'admin_settings.server_offline_message'|trans}}</p>
+                {% if chatSettings.isRunCommand == 0 %}
                 <a class="btn btn-success btn-md start-gos-server">{{'admin_settings.start_server_message'|trans}}</a>
+                {% elseif chatSettings.isRunCommand == constant('Kijho\\ChatBundle\\Entity\\ChatSettings::CHAT_START') %}
+                    <p class="alert alert-dismissable alert-info">{{'admin_settings.msg_chat_start'|trans}}</p>
+                {% elseif chatSettings.isRunCommand == constant('Kijho\\ChatBundle\\Entity\\ChatSettings::CHAT_STOP') %}
+                    <p class="alert alert-dismissable alert-info">{{'admin_settings.msg_chat_stop'|trans}}</p>
+                {% endif%}
             </div>
 
             <div class="chat-group">

@@ -45,7 +45,8 @@ admin_settings:
     user_settings: "Configuración de Usuario"
     general_settings: "Configuración General"
     visual_theme: "Apariencia"
-    
+    msg_chat_start: 'Por favor espere, el chat comenzara en unos minutos, debe volver a cargar la página para comprobar que el chat está funcionando'
+    msg_chat_stop: En unos momento el chat se deshabilitara, y no sera posible su uso.
 client_email:
     support_offline: "Equipo de Soporte fuera de linea"
     no_admin_online: "No hay personal de soporte en linea, por favor rellene el siguiente formulario para enviar un correo electrónico:"

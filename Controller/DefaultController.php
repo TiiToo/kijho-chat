@@ -113,6 +113,7 @@ class DefaultController extends Controller {
 
         $customMessages = json_decode($chatSettings->getCustomMessages());
 
+//        \Symfony\Component\VarDumper\VarDumper::dump($chatSettings);
         $settingsForm = $this->createForm(ChatSettingsType::class, $chatSettings, array('translator' => $this->get('translator')));
 
         return $this->render('ChatBundle:Default:indexAdmin.html.twig', array(
@@ -179,45 +180,16 @@ class DefaultController extends Controller {
      */
     public function startGosServerAction() {
 
-        $response = array(
-            'result' => '__OK__',
-            'msg' => 'Server Running...'
-        );
 
-        $consolePath = $this->container->getParameter('kernel.root_dir') . '/console';
-        // Detect if console binary is in new symfony 3 structure folder
-        if (file_exists($this->container->getParameter('kernel.root_dir') . '/../bin/console')) {
-            $consolePath = realpath($this->container->getParameter('kernel.root_dir') . '/../bin/console');
-        }
+        $em = $this->getDoctrine()->getManager();
 
-        $commandline = 'php ' . $consolePath . ' gos:websocket:server';
+        $chatSettings = $em->getRepository('ChatBundle:ChatSettings')->findOneBy(array(), array());
+        $chatSettings->setIsRunCommand(ChatSettings::CHAT_START);
+        $em->persist($chatSettings);
+        $em->flush();
+        $response['msg'] = 'waiting crontask run';
 
-        $process = new \Symfony\Component\Process\Process($commandline);
-        $process->setTimeout(82800);
-//        $process->setIdleTimeout(600);
-        $process->run();
-//        try {
-        if (!$process->isSuccessful()) {
-            throw new \RuntimeException($process->getErrorOutput());
-        }
-        $response['msg'] = $process->getOutput() . '<hr/>';
-//            echo $process->getOutput() . '<hr/>';
-//        } catch (\RuntimeException $r) {
-//            $response = array(
-//                'result' => '__KO__',
-//                'msg' => $r->getMessage()
-//            );
-////            echo $r->getMessage();
-//        }
-//        try {
-//            $output = shell_exec('php ' . $consolePath . ' gos:websocket:server > /dev/null 2>&1');
-//            $response['msg'] = "<pre>$output</pre>";
-//        } catch (\Exception $exc) {
-//            $response = array(
-//                'result' => '__KO__',
-//                'msg' => 'Server error'
-//            );
-//        }
+
         return new JsonResponse($response);
     }
 
@@ -232,28 +204,14 @@ class DefaultController extends Controller {
             'msg' => 'Server Stopped...'
         );
 
-        try {
 
-            $port = $this->container->getParameter('kijho_chat_port');
+        $em = $this->getDoctrine()->getManager();
 
-            $cmd = 'fuser -KILL -k -n tcp ' . $port;
+        $chatSettings = $em->getRepository('ChatBundle:ChatSettings')->findOneBy(array(), array());
+        $chatSettings->setIsRunCommand(ChatSettings::CHAT_STOP);
+        $em->persist($chatSettings);
+        $em->flush();
 
-            $process = new Process($cmd);
-            $process->run();
-
-            // executes after the command finishes
-            if (!$process->isSuccessful()) {
-                $exception = new ProcessFailedException($process);
-                $response['msg'] = $exception->getMessage();
-            } else {
-                $response['msg'] = "<pre>" . $process->getOutput() . "</pre>";
-            }
-        } catch (\Exception $exc) {
-            $response = array(
-                'result' => '__KO__',
-                'msg' => 'Server error'
-            );
-        }
         return new JsonResponse($response);
     }
 

@@ -1,4 +1,10 @@
 services:
+    gsmdealer.pid_file.console_event_listener:
+        class: Kijho\ChatBundle\EventListener\PidFileEventListener
+        tags:
+            - { name: kernel.event_listener, event: console.command, method: onConsoleCommand }
+            - { name: kernel.event_listener, event: console.terminate, method: onConsoleTerminate }    
+    
     #Configuracion del chat
     chat_topic.chat_service:
         class: Kijho\ChatBundle\Topic\ChatTopic
