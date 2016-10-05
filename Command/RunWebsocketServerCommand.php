@@ -13,7 +13,7 @@ use Kijho\ChatBundle\Entity\ChatSettings;
  * @author LUIS FERNNADO GRANADOS 
  * @since 1.0 04/10/2016
  */
-class runWebsocketServerCommand extends ContainerAwareCommand {
+class RunWebsocketServerCommand extends ContainerAwareCommand {
 
     const startHour = "23:00:00";
     const endHour = "23:03:59";
