@@ -19,20 +19,29 @@ class PidFileEventListener {
         // the input object will read the actual arguments from $_SERVER['argv']
         $input = new ArgvInput();
         // bind the application's input definition to it
-        $input->bind($definition);
 
-        $pidFile = $input->getOption('pidfile');
+        $option = array('--pidfile');
 
-        if ($pidFile !== null) {
-            file_put_contents($pidFile, getmypid());
+        if (true === $input->hasParameterOption($option)) {
+            $input->bind($definition);
+            
+            $pidFile = $input->getParameterOption($option);
+            if ($pidFile !== null) {
+                file_put_contents($pidFile, getmypid());
+            }
         }
     }
 
     public function onConsoleTerminate(ConsoleTerminateEvent $event) {
-        $pidFile = $event->getInput()->getOption('pidfile');
+        $option = array('--pidfile');
+        $input = $event->getInput();
+//        \Symfony\Component\VarDumper\VarDumper::dump($input);
+        if (true === $input->hasParameterOption($option)) {
+            $pidFile = $input->getParameterOption($option);
 
-        if ($pidFile !== null) {
-            unlink($pidFile);
+            if ($pidFile !== null) {
+                unlink($pidFile);
+            }
         }
     }
 

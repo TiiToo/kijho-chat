@@ -82,7 +82,7 @@ class RunWebsocketServerCommand extends ContainerAwareCommand {
                             . '/../bin/console';
                 }
 
-                $commandline = "php " . $consolePath . " gos:websocket:server --env=prod  --pidfile="
+                $commandline = "php " . $consolePath . " gos:websocket:server --env=prod --pidfile="
                         . $rootPath . "chat.pid";
                 $output->writeln("Starting server chat");
 
